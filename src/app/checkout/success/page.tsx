@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import { naira } from "@/lib/format";
 
-type Result = { ok?: boolean; ref?: string; status?: string; email?: string; phone?: string; installer?: string; amount?: number; error?: string };
+type Result = { ok?: boolean; ref?: string; status?: string; email?: string; phone?: string; installer?: string; amount?: number; emailed?: boolean; error?: string };
 
 function Success() {
   const id = useSearchParams().get("payment_intent");
@@ -35,7 +35,7 @@ function Success() {
       <p className="text-lg leading-relaxed text-ink-2">
         Order <b className="text-ink">{r.ref}</b> for <b className="num text-ink">{naira(r.amount || 0)}</b> is <b className="text-ink">pending</b>. We're working on it and will call you on <b className="text-ink">{r.phone}</b> shortly to arrange delivery{r.installer === "yes" ? " and connect you with an installer" : ""}.
       </p>
-      <p className="mt-3 text-mute">A copy has been sent to {r.email}.</p>
+      {r.emailed && <p className="mt-3 text-mute">A copy has been sent to {r.email}.</p>}
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/shop" className="btn btn-ink">Continue shopping</Link>
         <Link href="/account/cards" className="btn btn-ghost">Manage saved cards</Link>
