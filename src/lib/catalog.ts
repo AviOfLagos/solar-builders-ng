@@ -25,13 +25,14 @@ export const CATEGORIES = [
   { slug: "lights-accessories", name: "Lights, fans & accessories", short: "Lights & more", blurb: "Solar lanterns, fans, street lights and charge controllers." },
 ] as const;
 
-export function sellingPrice(cost: number) {
-  const raw = cost * (1 + STORE.markup);
+export function sellingPrice(cost: number, brand?: string) {
+  const markup = (brand ? STORE.brandMarkup[brand] : undefined) ?? STORE.markup;
+  const raw = cost * (1 + markup);
   return Math.ceil(raw / STORE.roundTo) * STORE.roundTo;
 }
 
 export const brands: Brand[] = data.brands;
-export const products: Product[] = data.products.map((p) => ({ ...p, price: sellingPrice(p.costNgn) }));
+export const products: Product[] = data.products.map((p) => ({ ...p, price: sellingPrice(p.costNgn, p.brand) }));
 
 const bySlug = new Map(products.map((p) => [p.slug, p]));
 const byId = new Map(products.map((p) => [p.id, p]));

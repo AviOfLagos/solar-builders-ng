@@ -2,11 +2,27 @@ import "server-only";
 
 type Mail = { to: { email: string; name?: string }[]; subject: string; html: string; text?: string; replyTo?: string };
 
+const hasBrevo = () => !!(process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL);
+const hasResend = () => !!process.env.RESEND_API_KEY;
+
+/** True when some real email provider is configured (Brevo first, Resend as fallback). */
 export function brevoConfigured() {
-  return !!(process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL);
+  return hasBrevo() || hasResend();
+}
+
+async function sendViaResend(m: Mail) {
+  const from = process.env.RESEND_FROM || `${process.env.BREVO_SENDER_NAME || "Solar Builders NG"} <onboarding@resend.dev>`;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify({ from, to: m.to.map((t) => t.email), subject: m.subject, html: m.html, text: m.text, reply_to: m.replyTo }),
+  });
+  if (!res.ok) console.error("[mail] Resend error", res.status, await res.text());
+  return { ok: res.ok };
 }
 
 export async function sendMail(m: Mail) {
+  if (!hasBrevo() && hasResend()) return sendViaResend(m);
   if (!brevoConfigured()) {
     console.log(`[mail:dev] to=${m.to.map((t) => t.email).join(",")} subject="${m.subject}"\n${m.text ?? ""}`);
     return { ok: true, dev: true };

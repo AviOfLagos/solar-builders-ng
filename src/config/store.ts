@@ -7,15 +7,25 @@ export const STORE = {
   city: "Lagos",
   country: "NG",
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "hello@solarbuilders.ng",
-  supportPhone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || "+2348000000000",
-  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "2348000000000",
+  supportPhone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || "+2347030546907",
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "2347030546907",
   currency: "NGN",
   /** Markup on the official brand price. 0.01 = 1%. */
   markup: 0.01,
+  /** Per-brand overrides, e.g. partner brands that supply us directly at +30%. */
+  brandMarkup: {} as Record<string, number>,
   /** Round selling prices up to the nearest N naira. */
   roundTo: 10,
   /** Delivery fee within Lagos (naira). 0 = free. */
   deliveryFee: 0,
+  /** Social profiles. Empty ones are hidden. */
+  socials: {
+    instagram: process.env.NEXT_PUBLIC_INSTAGRAM || "",
+    x: process.env.NEXT_PUBLIC_X || "",
+    tiktok: process.env.NEXT_PUBLIC_TIKTOK || "",
+    facebook: process.env.NEXT_PUBLIC_FACEBOOK || "",
+    linkedin: process.env.NEXT_PUBLIC_LINKEDIN || "",
+  },
 };
 
 export const LAGOS_LGAS = [

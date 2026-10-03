@@ -1,5 +1,6 @@
 import { products, brands, CATEGORIES, brandName } from "@/lib/catalog";
 import { FAQ, GUIDES } from "@/data/content";
+import { SEGMENTS, tiersFor } from "@/data/packages";
 import { STORE } from "@/config/store";
 import { abs } from "@/lib/seo";
 import { naira } from "@/lib/format";
@@ -12,6 +13,9 @@ export function GET() {
     `# ${STORE.name}`,
     "",
     `> Online solar store in Lagos, Nigeria selling genuine inverters, lithium batteries, solar panels, power stations and complete solar systems from ${brands.map((b) => b.name).join(", ")}. Free delivery to all 20 Lagos LGAs. Optional installation by our engineers. Prices in naira (NGN).`,
+    "",
+    "## Packages by buyer type (kit price; typical installed total)",
+    ...SEGMENTS.flatMap((s) => [`### [${s.name}](${abs(`/packages/${s.slug}`)})`, ...tiersFor(s).map((t) => `- ${t.name}: ${t.tagline}. ${t.kw}kW / ${t.kwh}kWh. Kit ${naira(t.price)}${t.install[1] ? `; installed ${naira(t.price + t.install[0])}–${naira(t.price + t.install[1])}` : "; no installation needed"}.`)]),
     "",
     "## Categories",
     ...CATEGORIES.map((c) => `- [${c.name}](${abs(`/category/${c.slug}`)}): ${c.blurb}`),

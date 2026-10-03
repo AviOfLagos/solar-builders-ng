@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "./Logo";
 import { useCart } from "@/lib/cart";
-import { CATEGORIES } from "@/lib/catalog";
 
 type Card = { id: string; brand: string; last4: string; nickname: string; expMonth: number; expYear: number };
 type Me = { user: { email: string } | null; cards: Card[] };
@@ -36,13 +35,10 @@ export function Header() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
         <Link href="/" aria-label="Solar Builders NG home"><Logo /></Link>
-        <nav className="ml-6 hidden items-center gap-5 text-sm font-medium lg:flex">
+        <nav className="ml-8 hidden items-center gap-6 text-[0.95rem] font-medium lg:flex">
           <Link href="/shop" className="hover:text-sun-deep">Shop all</Link>
-          {CATEGORIES.slice(0, 4).map((c) => (
-            <Link key={c.slug} href={`/category/${c.slug}`} className="hover:text-sun-deep">{c.short}</Link>
-          ))}
-          <Link href="/deals" className="text-flare">Deals</Link>
-          <Link href="/guides" className="hover:text-sun-deep">Guides</Link>
+          <Link href="/packages" className="hover:text-sun-deep">Packages</Link>
+          <Link href="/category/complete-systems" className="hover:text-sun-deep">Complete systems</Link>
         </nav>
         <form
           className="ml-auto hidden md:block"
@@ -90,9 +86,8 @@ export function Header() {
           </form>
           <ul className="grid grid-cols-2 gap-2 text-sm font-medium">
             <li><Link href="/shop" className="block py-2">Shop all</Link></li>
-            {CATEGORIES.map((c) => <li key={c.slug}><Link href={`/category/${c.slug}`} className="block py-2">{c.short}</Link></li>)}
-            <li><Link href="/deals" className="block py-2 text-flare">Deals</Link></li>
-            <li><Link href="/guides" className="block py-2">Guides</Link></li>
+            <li><Link href="/packages" className="block py-2">Packages</Link></li>
+            <li><Link href="/category/complete-systems" className="block py-2">Complete systems</Link></li>
             <li><Link href="/account" className="block py-2">My account</Link></li>
           </ul>
         </nav>
