@@ -17,6 +17,16 @@ export async function GET(req: Request) {
     await step("orders", () => sweepStaleOrders());
     await step("pools", sweepPools);
   }
-  await step("rateLimits", async () => (await (await db())`delete from rate_limits where window_start < now() - interval '1 day'`).count);
+  await step("rateLimits", async () => {
+    const sql = await db();
+    const gone = await sql`delete from rate_limits where window_start < now() - interval '1 day'`;
+    return gone.count;
+  });
+  await step("leads", async () => {
+    // Privacy page promise: unfinished carts are deleted after 90 days.
+    const sql = await db();
+    const gone = await sql`delete from leads where order_id is null and updated_at < now() - interval '90 days'`;
+    return gone.count;
+  });
   return NextResponse.json(out);
 }

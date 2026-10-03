@@ -92,7 +92,7 @@ export async function finalizeGiftCard(pi: Stripe.PaymentIntent) {
   }
   const body = `<p style="font-size:15px">${esc(g.from_name || "Someone")} sent ${esc(g.to_name || "you")} a <b>${naira(g.amount)}</b> Solar Builders gift card.</p>${g.message ? `<p style="font-style:italic">“${esc(g.message)}”</p>` : ""}<p style="font-size:26px;letter-spacing:3px;font-weight:bold">${g.code}</p><p>Use it at checkout on ${STORE.url}. It never expires and can't be exchanged for cash.</p>`;
   await sendMail({ to: [g.to_email, g.from_email], subject: `A ${naira(g.amount)} solar gift card for ${g.to_name || "you"}`, html: shell("You've got a solar gift card", body) });
-  await notifyOwner(`GIFT CARD ${g.code} sold — ${naira(g.amount)} from ${g.from_name} <${g.from_email}> to ${g.to_name} <${g.to_email}>`);
+  await notifyOwner(`GIFT CARD ${g.code} sold — ${naira(g.amount)} from ${g.from_name} (${g.from_email})${g.to_name || g.to_email ? ` to ${[g.to_name, g.to_email].filter(Boolean).join(", ")}` : ""}`);
   return { ok: true, kind: "gift_card", code: g.code as string, amount: g.amount as number };
 }
 

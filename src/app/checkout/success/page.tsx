@@ -3,14 +3,14 @@ import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/lib/cart";
-import { naira } from "@/lib/format";
+import { naira, ngLocal } from "@/lib/format";
 import { api, setLeadId } from "@/lib/client";
 import { Share } from "@/components/Share";
 import { STORE } from "@/config/store";
 
 type Result = {
   ok?: boolean; kind?: string; paymentStatus?: string; amount?: number; emailed?: boolean; error?: string;
-  order?: { ref: string; phone?: string; email?: string; installer?: boolean; recipient?: { name: string } | null; status: string } | null;
+  order?: { ref: string; total?: number; giftUsed?: number; phone?: string; email?: string; installer?: boolean; recipient?: { name: string } | null; status: string } | null;
   pool?: { id: string; title: string; goal: number; raised: number; status: string } | null;
   accepted?: number; refunded?: number;
   gift?: { code: string; amount: number; toName: string } | null;
@@ -71,7 +71,7 @@ function Success() {
           <p className="text-lg text-ink-2">You added <b className="num text-ink">{naira(r.accepted)}</b> to <b className="text-ink">{p.title}</b>. It&apos;s now at <b className="num text-ink">{naira(p.raised)}</b> of {naira(p.goal)}{p.status === "funded" ? ". Goal reached, so we're placing the order!" : "."}</p>
         ) : <p className="text-lg text-ink-2">Someone finished it just before you. Nothing was kept: your full payment is on its way back to your card.</p>}
         {!!r.refunded && !!r.accepted && <p className="mt-3 rounded-lg bg-haze p-3 text-sm">Only {naira(r.accepted)} was needed to finish it, so we&apos;ve refunded the other <b className="num">{naira(r.refunded)}</b> to your card. Refunds show in 5 to 10 working days.</p>}
-        <div className="mt-6"><Share path={`/fund/${p.id}`} text={`I just helped with "${p.title}". Chip in too:`} images={[{ label: "Story picture", href: `/api/v1/share/pool/${p.id}?f=story` }]} /></div>
+        {!!r.accepted && <div className="mt-6"><Share path={`/fund/${p.id}`} text={`I just helped with "${p.title}". Chip in too:`} images={[{ label: "Story picture", href: `/api/v1/share/pool/${p.id}?f=story` }]} /></div>}
         <div className="mt-6 flex flex-wrap gap-3"><Link href={`/fund/${p.id}`} className="btn btn-ink">Back to the page</Link><Link href="/fund/new" className="btn btn-ghost">Start your own</Link></div>
       </Shell>
     );
@@ -95,8 +95,8 @@ function Success() {
   return (
     <Shell title="Thank you. We've got your order.">
       <p className="text-lg leading-relaxed text-ink-2">
-        Order <b className="text-ink">{o?.ref}</b> for <b className="num text-ink">{naira(r.amount || 0)}</b> is <b className="text-ink">pending</b>.{" "}
-        {o?.phone ? <>We&apos;ll call {o.recipient ? <b className="text-ink">{o.recipient.name}</b> : "you"} on <b className="text-ink">{o.phone}</b> shortly to arrange delivery{o.installer ? " and installation" : ""}.</> : "We'll call shortly to arrange delivery."}
+        Order <b className="text-ink">{o?.ref}</b> for <b className="num text-ink">{naira(o?.total ?? r.amount ?? 0)}</b>{o?.giftUsed ? ` (${naira(o.giftUsed)} on your gift card)` : ""} is <b className="text-ink">pending</b>.{" "}
+        {o?.phone ? <>We&apos;ll call {o.recipient ? <b className="text-ink">{o.recipient.name}</b> : "you"} on <b className="text-ink">{ngLocal(o.phone)}</b> shortly to arrange delivery{o.installer ? " and installation" : ""}.</> : "We'll call shortly to arrange delivery."}
       </p>
       {r.emailed && o?.email && <p className="mt-3 text-mute">A copy has been sent to {o.email}.</p>}
       {o?.ref && <GoingSolar refId={o.ref} />}

@@ -40,8 +40,8 @@ export async function paymentSummary(piId: string, clientSecret: string, viewer:
     return { ...base, gift: allowed && g?.status === "active" ? { code: g.code, amount: g.amount, toName: g.to_name } : null };
   }
 
-  const [o] = await sql`select id, user_id, buyer, delivery, recipient, installer, status, pool_id from orders where pi_id = ${pi.id}`;
+  const [o] = await sql`select id, user_id, buyer, delivery, recipient, installer, status, pool_id, total_paid, gift_card_used from orders where pi_id = ${pi.id}`;
   if (!o) return { ...base, order: null };
   const mine = allowed || (!!viewer && viewer.uid === o.user_id);
-  return { ...base, order: mine ? { ref: o.id, phone: o.delivery.phone, email: o.buyer.email, installer: o.installer, recipient: o.recipient ? { name: o.recipient.name } : null, status: o.status } : { ref: o.id, status: o.status }, error: "error" in r ? r.error : undefined };
+  return { ...base, order: mine ? { ref: o.id, total: o.total_paid + o.gift_card_used, giftUsed: o.gift_card_used, phone: o.delivery.phone, email: o.buyer.email, installer: o.installer, recipient: o.recipient ? { name: o.recipient.name } : null, status: o.status } : { ref: o.id, status: o.status }, error: "error" in r ? r.error : undefined };
 }
