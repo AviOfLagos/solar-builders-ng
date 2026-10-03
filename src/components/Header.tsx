@@ -22,7 +22,7 @@ export function Header() {
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!cardsOpen) return;
-    fetch("/api/me").then((r) => r.json()).then(setMe).catch(() => setMe({ user: null, cards: [] }));
+    fetch("/api/v1/me").then((r) => r.json()).then(setMe).catch(() => setMe({ user: null, cards: [] }));
     const close = (e: MouseEvent) => { if (pop.current && !pop.current.contains(e.target as Node)) setCardsOpen(false); };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
@@ -39,6 +39,7 @@ export function Header() {
           <Link href="/shop" className="hover:text-sun-deep">Shop all</Link>
           <Link href="/packages" className="hover:text-sun-deep">Packages</Link>
           <Link href="/category/complete-systems" className="hover:text-sun-deep">Complete systems</Link>
+          <Link href="/give" className="hover:text-sun-deep">Buy for someone</Link>
         </nav>
         <form
           className="ml-auto hidden md:block"
@@ -55,7 +56,7 @@ export function Header() {
             <div className="absolute right-0 mt-2 w-72 rounded-xl border border-line bg-paper p-4 shadow-lg">
               {!me ? <p className="text-sm text-mute">Loading…</p> : !me.user ? (
                 <div className="space-y-3 text-sm">
-                  <p>Sign in with your email to see the cards you've saved.</p>
+                  <p>Sign in to see the cards you've saved.</p>
                   <Link href="/account" onClick={() => setCardsOpen(false)} className="btn btn-ink w-full !py-2">Sign in</Link>
                 </div>
               ) : me.cards.length === 0 ? (
@@ -88,6 +89,8 @@ export function Header() {
             <li><Link href="/shop" className="block py-2">Shop all</Link></li>
             <li><Link href="/packages" className="block py-2">Packages</Link></li>
             <li><Link href="/category/complete-systems" className="block py-2">Complete systems</Link></li>
+            <li><Link href="/give" className="block py-2">Buy for someone</Link></li>
+            <li><Link href="/sell" className="block py-2">Sell & earn</Link></li>
             <li><Link href="/account" className="block py-2">My account</Link></li>
           </ul>
         </nav>

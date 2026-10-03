@@ -28,6 +28,16 @@ export const STORE = {
   },
 };
 
+/**
+ * Pay small small: a partner lender pays us in full; the customer repays the lender.
+ * Rates are set by the lender, so we only show the split, not interest.
+ */
+export const FINANCE = {
+  minTotal: 300_000,
+  downPayments: [30, 40, 50],
+  months: [3, 6, 12],
+};
+
 export const LAGOS_LGAS = [
   "Agege", "Ajeromi-Ifelodun", "Alimosho", "Amuwo-Odofin", "Apapa", "Badagry",
   "Epe", "Eti-Osa", "Ibeju-Lekki", "Ifako-Ijaiye", "Ikeja", "Ikorodu", "Kosofe",

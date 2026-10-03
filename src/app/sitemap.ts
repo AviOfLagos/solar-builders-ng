@@ -18,5 +18,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: abs("/guides"), lastModified: now, priority: 0.6 },
     ...GUIDES.map((g) => ({ url: abs(`/guides/${g.slug}`), lastModified: now, priority: 0.6 })),
     { url: abs("/faq"), lastModified: now, priority: 0.5 },
+    ...["/give", "/gift-cards", "/pay-small-small", "/sell"].map((p) => ({ url: abs(p), lastModified: now, priority: 0.8 })),
   ];
 }

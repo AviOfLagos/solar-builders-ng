@@ -8,6 +8,8 @@ import { PromoBar } from "@/components/PromoBar";
 import { CartDrawer } from "@/components/CartDrawer";
 import { STORE } from "@/config/store";
 import { JsonLd, orgJsonLd } from "@/lib/seo";
+import { RefCapture } from "@/components/RefCapture";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   metadataBase: new URL(STORE.url),
@@ -32,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main id="main" className="flex-1">{children}</main>
         <Footer />
         <CartDrawer />
+        <Suspense><RefCapture /></Suspense>
         <JsonLd data={orgJsonLd()} />
       </body>
     </html>

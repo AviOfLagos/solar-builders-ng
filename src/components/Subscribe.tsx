@@ -11,7 +11,7 @@ export function Subscribe() {
         e.preventDefault();
         setState("busy");
         const email = new FormData(e.currentTarget).get("email");
-        const r = await fetch("/api/subscribe", { method: "POST", body: JSON.stringify({ email }) });
+        const r = await fetch("/api/v1/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, source: "footer" }) });
         setState(r.ok ? "done" : (await r.json()).error || "Try again.");
       }}
     >

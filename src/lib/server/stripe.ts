@@ -1,5 +1,6 @@
 import "server-only";
 import Stripe from "stripe";
+import { db } from "./db";
 
 let client: Stripe | null = null;
 
@@ -13,22 +14,18 @@ export function stripe() {
   return client;
 }
 
-export async function findOrCreateCustomer(email: string, name?: string) {
-  const s = stripe();
-  const existing = await s.customers.list({ email, limit: 1 });
-  if (existing.data[0]) return existing.data[0];
-  return s.customers.create({ email, name, metadata: { source: "solar-builders-ng" } });
+/** One Stripe customer per account, created on first need. Never looked up by email. */
+export async function customerFor(uid: string) {
+  const sql = await db();
+  const [u] = await sql`select id, email, name, stripe_customer_id from users where id = ${uid}`;
+  if (!u) throw new Error("User not found");
+  if (u.stripe_customer_id) return u.stripe_customer_id as string;
+  const c = await stripe().customers.create({ email: u.email, name: u.name || undefined, metadata: { user_id: uid } });
+  await sql`update users set stripe_customer_id = ${c.id} where id = ${uid}`;
+  return c.id;
 }
 
-export type SavedCard = {
-  id: string;
-  brand: string;
-  last4: string;
-  expMonth: number;
-  expYear: number;
-  nickname: string;
-  created: number;
-};
+export type SavedCard = { id: string; brand: string; last4: string; expMonth: number; expYear: number; nickname: string; created: number };
 
 /** Cards for a customer, newest first. */
 export async function listCards(customerId: string): Promise<SavedCard[]> {
@@ -51,3 +48,6 @@ export async function ownsCard(customerId: string, pmId: string) {
   const pm = await stripe().paymentMethods.retrieve(pmId);
   return pm.customer === customerId ? pm : null;
 }
+
+/** Stripe's smallest charge is about US$0.50; keep every naira charge above this. */
+export const MIN_CHARGE_NGN = 1000;

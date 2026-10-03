@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/client";
 import { useCart } from "@/lib/cart";
 import { getProductById, brandName } from "@/lib/catalog";
 import { naira } from "@/lib/format";
@@ -11,6 +12,23 @@ export function useCartLines() {
   const items = lines.map((l) => ({ ...l, p: getProductById(l.id) })).filter((l) => l.p) as { id: string; qty: number; p: NonNullable<ReturnType<typeof getProductById>> }[];
   const subtotal = items.reduce((s, l) => s + l.p.price * l.qty, 0);
   return { items, subtotal };
+}
+
+function ShareCart() {
+  const lines = useCart((s) => s.lines);
+  const [state, setState] = useState("");
+  return (
+    <button className="underline underline-offset-4" onClick={async () => {
+      setState("…");
+      try {
+        const r = await api<{ path: string }>("/builds", { body: { items: lines } });
+        const url = new URL(r.path, location.origin).toString();
+        await navigator.clipboard.writeText(url).catch(() => {});
+        setState("Link copied");
+        window.open(`https://wa.me/?text=${encodeURIComponent("Here's my solar setup: " + url)}`, "_blank");
+      } catch (e) { setState((e as Error).message); }
+    }}>{state || "Share cart"}</button>
+  );
 }
 
 export function CartDrawer() {
@@ -64,7 +82,11 @@ export function CartDrawer() {
               <div className="flex justify-between text-sm"><span>Subtotal</span><span className="num font-semibold">{naira(subtotal)}</span></div>
               <div className="flex justify-between text-sm text-mute"><span>Delivery in Lagos</span><span>Free</span></div>
               <Link href="/checkout" onClick={() => setOpen(false)} className="btn btn-sun w-full text-base">Checkout · {naira(subtotal)}</Link>
-              <Link href="/cart" onClick={() => setOpen(false)} className="block text-center text-sm underline underline-offset-4">View full cart</Link>
+              <div className="flex justify-center gap-4 text-sm">
+                <ShareCart />
+                <Link href="/fund/new" onClick={() => setOpen(false)} className="underline underline-offset-4">Fund with friends</Link>
+                <Link href="/pay-small-small" onClick={() => setOpen(false)} className="underline underline-offset-4">Pay small small</Link>
+              </div>
             </div>
           </>
         )}

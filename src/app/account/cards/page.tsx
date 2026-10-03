@@ -14,7 +14,7 @@ export default function CardsPage() {
   const [adding, setAdding] = useState<{ secret: string; nickname: string } | null>(null);
   const [nick, setNick] = useState("");
   const [msg, setMsg] = useState("");
-  const load = useCallback(() => fetch("/api/me").then((r) => r.json()).then(setData), []);
+  const load = useCallback(() => fetch("/api/v1/me").then((r) => r.json()).then(setData), []);
   useEffect(() => { load(); }, [load]);
 
   if (!data) return <Center>Loading…</Center>;
@@ -34,7 +34,7 @@ export default function CardsPage() {
         {!stripePromise ? <p className="mt-2 text-sm text-mute">Card saving will be available once payments are switched on.</p> : !adding ? (
           <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={async (e) => {
             e.preventDefault(); setMsg("");
-            const r = await fetch("/api/cards/setup-intent", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nickname: nick }) });
+            const r = await fetch("/api/v1/cards/setup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ nickname: nick }) });
             const d = await r.json();
             if (!r.ok) return setMsg(d.error);
             setAdding({ secret: d.clientSecret, nickname: nick });
@@ -64,7 +64,7 @@ function AddCard({ onDone, onCancel }: { onDone: () => void; onCancel: () => voi
       setBusy(true); setErr("");
       const res = await stripe.confirmSetup({ elements, redirect: "if_required", confirmParams: { return_url: `${location.origin}/account/cards` } });
       if (res.error) { setErr(res.error.message || "Card was not saved."); setBusy(false); return; }
-      await fetch("/api/cards/setup-intent", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ setupIntentId: res.setupIntent.id }) });
+      await fetch("/api/v1/cards/setup", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ setupIntentId: res.setupIntent.id }) });
       setBusy(false); onDone();
     }}>
       <PaymentElement />
@@ -89,13 +89,13 @@ function CardRow({ c, latest, onChange }: { c: Card; latest: boolean; onChange: 
         <button className="text-sm underline" onClick={() => setEdit((x) => !x)}>Rename</button>
         <button className="text-sm text-flare underline" disabled={busy} onClick={async () => {
           if (!window.confirm(`Remove ${c.nickname}?`)) return;
-          setBusy(true); await fetch(`/api/cards/${c.id}`, { method: "DELETE" }); onChange();
+          setBusy(true); await fetch(`/api/v1/cards/${c.id}`, { method: "DELETE" }); onChange();
         }}>Remove</button>
       </div>
       {edit && (
         <form className="mt-3 flex gap-2" onSubmit={async (e) => {
           e.preventDefault(); setBusy(true);
-          await fetch(`/api/cards/${c.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ nickname: name }) });
+          await fetch(`/api/v1/cards/${c.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ nickname: name }) });
           setBusy(false); setEdit(false); onChange();
         }}>
           <input className="field" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} aria-label="Card name" />
