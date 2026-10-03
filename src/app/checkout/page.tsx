@@ -7,7 +7,7 @@ import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useCartLines } from "@/components/CartDrawer";
 import { CardChip } from "@/components/Header";
-import { LAGOS_LGAS } from "@/config/store";
+import { LAGOS_LGAS, STORE } from "@/config/store";
 import { naira, NG_PHONE, normalizePhone, isEmail } from "@/lib/format";
 
 const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -154,7 +154,7 @@ function CheckoutForm({ saveCard, setSaveCard, stripeReady, stripe, elements }: 
 
           <Section title="Payment">
             {!stripeReady ? (
-              <p className="rounded-xl bg-sun/20 p-4 text-sm">Card payments are being switched on. To order now, message us on WhatsApp.</p>
+              <p className="rounded-xl bg-sun/20 p-4 text-sm">Card payments are being switched on. To order now, <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
             ) : (
               <div className="space-y-3">
                 {me.cards.length > 0 && (

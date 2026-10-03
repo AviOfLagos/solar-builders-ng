@@ -9,7 +9,11 @@ import { JsonLd, faqJsonLd } from "@/lib/seo";
 import { PROMO } from "@/config/store";
 
 export default function Home() {
-  const deals = products.filter(inPromo).filter((p) => p.price < 2_500_000).sort((a, b) => a.price - b.price).filter((_, i) => i % 2 === 0).slice(0, 8);
+  // Two mid-priced picks from each promo category.
+  const promoItems = products.filter(inPromo).filter((p) => p.price >= 100_000 && p.price < 2_500_000);
+  const deals = [...new Set(promoItems.map((p) => p.category))]
+    .flatMap((c) => promoItems.filter((p) => p.category === c).sort((a, b) => a.price - b.price).slice(0, 2))
+    .slice(0, 8);
   const popular = ["itel-powercore-3k-pro", "felicity-ivem6048", "ecoflow-delta-3-max", "arnergy-5kw-inverter", "sun-king-powerhub-pro", "felicity-flh-48100ug1", "itel-energy-complete-4kw", "ecoflow-river-3-plus"]
     .map((s) => products.find((p) => p.slug.startsWith(s)))
     .filter((p) => !!p);
