@@ -36,7 +36,7 @@ export function Header() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
         <Link href="/" aria-label="Solar Builders NG home"><Logo /></Link>
-        <nav className="ml-8 hidden items-center gap-6 text-[0.95rem] font-medium lg:flex">
+        <nav className="ml-6 hidden items-center gap-5 whitespace-nowrap text-[0.95rem] font-medium lg:flex">
           <Link href="/shop" className="hover:text-sun-deep">Shop all</Link>
           <Link href="/packages" className="hover:text-sun-deep">Packages</Link>
           <Link href="/category/complete-systems" className="hover:text-sun-deep">Complete systems</Link>
@@ -44,13 +44,13 @@ export function Header() {
           <Link href="/give" className="hover:text-sun-deep">Buy for someone</Link>
         </nav>
         <form
-          className="ml-auto hidden md:block"
+          className="ml-auto hidden xl:block"
           role="search"
           onSubmit={(e) => { e.preventDefault(); const q = new FormData(e.currentTarget).get("q"); router.push(`/shop?q=${encodeURIComponent(String(q || ""))}`); }}
         >
           <input name="q" type="search" placeholder="Search 5kVA, lithium, EcoFlow…" className="field !w-64 !rounded-full !py-2 text-sm" aria-label="Search products" />
         </form>
-        <div className="relative ml-auto md:ml-0" ref={pop}>
+        <div className="relative ml-auto xl:ml-0" ref={pop}>
           <button onClick={() => setCardsOpen((o) => !o)} className="grid h-10 w-10 place-items-center rounded-full hover:bg-haze" aria-label="Saved cards" aria-expanded={cardsOpen}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 9.5h19M6 15h4" /></svg>
           </button>
