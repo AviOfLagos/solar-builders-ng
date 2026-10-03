@@ -1,4 +1,4 @@
-"""Builds src/data/catalog.json from research JSON (official-source prices)."""
+"""Builds data/catalog-costs.json from research JSON (official-source prices)."""
 import json, re, sys, os, hashlib
 R = sys.argv[1]
 brand_meta = {

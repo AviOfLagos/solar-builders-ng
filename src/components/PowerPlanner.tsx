@@ -75,7 +75,7 @@ export function PowerPlanner() {
             </button>
           ))}
         </div>
-        <p className="mt-5 text-sm font-semibold">2. Adjust what you'll run</p>
+        <p className="mt-5 text-sm font-semibold">2. Adjust what you’ll run</p>
         <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {APPLIANCES.map((a) => {
             const n = load[a.key];
@@ -140,7 +140,7 @@ export function PowerPlanner() {
           </div>
         ) : (
           <div className="mt-5 rounded-xl bg-paper p-4 text-sm">
-            That's a big load — bigger than our ready kits. <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Hi, I need about ${r.kw}kW and ${r.kwh}kWh. Can you quote?`)}`}>Get a custom quote on WhatsApp</a>.
+            That’s a big load — bigger than our ready kits. <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Hi, I need about ${r.kw}kW and ${r.kwh}kWh. Can you quote?`)}`}>Get a custom quote on WhatsApp</a>.
           </div>
         )}
       </div>

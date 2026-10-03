@@ -1,12 +1,11 @@
-import { body, fail, ok, route } from "@/lib/server/api";
-import { getSession } from "@/lib/server/session";
-import { stripeConfigured } from "@/lib/server/stripe";
-import { startCheckout, type CheckoutInput } from "@/lib/server/commerce";
+import { after } from "next/server";
+import { body, fail, ok, route, currentUser, limitIp } from "@/lib/server/api";
+import { stripeConfigured, ensureWebhook } from "@/lib/server/stripe";
+import { startCheckout } from "@/lib/server/orders";
 
 export const POST = route(async (req: Request) => {
   if (!stripeConfigured()) return fail("Payments are not switched on yet. Please WhatsApp us to order.", 503);
-  const b = await body<CheckoutInput>(req);
-  const r = await startCheckout(b, await getSession(), new URL(req.url).origin);
-  const { status, ...rest } = r;
-  return "error" in r ? fail(String(r.error), status, rest) : ok(rest);
+  await limitIp(req, "checkout", 20, 600);
+  after(() => ensureWebhook().catch((e) => console.error("[webhook setup]", e)));
+  return ok(await startCheckout(await body(req), await currentUser(), new URL(req.url).origin));
 });

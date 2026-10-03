@@ -55,12 +55,18 @@ export function Footer() {
           <FooterCol title="Packages" links={[...SEGMENTS.map((s) => [s.name, `/packages/${s.slug}`] as [string, string])]} />
           <FooterCol title="Shop" links={[["All products", "/shop"], ...CATEGORIES.map((c) => [c.name, `/category/${c.slug}`] as [string, string]), ["Solar Friday deals", "/deals"]]} />
           <FooterCol title="Brands" links={brands.map((b) => [b.name, `/brands/${b.slug}`] as [string, string])} />
-          <FooterCol title="Help" links={[["Buy for someone", "/give"], ["Fund with friends", "/fund/new"], ["Gift cards", "/gift-cards"], ["Pay small small", "/pay-small-small"], ["Sell solar & earn", "/sell"], ["Installation cost guide", "/guides/solar-installation-cost-lagos"], ["All guides", "/guides"], ["FAQ", "/faq"], ["My account & cards", "/account"], ["WhatsApp us", wa], [STORE.supportEmail, `mailto:${STORE.supportEmail}`]]} />
+          <FooterCol title="Help" links={[["Buy for someone", "/give"], ["Go Solar Me", "/go-solar-me"], ["Gift cards", "/gift-cards"], ["Pay small small", "/pay-small-small"], ["Sell solar & earn", "/sell"], ["Installation cost guide", "/guides/solar-installation-cost-lagos"], ["All guides", "/guides"], ["FAQ", "/faq"], ["My account & cards", "/account"], ["WhatsApp us", wa], ...(STORE.supportEmail ? [[STORE.supportEmail, `mailto:${STORE.supportEmail}`] as [string, string]] : [])]} />
         </div>
       </div>
       <div className="border-t border-white/10">
         <p className="mx-auto max-w-7xl px-4 py-5 text-xs leading-relaxed text-white/45">
           Free delivery to all 20 Lagos LGAs: {LAGOS_LGAS.join(", ")}. © {new Date().getFullYear()} {STORE.name}. Brand names belong to their owners.
+          <span className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+            <Link className="underline hover:text-white" href="/legal/terms">Terms of sale</Link>
+            <Link className="underline hover:text-white" href="/legal/refunds">Refunds</Link>
+            <Link className="underline hover:text-white" href="/legal/pool-rules">Go Solar Me rules</Link>
+            <Link className="underline hover:text-white" href="/legal/privacy">Privacy</Link>
+          </span>
         </p>
       </div>
     </footer>

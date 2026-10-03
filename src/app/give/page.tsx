@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const WAYS = [
   { title: "Buy it for them", text: "Pay from anywhere, abroad or in Nigeria. Enter their Lagos address and phone. We call them, deliver and install.", href: "/packages", cta: "Pick a package", note: "Choose “Someone else” at checkout" },
-  { title: "Fund it together", text: "Start a public page for a kit. Siblings, friends, colleagues or your church chip in any amount. We order when it's fully funded.", href: "/fund/new", cta: "Start a funding page" },
+  { title: "Fund it together", text: "Go Solar Me: a page for a kit that siblings, friends, colleagues or your church chip into, or split equally with housemates. We order when it is fully funded.", href: "/go-solar-me", cta: "See how Go Solar Me works" },
   { title: "Send a gift card", text: "Let them choose. Solar gift cards from ₦10,000 for birthdays, weddings and staff rewards.", href: "/gift-cards", cta: "Buy a gift card" },
   { title: "Pay small small", text: "Pay part today and spread the rest over 3–12 months with our lending partner.", href: "/pay-small-small", cta: "See plans" },
 ];

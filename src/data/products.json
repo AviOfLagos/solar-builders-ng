@@ -1,0 +1,1050 @@
+{
+ "brands": [
+  {
+   "slug": "felicity",
+   "name": "Felicity Solar",
+   "tagline": "Inverters, lithium batteries and panels engineered for Nigerian grid conditions.",
+   "officialUrl": "https://www.felicitysolar.ng"
+  },
+  {
+   "slug": "itel",
+   "name": "itel Energy",
+   "tagline": "Smart hybrid inverters, lithium storage and complete home kits.",
+   "officialUrl": "https://itelsolar.com"
+  },
+  {
+   "slug": "sun-king",
+   "name": "Sun King",
+   "tagline": "Solar home systems, lanterns and PowerHub inverters for every budget.",
+   "officialUrl": "https://ng.sunking.com/"
+  },
+  {
+   "slug": "arnergy",
+   "name": "Arnergy",
+   "tagline": "Nigerian-built scalable LFP storage for homes and businesses.",
+   "officialUrl": "https://shop.arnergy.com/"
+  },
+  {
+   "slug": "ecoflow",
+   "name": "EcoFlow",
+   "tagline": "Portable power stations and solar generators — plug in, power up.",
+   "officialUrl": "https://ng.ecoflow.com/"
+  }
+ ],
+ "products": [
+  {
+   "id": "4f0c60fd",
+   "slug": "felicity-ivem6048-6kva-hybrid-inverter-48v",
+   "name": "Felicity IVEM6048 – 6kVA Hybrid Inverter (48V)",
+   "brand": "felicity",
+   "category": "inverters",
+   "specs": [
+    "6kVA",
+    "48V",
+    "120A MPPT",
+    "Pure sine wave"
+   ],
+   "description": "6kVA pure sine wave hybrid inverter with built-in MPPT controller supporting lithium, GEL and AGM batteries.",
+   "image": "/products/felicity-ivem6048-6kva-hybrid-inverter-48v.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/ckdgjwypmibc4ue0aq8v",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-inverter/felicity-ivem6048-6kva-hybrid-inverter-48v-19",
+   "price": 643370
+  },
+  {
+   "id": "f26549e3",
+   "slug": "felicity-ivem3048-lv-3kva-hybrid-inverter-48v-low-voltage",
+   "name": "Felicity IVEM3048-LV – 3kVA Hybrid Inverter (48V, Low Voltage)",
+   "brand": "felicity",
+   "category": "inverters",
+   "specs": [
+    "3kVA",
+    "48V",
+    "60A MPPT"
+   ],
+   "description": "3kVA pure sine wave hybrid inverter with integrated 60A MPPT charge controller.",
+   "image": "/products/felicity-ivem3048-lv-3kva-hybrid-inverter-48v-low-voltage.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/vnsfbuhrxuuxcou7q8kk",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-inverter/felicity-ivem3048-lv-3kva-hybrid-inverter-48v-low-voltage-14",
+   "price": 498940
+  },
+  {
+   "id": "647e1b3f",
+   "slug": "felicity-ivpm7548-hybrid-inverter-7-5kva-48v",
+   "name": "Felicity IVPM7548 Hybrid Inverter (7.5kVA / 48V)",
+   "brand": "felicity",
+   "category": "inverters",
+   "specs": [
+    "7.5kVA",
+    "48V",
+    "120A MPPT"
+   ],
+   "description": "7.5kVA pure sine wave hybrid inverter with 120A MPPT controller and lithium battery wake-up.",
+   "image": "/products/felicity-ivpm7548-hybrid-inverter-7-5kva-48v.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/ims1ppeytsbnpvwknfpc",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-inverter/felicity-ivpm7548-hybrid-inverter-7-5kva-48v-11",
+   "price": 1108580
+  },
+  {
+   "id": "714e24f8",
+   "slug": "felicity-ivps10048-10kva-pure-sine-wave-inverter-48v",
+   "name": "Felicity IVPS10048 – 10kVA Pure Sine Wave Inverter (48V)",
+   "brand": "felicity",
+   "category": "inverters",
+   "specs": [
+    "10kVA",
+    "48V",
+    "Pure sine wave"
+   ],
+   "description": "10kVA pure sine wave inverter on a 48V DC system, compatible with deep-cycle, AGM and lithium batteries.",
+   "image": "/products/felicity-ivps10048-10kva-pure-sine-wave-inverter-48v.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/isas5xmdshcnzhz2czmd",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-inverter/felicity-ivps10048-10kva-pure-sine-wave-inverter-48v-17",
+   "price": 1247350
+  },
+  {
+   "id": "5d9aa3ca",
+   "slug": "felicity-all-in-one-solar-system-8kw-48v-ai100-8048-without-batteries",
+   "name": "Felicity All-in-One Solar System 8kW / 48V (AI100-8048, without batteries)",
+   "brand": "felicity",
+   "category": "complete-systems",
+   "specs": [
+    "8kW",
+    "48V",
+    "8000W PV input"
+   ],
+   "description": "All-in-one 8kW unit combining a pure sine wave inverter and MPPT controller (batteries not included).",
+   "image": "/products/felicity-all-in-one-solar-system-8kw-48v-ai100-8048-without-batteries.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/ds01vpf6u3wywvcqsoge",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-inverter/felicity-all-in-one-solar-system-8kw-48v-ai100-8048-without-batteries-22",
+   "price": 1631150
+  },
+  {
+   "id": "d24310e7",
+   "slug": "felicity-solar-the-hope1000-portable-lithium-battery",
+   "name": "Felicity HOPE1000 Portable Lithium Battery",
+   "brand": "felicity",
+   "category": "power-stations",
+   "specs": [
+    "1kWh",
+    "LiFePO4",
+    "250W output",
+    "200W solar input"
+   ],
+   "description": "Portable 1kWh LiFePO4 power unit with built-in MPPT for TVs, fans, lights and laptops.",
+   "image": "/products/felicity-solar-the-hope1000-portable-lithium-battery.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/felicity-solar/pv2f6htpizedod3otjb8",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-batteries/the-hope1000-portable-lithium-battery-48",
+   "price": 304970
+  },
+  {
+   "id": "d4fa670d",
+   "slug": "felicity-flh-48100ug1-48v-100ah-lifepo4-battery-module-5-12kwh",
+   "name": "Felicity FLH-48100UG1 – 48V 100Ah LiFePO4 Battery Module (5.12kWh)",
+   "brand": "felicity",
+   "category": "batteries",
+   "specs": [
+    "48V",
+    "100Ah",
+    "5.12kWh",
+    "6000 cycles"
+   ],
+   "description": "5.12kWh LiFePO4 module with built-in BMS, LCD and RS485/CAN/WiFi communication.",
+   "image": "/products/felicity-flh-48100ug1-48v-100ah-lifepo4-battery-module-5-12kwh.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/kfbybkvyn8ntpmk0pozy",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-batteries/felicity-flh-48100ug1-48v-100ah-lifepo4-battery-module-5-12kwh-29",
+   "price": 1309510
+  },
+  {
+   "id": "6af2d56f",
+   "slug": "felicity-lpbf24200-m-24v-5kw-200ah-lifepo4-battery",
+   "name": "Felicity LPBF24200-M – 24V 5KW 200Ah LiFePO4 Battery",
+   "brand": "felicity",
+   "category": "batteries",
+   "specs": [
+    "24V",
+    "200Ah",
+    "5kWh"
+   ],
+   "description": "24V 200Ah LiFePO4 battery with intelligent BMS and 6000+ cycle life.",
+   "image": "/products/felicity-lpbf24200-m-24v-5kw-200ah-lifepo4-battery.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/fqaawahcies3pczefzru",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-batteries/felicity-lpbf24200-m-24v-5kw-200ah-lifepo-battery-27",
+   "price": 1088780
+  },
+  {
+   "id": "e906649d",
+   "slug": "felicity-lpbf48150-48v-150ah-7-2kw-wall-mount-lithium-battery",
+   "name": "Felicity LPBF48150 – 48V 150Ah 7.2KW Wall-Mount Lithium Battery",
+   "brand": "felicity",
+   "category": "batteries",
+   "specs": [
+    "48V",
+    "150Ah",
+    "7.2kWh",
+    "Wall-mount"
+   ],
+   "description": "Space-saving wall-mount 48V LiFePO4 battery with smart BMS and 6000+ cycles.",
+   "image": "/products/felicity-lpbf48150-48v-150ah-7-2kw-wall-mount-lithium-battery.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/tfq7phxrgeti5rarlypn",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-batteries/felicity-lpbf48150-48v-150ah-7-2kw-wall-mount-lithium-battery-15",
+   "price": 1535200
+  },
+  {
+   "id": "02fa4eb6",
+   "slug": "felicity-solar-550w-monocrystalline-solar-panel",
+   "name": "Felicity Solar 550W Monocrystalline Solar Panel",
+   "brand": "felicity",
+   "category": "solar-panels",
+   "specs": [
+    "550W",
+    "Monocrystalline",
+    "Half-cell"
+   ],
+   "description": "550W half-cell monocrystalline panel with aluminium frame built for tropical conditions.",
+   "image": "/products/felicity-solar-550w-monocrystalline-solar-panel.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/qrmdbg517mz9xf7pc3i4",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-panels/felicity-solar-550w-monocrystalline-solar-panel-45",
+   "price": 162990
+  },
+  {
+   "id": "30d7a450",
+   "slug": "felicity-sccm-6048-60a-48v-mppt-solar-charge-controller",
+   "name": "Felicity SCCM 6048 – 60A 48V MPPT Solar Charge Controller",
+   "brand": "felicity",
+   "category": "lights-accessories",
+   "specs": [
+    "60A",
+    "48V",
+    "MPPT",
+    "99% efficiency"
+   ],
+   "description": "60A MPPT controller for 48V systems with overcharge, reverse-polarity and short-circuit protection.",
+   "image": "/products/felicity-sccm-6048-60a-48v-mppt-solar-charge-controller.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/bj54yb7kpbq5rneidoi5",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-charge-controller/felicity-sccm-6048-60a-48v-mppt-solar-charge-controller-28",
+   "price": 169990
+  },
+  {
+   "id": "310cc004",
+   "slug": "felicity-p2-60w-all-in-one-solar-street-light",
+   "name": "Felicity P2-60W All-in-One Solar Street Light",
+   "brand": "felicity",
+   "category": "lights-accessories",
+   "specs": [
+    "60W LED",
+    "Motion sensor",
+    "IP65"
+   ],
+   "description": "All-in-one 60W solar street light with motion and light sensors in an IP65 housing.",
+   "image": "/products/felicity-p2-60w-all-in-one-solar-street-light.webp",
+   "imageSource": "https://res.cloudinary.com/dofnlzfn6/image/upload/f_auto,q_auto:eco,dpr_auto,w_540,h_450,c_fill,g_auto/yeezlxd485xf2aikib66",
+   "sourceUrl": "https://www.felicitysolar.ng/products/felicity-solar-street-light/felicity-p2-60w-all-in-one-solar-street-light-39",
+   "price": 171990
+  },
+  {
+   "id": "3fa04bc2",
+   "slug": "itel-energy-6-6kw-ip66-hybrid-inverter-ihy-6k6l1c",
+   "name": "itel Energy 6.6kW IP66 Hybrid Inverter (IHY-6K6L1C)",
+   "brand": "itel",
+   "category": "inverters",
+   "specs": [
+    "6.6kW",
+    "48V",
+    "13.2kW PV input",
+    "2 MPPTs"
+   ],
+   "description": "Single-phase 6.6kW hybrid inverter with IP66 weatherproofing and 5-year warranty.",
+   "image": "/products/itel-energy-6-6kw-ip66-hybrid-inverter-ihy-6k6l1c.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/07/itel-Energy-6.6kW-IP66-Hybrid-Inverter-IHY-6K6L1C-48V-Single-Phase-13.2kW-PV-Input-2-MPPTs-5-Year-Warranty.webp",
+   "sourceUrl": "https://itelsolar.com/product/itel-energy-6-6kw-ip66-hybrid-inverter-ihy-6k6l1c-48v-single-phase-13-2kw-pv-input-2-mppts-5-year-warranty/",
+   "price": 697440
+  },
+  {
+   "id": "833a3aa0",
+   "slug": "itel-energy-50kw-3-phase-hybrid-inverter-ihy-50kh3s",
+   "name": "itel Energy 50kW 3-Phase Hybrid Inverter (IHY-50KH3S)",
+   "brand": "itel",
+   "category": "inverters",
+   "specs": [
+    "50kW",
+    "3-phase",
+    "75kW PV input",
+    "IP66"
+   ],
+   "description": "Commercial 50kW three-phase hybrid inverter with 4 MPPTs, parallelable up to 500kW.",
+   "image": "/products/itel-energy-50kw-3-phase-hybrid-inverter-ihy-50kh3s.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/06/50kW-3-Phase-Hybrid-Inverter-IHY-50KH3S.webp",
+   "sourceUrl": "https://itelsolar.com/product/50kw-3-phase-hybrid-inverter-ihy-50kh3s/",
+   "price": 7501250
+  },
+  {
+   "id": "24817d51",
+   "slug": "itel-powercore-3k-unit-3kw-24v-ip54-smart-inverter-2-56kwh-lithium-bat",
+   "name": "itel PowerCore 3K Unit: 3KW 24V IP54 Smart Inverter + 2.56kWh Lithium Battery",
+   "brand": "itel",
+   "category": "complete-systems",
+   "specs": [
+    "3kW",
+    "24V",
+    "2.56kWh LiFePO4",
+    "IP54"
+   ],
+   "description": "Inverter-plus-battery bundle giving about 6.5–7 hours backup at 350W, expandable to 4000W of panels.",
+   "image": "/products/itel-powercore-3k-unit-3kw-24v-ip54-smart-inverter-2-56kwh-lithium-bat.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2025/12/Industrial-Grade-Protection-IP54-Rated-3KW-Inverter-2.56kWh-Lithium-Battery-solar-installed-setup.jpg?fit=1024%2C1024&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/itel-powercore-3k-unit-3kw-24v-ip54-smart-inverter-2-56kwh-lithium-battery-without-panels/",
+   "price": 874490
+  },
+  {
+   "id": "e7920349",
+   "slug": "itel-powercore-3k-pro-3kw-24v-ip54-smart-inverter-2-56kwh-lithium-batt",
+   "name": "itel PowerCore 3K Pro: 3KW 24V IP54 Smart Inverter + 2.56kWh Lithium Battery + 1770W Solar Kit",
+   "brand": "itel",
+   "category": "complete-systems",
+   "specs": [
+    "3kW",
+    "24V",
+    "2.56kWh",
+    "1770W panels"
+   ],
+   "description": "Complete small-home solar kit pairing a 3kW inverter and 2.56kWh battery with 1770W of panels.",
+   "image": "/products/itel-powercore-3k-pro-3kw-24v-ip54-smart-inverter-2-56kwh-lithium-batt.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2025/12/Itel-PowerCore-3K-Pro-3KW-24V-IP54-Smart-Inverter-2.56kWh-Lithium-Battery-1770W-High-Power-Solar-Kit.webp?fit=680%2C680&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/itel-powercore-3k-pro-3kw-24v-ip54-smart-inverter-2-56kwh-lithium-battery-1770w-high-power-solar-kit/",
+   "price": 1174130
+  },
+  {
+   "id": "8ff132b0",
+   "slug": "itel-power-go-pro-320wh-portable-power-station-iess-320act",
+   "name": "itel Power Go Pro 320Wh Portable Power Station (IESS-320ACT)",
+   "brand": "itel",
+   "category": "power-stations",
+   "specs": [
+    "320Wh",
+    "200W AC",
+    "LiFePO4",
+    "100W solar input"
+   ],
+   "description": "Compact 320Wh LiFePO4 power station with 200W AC output and solar charging.",
+   "image": "/products/itel-power-go-pro-320wh-portable-power-station-iess-320act.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/08/power-go-pro.webp?fit=1200%2C1500&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/itel-power-go-pro-320wh-portable-power-station-iess-320act-200w-ac-output-lifepo4-battery-100w-solar-charging/",
+   "price": 136390
+  },
+  {
+   "id": "ce387eec",
+   "slug": "itel-1280wh-12v-lithium-battery-lifepo4-ipb-12100",
+   "name": "itel 1280Wh 12V Lithium Battery (LiFePO4) IPB-12100",
+   "brand": "itel",
+   "category": "batteries",
+   "specs": [
+    "12V",
+    "100Ah",
+    "1.28kWh",
+    "IP54"
+   ],
+   "description": "12V LiFePO4 battery for small solar storage setups.",
+   "image": "/products/itel-1280wh-12v-lithium-battery-lifepo4-ipb-12100.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/01/itel-Energy-1280Wh-12V-Lithium-Battery-LiFePO%E2%82%84-%E2%80%93-Smart-Solar-Storage-Solution.webp?fit=680%2C680&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/itel-1280wh-12v-lithium-battery-lifepo%e2%82%84-smart-solar-storage-solution-ipb-12100/",
+   "price": 216980
+  },
+  {
+   "id": "1cc88e65",
+   "slug": "itel-16000wh-lithium-battery-standing-48v-314ah-ipl-51314h",
+   "name": "itel 16000Wh Lithium Battery Standing 48V 314Ah (IPL-51314H)",
+   "brand": "itel",
+   "category": "batteries",
+   "specs": [
+    "48V",
+    "314Ah",
+    "16kWh",
+    "6000 cycles"
+   ],
+   "description": "Floor-standing 16kWh LiFePO4 battery rated 6,000+ cycles at 80% DoD.",
+   "image": "/products/itel-16000wh-lithium-battery-standing-48v-314ah-ipl-51314h.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2025/04/itel-10240Wh-Lithium-Battery-Standing-48V-200Ah-10.24kWh-IPL-51200.webp?fit=900%2C900&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/itel-16000wh-lithium-battery-standing-48v-314ah-16kwh-ipl-51314h-indoor-ip21/",
+   "price": 2386770
+  },
+  {
+   "id": "78ceeb97",
+   "slug": "itel-energy-premium-32kwh-lifepo4-lithium-solar-battery-51-2v-628ah",
+   "name": "itel Energy Premium 32kWh LiFePO4 Lithium Solar Battery (51.2V 628Ah)",
+   "brand": "itel",
+   "category": "batteries",
+   "specs": [
+    "51.2V",
+    "628Ah",
+    "32kWh",
+    "IP65"
+   ],
+   "description": "High-capacity 32kWh LiFePO4 battery with intelligent BMS and 8000+ cycles.",
+   "image": "/products/itel-energy-premium-32kwh-lifepo4-lithium-solar-battery-51-2v-628ah.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/03/Premium-32kWh-LiFePO4-Lithium-Solar-Battery-51.2V-628Ah-Intelligent-BMS-8000-Cycles.webp?fit=408%2C408&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/premium-32kwh-lifepo4-lithium-solar-battery-48v-628ah-intelligent-bms-8000-cycles/",
+   "price": 4546220
+  },
+  {
+   "id": "4a7e981d",
+   "slug": "itel-energy-620w-n-type-bifacial-monocrystalline-solar-panel",
+   "name": "itel Energy 620W N-Type Bifacial Monocrystalline Solar Panel",
+   "brand": "itel",
+   "category": "solar-panels",
+   "specs": [
+    "620W",
+    "N-type",
+    "Bifacial",
+    "Monocrystalline"
+   ],
+   "description": "High-output 620W N-type bifacial monocrystalline panel.",
+   "image": "/products/itel-energy-620w-n-type-bifacial-monocrystalline-solar-panel.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/06/iTel-62W-Solar-Panel-Monocrystalline-N-Type-Solar.webp?fit=680%2C680&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/620w-n-type-bifacial-monocrystalline-solar-panel/",
+   "price": 164380
+  },
+  {
+   "id": "861bd1c4",
+   "slug": "itel-energy-complete-4kw-hybrid-solar-system-2x-5kwh-lithium-battery-8",
+   "name": "itel Complete 4kW Hybrid Solar System — 2x 5kWh Lithium Battery + 8x 620W Panels",
+   "brand": "itel",
+   "category": "complete-systems",
+   "specs": [
+    "4kW",
+    "10kWh",
+    "8x 620W panels"
+   ],
+   "description": "Complete 4kW home solar bundle with 10kWh lithium storage and eight 620W panels.",
+   "image": "/products/itel-energy-complete-4kw-hybrid-solar-system-2x-5kwh-lithium-battery-8.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/07/Complete-4kW-Hybrid-Solar-System-2x-5kWh-Lithium-Battery-8x-620W-Panels.png?fit=1600%2C2111&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/complete-4kw-hybrid-solar-system-2x-5kwh-lithium-battery-8x-620w-panels/",
+   "price": 3654730
+  },
+  {
+   "id": "656394a1",
+   "slug": "itel-energy-complete-6kw-hybrid-solar-system-16kwh-lithium-lifepo4-bat",
+   "name": "itel Complete 6kW Hybrid Solar System — 16kWh Lithium LiFePO4 Battery + 12x 620W Panels",
+   "brand": "itel",
+   "category": "complete-systems",
+   "specs": [
+    "6kW",
+    "16kWh",
+    "12x 620W panels"
+   ],
+   "description": "Whole-home 6kW hybrid bundle with 16kWh LiFePO4 storage and twelve 620W panels.",
+   "image": "/products/itel-energy-complete-6kw-hybrid-solar-system-16kwh-lithium-lifepo4-bat.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2026/07/Complete-6kW-Hybrid-Solar-System-16kWh-Lithium-LiFePO4-Battery-12x-620W-Panels.png?fit=1600%2C2114&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/complete-6kw-hybrid-solar-system-16kwh-lithium-lifepo4-battery-12x-620w-panels/",
+   "price": 4916210
+  },
+  {
+   "id": "f0d5f6f9",
+   "slug": "itel-6kw-solar-system-with-20-48kwh-lithium-battery-no-panels",
+   "name": "itel 6kW Solar System with 20.48kWh Lithium Battery (No Panels)",
+   "brand": "itel",
+   "category": "complete-systems",
+   "specs": [
+    "6kW",
+    "20.48kWh",
+    "IP54 inverter"
+   ],
+   "description": "6kW inverter and 20.48kWh battery setup for about 12 hours of backup (panels not included).",
+   "image": "/products/itel-6kw-solar-system-with-20-48kwh-lithium-battery-no-panels.webp",
+   "imageSource": "https://i0.wp.com/itelsolar.com/wp-content/uploads/2025/07/itel-6kw-solar-system-with-20.48kwh-Lithium-Battery-No-Panels-Setup-12-hrs-Backup-light-Run-1.5hp-AC-Refrigerator-LED-Lights-TV-Laptop-and-Phone-.webp?fit=900%2C900&ssl=1",
+   "sourceUrl": "https://itelsolar.com/product/itel-6kw-solar-system-with-20-48kwh-lithium-battery-no-panels-setup-for-12-hrs-backup-light-1-5hp-ac-refrigerator-led-lights-tv-laptop-and-phone/",
+   "price": 4665040
+  },
+  {
+   "id": "595fea75",
+   "slug": "sun-king-powerhub-core-2-kw",
+   "name": "Sun King PowerHub Core (2 kW)",
+   "brand": "sun-king",
+   "category": "inverters",
+   "specs": [
+    "2 kW AC inverter",
+    "2.5 kWh LFP battery",
+    "1.8-2.7 kWp solar"
+   ],
+   "description": "Complete solar inverter system for homes and businesses with scalable solar and battery storage.",
+   "image": "/products/sun-king-powerhub-core-2-kw.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2026/09/PowerHub-5-kW-Set_5-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/powerhub-3300/",
+   "price": 2435110
+  },
+  {
+   "id": "3c2c79cf",
+   "slug": "sun-king-powerhub-plus-3-3-kw",
+   "name": "Sun King PowerHub Plus (3.3 kW)",
+   "brand": "sun-king",
+   "category": "inverters",
+   "specs": [
+    "3.3 kW AC inverter",
+    "5 kWh LFP battery",
+    "1.8-3.6 kWp solar"
+   ],
+   "description": "Mid-tier PowerHub solar inverter system that can run AC units and heavy appliances.",
+   "image": "/products/sun-king-powerhub-plus-3-3-kw.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2026/09/PowerHub-5-kW-Set_5-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/powerhub-3300/",
+   "price": 3237560
+  },
+  {
+   "id": "58f50d9d",
+   "slug": "sun-king-powerhub-pro-5-kw",
+   "name": "Sun King PowerHub Pro (5 kW)",
+   "brand": "sun-king",
+   "category": "inverters",
+   "specs": [
+    "5 kW AC inverter",
+    "5-10 kWh LFP battery",
+    "2.7-5.4 kWp solar"
+   ],
+   "description": "Top-tier PowerHub solar inverter system for larger homes and businesses.",
+   "image": "/products/sun-king-powerhub-pro-5-kw.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2026/09/PowerHub-5-kW-Set_5-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/powerhub-3300/",
+   "price": 3837500
+  },
+  {
+   "id": "95780ff4",
+   "slug": "sun-king-powerplay-pro",
+   "name": "Sun King PowerPlay Pro",
+   "brand": "sun-king",
+   "category": "power-stations",
+   "specs": [
+    "600W pure sine wave inverter",
+    "800Wh LFP battery",
+    "450W solar panel (expandable to 900W)"
+   ],
+   "description": "Portable hybrid inverter system that runs essential appliances on solar, grid or battery.",
+   "image": "/products/sun-king-powerplay-pro.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2026/03/Powerplay-pro-panel-2-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/powerplay-pro/",
+   "price": 895870
+  },
+  {
+   "id": "1aff1775",
+   "slug": "sun-king-homeplus-max",
+   "name": "Sun King HomePlus Max",
+   "brand": "sun-king",
+   "category": "complete-systems",
+   "specs": [
+    "192 Wh LFP battery",
+    "80 W solar panel",
+    "4 x 600 lm LED tubes + security lamp",
+    "65W USB-C output"
+   ],
+   "description": "Sun King's most powerful solar home system for bright lighting and device charging.",
+   "image": "/products/sun-king-homeplus-max.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2025/12/SK-525_526_HomePlus-Max_Non-GSM_For-Package_v0.0-1-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/homeplus-max/",
+   "price": 186850
+  },
+  {
+   "id": "26702a8f",
+   "slug": "sun-king-homeplus-max-32-hd-tv",
+   "name": "Sun King HomePlus Max + 32\" HD TV",
+   "brand": "sun-king",
+   "category": "complete-systems",
+   "specs": [
+    "32\" HD TV included",
+    "192 Wh LFP battery",
+    "80 W solar panel"
+   ],
+   "description": "HomePlus Max solar home system bundled with a 32-inch HD TV for lighting, charging and entertainment.",
+   "image": "/products/sun-king-homeplus-max-32-hd-tv.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2025/01/SK-525_526_HomePlus-Max_Non-GSM_For-Package-TV_v0.0-1-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/homeplus-max-32-hd-tv/",
+   "price": 464600
+  },
+  {
+   "id": "488fd79d",
+   "slug": "sun-king-homeplus-pro",
+   "name": "Sun King HomePlus Pro",
+   "brand": "sun-king",
+   "category": "complete-systems",
+   "specs": [
+    "4 x 240 lm LED tubes",
+    "13 Wp solar panel",
+    "38.4 Wh LFP battery",
+    "USB phone charging"
+   ],
+   "description": "Solar home system that lights your home and fast-charges your phone.",
+   "image": "/products/sun-king-homeplus-pro.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2025/12/SK-429-HomePlus-Pro_Vertical-20241026_2025-scaled-1.png",
+   "sourceUrl": "https://ng.sunking.com/product/homeplus-pro-2/",
+   "price": 85850
+  },
+  {
+   "id": "c10c32ca",
+   "slug": "sun-king-homeplus",
+   "name": "Sun King HomePlus",
+   "brand": "sun-king",
+   "category": "complete-systems",
+   "specs": [
+    "480 lm total (3 lights)",
+    "7 Wp solar panel",
+    "19.2 Wh LFP battery"
+   ],
+   "description": "Affordable, easy-to-install solar home system for essential lighting and phone charging.",
+   "image": "/products/sun-king-homeplus.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2025/09/Home-Plus-scaled.jpg",
+   "sourceUrl": "https://ng.sunking.com/product/homeplus/",
+   "price": 70700
+  },
+  {
+   "id": "0c7bf3bf",
+   "slug": "sun-king-16-solar-table-fan",
+   "name": "Sun King 16\" Solar Table Fan",
+   "brand": "sun-king",
+   "category": "lights-accessories",
+   "specs": [
+    "Up to 20 hours runtime",
+    "20W solar panel",
+    "3 speeds, brushless motor"
+   ],
+   "description": "Quiet solar fan with up to 20 hours of runtime for homes and businesses.",
+   "image": "/products/sun-king-16-solar-table-fan.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2024/12/SK-841-Solar-Fan_Cash-New-Design-1-min-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/16-solar-table-fan/",
+   "price": 90900
+  },
+  {
+   "id": "258a482c",
+   "slug": "sun-king-boom",
+   "name": "Sun King Boom",
+   "brand": "sun-king",
+   "category": "lights-accessories",
+   "specs": [
+    "160 lumens",
+    "9.9 Wh LFP battery",
+    "FM radio, MP3, 3W speaker"
+   ],
+   "description": "Portable solar lantern with built-in speaker and radio for home and outdoor use.",
+   "image": "/products/sun-king-boom.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2024/09/Boom-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/boom/",
+   "price": 48480
+  },
+  {
+   "id": "8be3c935",
+   "slug": "sun-king-pro-400",
+   "name": "Sun King Pro 400",
+   "brand": "sun-king",
+   "category": "lights-accessories",
+   "specs": [
+    "400 lumens",
+    "Up to 100 hours light",
+    "USB phone charging"
+   ],
+   "description": "Ultra-bright solar lantern with USB mobile charging.",
+   "image": "/products/sun-king-pro-400.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2024/09/Pro-400-angle-1.png",
+   "sourceUrl": "https://ng.sunking.com/product/pro/",
+   "price": 25250
+  },
+  {
+   "id": "17771c69",
+   "slug": "sun-king-pico-plus",
+   "name": "Sun King Pico Plus",
+   "brand": "sun-king",
+   "category": "lights-accessories",
+   "specs": [
+    "50 lumens",
+    "Up to 72 hours runtime",
+    "1.4 Wh LFP battery"
+   ],
+   "description": "Compact, durable and affordable solar lantern.",
+   "image": "/products/sun-king-pico-plus.webp",
+   "imageSource": "https://ng.sunking.com/wp-content/uploads/2025/09/Pico-Plus-Front-and-Back-scaled.png",
+   "sourceUrl": "https://ng.sunking.com/product/pico-plus/",
+   "price": 10100
+  },
+  {
+   "id": "2481ba87",
+   "slug": "arnergy-arn15kwh-lithium-iron-phosphate-battery",
+   "name": "Arnergy ARN15KWh Lithium Iron Phosphate Battery",
+   "brand": "arnergy",
+   "category": "batteries",
+   "specs": [
+    "15kWh",
+    "51.2V, 300Ah",
+    "15+ year design life"
+   ],
+   "description": "Robust LiFePO4 battery module engineered for advanced home and business energy storage.",
+   "image": "/products/arnergy-arn15kwh-lithium-iron-phosphate-battery.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/15kWh-C.png?v=1773919890",
+   "sourceUrl": "https://shop.arnergy.com/products/arn15kwh-lithium-iron-phosphate-battery",
+   "price": 2791250
+  },
+  {
+   "id": "2ffa1cf8",
+   "slug": "arnergy-arn10kwh-lithium-iron-phosphate-battery",
+   "name": "Arnergy ARN10KWh Lithium Iron Phosphate Battery",
+   "brand": "arnergy",
+   "category": "batteries",
+   "specs": [
+    "10kWh",
+    "51.2V, 200Ah",
+    "15-year design life"
+   ],
+   "description": "High-performance LiFePO4 battery module for reliable, long-lasting energy storage.",
+   "image": "/products/arnergy-arn10kwh-lithium-iron-phosphate-battery.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/10kWh-A.png?v=1763111870",
+   "sourceUrl": "https://shop.arnergy.com/products/arn10kwh-lithium-iron-phosphate-battery",
+   "price": 2414750
+  },
+  {
+   "id": "fe9a76ad",
+   "slug": "arnergy-350w-monocrystalline-solar-panel",
+   "name": "Arnergy 350W Monocrystalline Solar Panel",
+   "brand": "arnergy",
+   "category": "solar-panels",
+   "specs": [
+    "350W max output",
+    "Monocrystalline"
+   ],
+   "description": "Efficient monocrystalline panel delivering reliable solar power for homes and businesses.",
+   "image": "/products/arnergy-350w-monocrystalline-solar-panel.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/panel1-removebg-preview.png?v=1744703383",
+   "sourceUrl": "https://shop.arnergy.com/products/350w-monocrystalline-solar-panel-success",
+   "price": 131570
+  },
+  {
+   "id": "eda4bb8e",
+   "slug": "arnergy-5kva-hybrid-inverter-with-inbuilt-mppt-charge-controller",
+   "name": "Arnergy 5kVA Hybrid Inverter with Inbuilt MPPT Charge Controller",
+   "brand": "arnergy",
+   "category": "inverters",
+   "specs": [
+    "5kVA hybrid",
+    "Inbuilt MPPT charge controller",
+    "Scalable up to 45kVA"
+   ],
+   "description": "Hybrid solar inverter that manages and delivers a consistent, stable power supply.",
+   "image": "/products/arnergy-5kva-hybrid-inverter-with-inbuilt-mppt-charge-controller.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/Wall-2.jpg?v=1704892472",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-5kw-hybrid-inverter",
+   "price": 1581880
+  },
+  {
+   "id": "195c388e",
+   "slug": "arnergy-5kw-inverter-with-scalable-5kwh-to-15kwh-lfp-battery-storage",
+   "name": "Arnergy 5kW Inverter with Scalable (5kWh to 15kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "5kW hybrid inverter",
+    "5–15kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "All-in-one 5kW hybrid inverter and expandable LiFePO4 storage for homes and small businesses.",
+   "image": "/products/arnergy-5kw-inverter-with-scalable-5kwh-to-15kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/View2_0002s_0000_Layer2copy2_b6e63064-29b1-4e82-8b5d-11e845918bcc.jpg?v=1704446384",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-5kw-solar-system",
+   "price": 4575300
+  },
+  {
+   "id": "2a66e37f",
+   "slug": "arnergy-10kw-inverter-with-scalable-10kwh-to-30kwh-lfp-battery-storage",
+   "name": "Arnergy 10kW Inverter with Scalable (10kWh to 30kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "10kW hybrid inverter",
+    "10–30kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "10kW hybrid inverter with expandable LiFePO4 storage for uninterrupted home and business power.",
+   "image": "/products/arnergy-10kw-inverter-with-scalable-10kwh-to-30kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/View2_0001s_0004_ARN-OPL10kW-30kWh.jpg?v=1704445746",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-10kw-solar-system",
+   "price": 9140500
+  },
+  {
+   "id": "88c3b988",
+   "slug": "arnergy-15kw-inverter-with-scalable-15kwh-to-45kwh-lfp-battery-storage",
+   "name": "Arnergy 15kW Inverter with Scalable (15kWh to 45kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "15kW hybrid inverter",
+    "15–45kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "15kW hybrid inverter paired with scalable LiFePO4 storage for larger homes and businesses.",
+   "image": "/products/arnergy-15kw-inverter-with-scalable-15kwh-to-45kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/View2_0000s_0006_ARN-OPL15kW-45kWh.jpg?v=1704445425",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-15kw-solar-system",
+   "price": 13705700
+  },
+  {
+   "id": "708740c0",
+   "slug": "arnergy-20kw-inverter-with-scalable-20kwh-to-60kwh-lfp-battery-storage",
+   "name": "Arnergy 20kW Inverter with Scalable (20kWh to 60kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "20kW hybrid inverter",
+    "20–60kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "Powerful 20kW hybrid system with expandable LiFePO4 storage for residential and commercial sites.",
+   "image": "/products/arnergy-20kw-inverter-with-scalable-20kwh-to-60kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/ARN-OPL-20kW-60kWh-v2.jpg?v=1704446271",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-20kw-solar-system",
+   "price": 18270900
+  },
+  {
+   "id": "ebbf5530",
+   "slug": "arnergy-25kw-inverter-with-scalable-25kwh-to-75kwh-lfp-battery-storage",
+   "name": "Arnergy 25kW Inverter with Scalable (25kWh to 75kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "25kW hybrid inverter",
+    "25–75kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "High-capacity 25kW hybrid inverter with scalable LiFePO4 storage for constant power.",
+   "image": "/products/arnergy-25kw-inverter-with-scalable-25kwh-to-75kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/ARN-OPL-25kW-75kWh_C.png?v=1706273631",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-25kw-solar-system",
+   "price": 22836100
+  },
+  {
+   "id": "39a739b5",
+   "slug": "arnergy-30kw-inverter-with-scalable-30kwh-to-75kwh-lfp-battery-storage",
+   "name": "Arnergy 30kW Inverter with Scalable (30kWh to 75kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "30kW hybrid inverter",
+    "30–75kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "30kW hybrid inverter and expandable LiFePO4 bank for reliable commercial-grade electricity.",
+   "image": "/products/arnergy-30kw-inverter-with-scalable-30kwh-to-75kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/ARN-OPL-30kW-30kWh_C.png?v=1706274038",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-30kw-solar-system",
+   "price": 27401300
+  },
+  {
+   "id": "7370b2be",
+   "slug": "arnergy-50kw-inverter-with-scalable-50kwh-to-75kwh-lfp-battery-storage",
+   "name": "Arnergy 50kW Inverter with Scalable (50kWh to 75kWh) LFP Battery Storage",
+   "brand": "arnergy",
+   "category": "complete-systems",
+   "specs": [
+    "50kW hybrid inverter",
+    "50–75kWh LiFePO4",
+    "6000+ cycles",
+    "5-year warranty"
+   ],
+   "description": "50kW hybrid inverter with LiFePO4 storage for high-capacity commercial and residential demand.",
+   "image": "/products/arnergy-50kw-inverter-with-scalable-50kwh-to-75kwh-lfp-battery-storage.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0849/7060/2802/files/ARN-OPL-50kW-75kWh.jpg?v=1704721895",
+   "sourceUrl": "https://shop.arnergy.com/products/arn-opl-50kw-solar-system",
+   "price": 45672200
+  },
+  {
+   "id": "f7ed1d2e",
+   "slug": "ecoflow-delta-3-classic-portable-power-station",
+   "name": "EcoFlow DELTA 3 Classic Portable Power Station",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "1024Wh capacity",
+    "1800W output"
+   ],
+   "description": "Mid-size home backup power station for lights, TV, fridge and work devices.",
+   "image": "/products/ecoflow-delta-3-classic-portable-power-station.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/D3C011500x1500.png?v=1788849526",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-3-classic-portable-power-station",
+   "price": 805980
+  },
+  {
+   "id": "c9f68763",
+   "slug": "ecoflow-delta-3-max-portable-power-station",
+   "name": "EcoFlow DELTA 3 Max Portable Power Station",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "2048Wh capacity",
+    "2400W output"
+   ],
+   "description": "Larger-capacity DELTA 3 for longer outages and heavier appliances.",
+   "image": "/products/ecoflow-delta-3-max-portable-power-station.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/D3M021500x1500.png?v=1788851099",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-3-max-portable-power-station",
+   "price": 1375620
+  },
+  {
+   "id": "7195944f",
+   "slug": "ecoflow-delta-3-ultra-portable-power-station",
+   "name": "EcoFlow DELTA 3 Ultra Portable Power Station",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "3072Wh capacity",
+    "3600W output"
+   ],
+   "description": "High-output power station that can run most household appliances.",
+   "image": "/products/ecoflow-delta-3-ultra-portable-power-station.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/DELTA3Ultra.png?v=1787302371",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-3-ultra-portable-power-station",
+   "price": 2267450
+  },
+  {
+   "id": "b7c05af7",
+   "slug": "ecoflow-delta-pro-3-portable-power-station",
+   "name": "EcoFlow DELTA Pro 3 Portable Power Station",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "4000W output",
+    "Expandable 4-12kWh"
+   ],
+   "description": "Whole-home-class expandable battery system on wheels.",
+   "image": "/products/ecoflow-delta-pro-3-portable-power-station.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/ecoflow-delta-pro-3-portable-power-station-58557169729875_e8e8ed18-8e4e-440d-b8da-28b0348eabcd.png?v=1744679772",
+   "sourceUrl": "https://ng.ecoflow.com/products/delta-pro-3-portable-power-station",
+   "price": 3674380
+  },
+  {
+   "id": "1af9d065",
+   "slug": "ecoflow-delta-pro-ultra-power-station",
+   "name": "EcoFlow DELTA Pro Ultra Power Station",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "6900W output",
+    "6-30kWh capacity"
+   ],
+   "description": "EcoFlow's flagship whole-home backup and solar storage system.",
+   "image": "/products/ecoflow-delta-pro-ultra-power-station.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/ecoflow-delta-pro-ultra-home-diy-power-station-1174836536_2000x_caadabb2-f0f7-4551-86dc-2b3ce655ac83.webp",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-pro-ultra-power-station",
+   "price": 6717510
+  },
+  {
+   "id": "3af642e0",
+   "slug": "ecoflow-delta-3-1000-air",
+   "name": "EcoFlow DELTA 3 1000 Air",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "960Wh capacity",
+    "500W output"
+   ],
+   "description": "Entry DELTA model for lighting, fans and electronics during outages.",
+   "image": "/products/ecoflow-delta-3-1000-air.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/DELTA3Air1000_1500x1500_e258988b-ff63-4351-bfc3-967624c2fbff.png",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-3-air-1000-portable-power-station",
+   "price": 520150
+  },
+  {
+   "id": "f20e6137",
+   "slug": "ecoflow-delta-3-2000-air",
+   "name": "EcoFlow DELTA 3 2000 Air",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "1920Wh capacity",
+    "1000W output"
+   ],
+   "description": "High-capacity, moderate-output station built for long runtime on light loads.",
+   "image": "/products/ecoflow-delta-3-2000-air.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/DELTA3Air2000_1500x1500_fe8bb44d-2ba6-425a-8bb7-7b6ec023439a.png",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-3-air-2000-portable-power-station",
+   "price": 950410
+  },
+  {
+   "id": "2e611be1",
+   "slug": "ecoflow-river-3-plus",
+   "name": "EcoFlow RIVER 3 Plus",
+   "brand": "ecoflow",
+   "category": "power-stations",
+   "specs": [
+    "429Wh capacity",
+    "600W output"
+   ],
+   "description": "Compact portable station for laptops, routers, fans and lights.",
+   "image": "/products/ecoflow-river-3-plus.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/ecoflow-river-3-plus-portable-power-station-1146746223_756291e4-0ff9-41f3-9ccc-94ff718ead82.png?v=1770170261",
+   "sourceUrl": "https://ng.ecoflow.com/products/river-3-plus-portable-power-station",
+   "price": 375720
+  },
+  {
+   "id": "35372a14",
+   "slug": "ecoflow-delta-3-classic-solar-generator",
+   "name": "EcoFlow DELTA 3 Classic Solar Generator",
+   "brand": "ecoflow",
+   "category": "complete-systems",
+   "specs": [
+    "DELTA 3 Classic (1024Wh)",
+    "NextGen 160W portable solar panel"
+   ],
+   "description": "Bundle of the DELTA 3 Classic with a portable solar panel for off-grid charging.",
+   "image": "/products/ecoflow-delta-3-classic-solar-generator.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/EcoFlow_DELTA_3_Classic_NextGen_160W_Portable_Solar_Panel_1500x1500_05b2a973-ded4-4a34-9620-f9a772c8831d.png?v=1790837174",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-delta-3-classic-solar-generator",
+   "price": 942330
+  },
+  {
+   "id": "392451f7",
+   "slug": "ecoflow-river-3-ups-solar-generator-110w-portable-solar-panel",
+   "name": "EcoFlow RIVER 3 (UPS) Solar Generator (110W Portable Solar Panel)",
+   "brand": "ecoflow",
+   "category": "complete-systems",
+   "specs": [
+    "RIVER 3 UPS power station",
+    "110W portable solar panel"
+   ],
+   "description": "Small solar kit pairing a RIVER 3 with a 110W portable panel.",
+   "image": "/products/ecoflow-river-3-ups-solar-generator-110w-portable-solar-panel.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/R3P_110W-1_895fec4e-6719-4e81-a7ab-dcec193e0bf7.png?v=1785400620",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-river-3-ups-solar-generator-110w-portable-solar-panel",
+   "price": 381110
+  },
+  {
+   "id": "3cf2bedc",
+   "slug": "ecoflow-river-2-solar-generator",
+   "name": "EcoFlow RIVER 2 Solar Generator",
+   "brand": "ecoflow",
+   "category": "complete-systems",
+   "specs": [
+    "RIVER 2 power station",
+    "60W portable solar panel"
+   ],
+   "description": "Starter solar kit for phones, lights and small electronics.",
+   "image": "/products/ecoflow-river-2-solar-generator.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/ecoflow-river-2-solar-generator-pv60w-53253928124755_bef09669-b115-4257-8707-76b6788ec4d7.png?v=1767234962",
+   "sourceUrl": "https://ng.ecoflow.com/products/river-2-60w-portable-solar-panel",
+   "price": 354660
+  },
+  {
+   "id": "d9a30cc5",
+   "slug": "ecoflow-nextgen-220w-monofacial-portable-solar-panel",
+   "name": "EcoFlow NextGen 220W Monofacial Portable Solar Panel",
+   "brand": "ecoflow",
+   "category": "solar-panels",
+   "specs": [
+    "220W",
+    "25% efficiency",
+    "Portable"
+   ],
+   "description": "Portable solar panel for charging EcoFlow power stations off-grid.",
+   "image": "/products/ecoflow-nextgen-220w-monofacial-portable-solar-panel.webp",
+   "imageSource": "https://cdn.shopify.com/s/files/1/0701/8659/8581/files/01_220W____1_375d403f-5031-417d-8256-75ad7f1188b1.png?v=1751365802",
+   "sourceUrl": "https://ng.ecoflow.com/products/ecoflow-nextgen-220w-monofacial-portable-solar-panel",
+   "price": 284820
+  }
+ ]
+}

@@ -13,7 +13,7 @@ export function GET() {
     promo: PROMO,
     categories: CATEGORIES,
     brands,
-    products: products.map(({ costNgn: _c, ...p }) => ({ ...p, image: abs(p.image) })),
+    products: products.map((p) => ({ ...p, image: abs(p.image) })),
     segments: SEGMENTS.map((s) => ({ ...s, tiers: ALL_TIERS.filter((t) => t.segment.slug === s.slug).map((t) => ({ id: t.id, name: t.name, tagline: t.tagline, powers: t.powers, kw: t.kw, kwh: t.kwh, install: t.install, best: !!t.best, price: t.price, items: t.items.map((i) => ({ id: t.lines.find((l) => l.p.slug === i.slug)!.p.id, qty: i.qty })) })) })),
   });
 }

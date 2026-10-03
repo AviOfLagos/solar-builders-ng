@@ -28,7 +28,7 @@ export default async function SegmentPage(props: PageProps<"/packages/[slug]">) 
         <blockquote className="max-w-2xl border-l-4 border-sun pl-4 text-lg italic text-ink-2">{s.worry}</blockquote>
         <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{tiers.map((t) => <PackageCard key={t.id} t={t} />)}</div>
         <p className="mt-6 text-sm text-mute">
-          Kits are matched from each brand's specifications. We confirm everything on a call before ordering from the brand. Installation is quoted separately and never charged at checkout.
+          Kits are matched from each brand’s specifications. We confirm everything on a call before ordering from the brand. Installation is quoted separately and never charged at checkout.
           Need something different? <a className="font-semibold text-ink underline" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Hi, I'm looking at solar for ${s.name.toLowerCase()}.`)}`}>Ask us on WhatsApp</a>.
         </p>
       </div>

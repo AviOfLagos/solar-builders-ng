@@ -1,6 +1,7 @@
 import "server-only";
-import postgres from "postgres";
+import postgres, { type TransactionSql } from "postgres";
 import { customAlphabet } from "nanoid";
+import { createHash } from "crypto";
 
 type Sql = ReturnType<typeof postgres>;
 const g = globalThis as unknown as { __sql?: Sql; __schema?: Promise<void> };
@@ -135,12 +136,96 @@ create table if not exists subscribers (
 create index if not exists orders_store_idx on orders(store_id);
 create index if not exists orders_user_idx on orders(user_id);
 create index if not exists contributions_pool_idx on contributions(pool_id);
+
+-- v2: Google/Apple sign-in, gift card holds, refunds, deadlines, squads, leads, ledger, rate limits
+alter table users alter column password_hash drop not null;
+alter table users add column if not exists google_sub text unique;
+alter table users add column if not exists apple_sub text unique;
+alter table orders add column if not exists gift_code text;
+alter table orders add column if not exists lead_id text;
+alter table orders add column if not exists refunded int not null default 0;
+alter table orders add column if not exists status_at timestamptz not null default now();
+create index if not exists orders_status_idx on orders(status, created_at);
+alter table pools add column if not exists kind text not null default 'public';
+alter table pools add column if not exists deadline timestamptz;
+alter table pools add column if not exists extended boolean not null default false;
+alter table pools add column if not exists ended_at timestamptz;
+update pools set deadline = created_at + interval '30 days' where deadline is null;
+alter table contributions add column if not exists refunded int not null default 0;
+alter table contributions add column if not exists piece text;
+alter table contributions add column if not exists share_id text;
+alter table contributions add column if not exists user_id text;
+create table if not exists shares (
+  id text primary key,
+  pool_id text not null references pools(id) on delete cascade,
+  name text not null default '',
+  amount int not null,
+  status text not null default 'open',
+  position int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists shares_pool_idx on shares(pool_id);
+create table if not exists leads (
+  id text primary key,
+  user_id text references users(id) on delete set null,
+  name text not null default '',
+  phone text not null default '',
+  email text not null default '',
+  consent boolean not null default false,
+  source text not null default '',
+  items jsonb not null default '[]',
+  total int not null default 0,
+  order_id text,
+  contacted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists leads_updated_idx on leads(updated_at desc);
+create table if not exists ledger (
+  id bigserial primary key,
+  at timestamptz not null default now(),
+  kind text not null,
+  amount int not null,
+  ref text not null default '',
+  pi_id text,
+  note text not null default ''
+);
+create index if not exists ledger_ref_idx on ledger(ref);
+create table if not exists rate_limits (
+  key text primary key,
+  window_start timestamptz not null,
+  count int not null
+);
+create table if not exists settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
 `;
 
-/** Creates tables on first use. Idempotent, so it is safe on every cold start. */
+const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);
+
+/**
+ * Creates and migrates tables on first use. Runs once per schema change: a lock stops two
+ * cold starts migrating at the same time, and the schema's hash is stored when done.
+ */
+async function migrate(s: Sql) {
+  await s.begin(async (tx) => {
+    await tx`select pg_advisory_xact_lock(727274)`;
+    await tx.unsafe(`create table if not exists settings (key text primary key, value text not null, updated_at timestamptz not null default now())`);
+    const [v] = await tx`select value from settings where key = 'schema_version'`;
+    if (v?.value === SCHEMA_VERSION) return;
+    await tx.unsafe(SCHEMA);
+    await tx`insert into settings (key, value) values ('schema_version', ${SCHEMA_VERSION}) on conflict (key) do update set value = excluded.value, updated_at = now()`;
+  });
+}
+
 export async function db() {
   const s = sql();
-  g.__schema ??= s.unsafe(SCHEMA).then(() => undefined).catch((e) => { g.__schema = undefined; throw e; });
+  g.__schema ??= migrate(s).catch((e) => { g.__schema = undefined; throw e; });
   await g.__schema;
   return s;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type Tx = TransactionSql<{}>;

@@ -1,5 +1,5 @@
 import "server-only";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, createRemoteJWKSet } from "jose";
 import { cookies, headers } from "next/headers";
 import { randomBytes, scrypt as _scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -19,12 +19,37 @@ export async function hashPassword(pw: string) {
   return `scrypt$${salt.toString("hex")}$${key.toString("hex")}`;
 }
 
-export async function checkPassword(pw: string, stored: string) {
-  const [, saltHex, keyHex] = stored.split("$");
+const DUMMY = "scrypt$00000000000000000000000000000000$" + "0".repeat(128);
+
+/** Always does the same work, even for unknown accounts, so timing doesn't reveal which emails exist. */
+export async function checkPassword(pw: string, stored: string | null | undefined) {
+  const [, saltHex, keyHex] = (stored || DUMMY).split("$");
   if (!saltHex || !keyHex) return false;
-  const key = await scrypt(pw, Buffer.from(saltHex, "hex"), 64);
+  const key = await scrypt(pw.slice(0, 256), Buffer.from(saltHex, "hex"), 64);
   const want = Buffer.from(keyHex, "hex");
-  return key.length === want.length && timingSafeEqual(key, want);
+  return !!stored && key.length === want.length && timingSafeEqual(key, want);
+}
+
+/* ---------- Google sign-in ---------- */
+
+const GOOGLE_JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
+
+/** Client ids allowed to sign in: the website's plus the app's (iOS, Android). */
+export function googleClientIds() {
+  return [process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID, ...(process.env.GOOGLE_CLIENT_IDS || "").split(",")].map((s) => s?.trim()).filter(Boolean) as string[];
+}
+
+/** Checks a Google ID token (from the web button or the app) and returns the verified identity. */
+export async function verifyGoogle(credential: string) {
+  const audience = googleClientIds();
+  if (!audience.length) return null;
+  try {
+    const { payload } = await jwtVerify(credential, GOOGLE_JWKS, { issuer: ["https://accounts.google.com", "accounts.google.com"], audience });
+    if (!payload.sub || !payload.email || payload.email_verified !== true) return null;
+    return { sub: String(payload.sub), email: String(payload.email).toLowerCase(), name: String(payload.name || "") };
+  } catch {
+    return null;
+  }
 }
 
 export type Session = { uid: string; email: string; name: string };

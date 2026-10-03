@@ -5,7 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PromoBar } from "@/components/PromoBar";
-import { CartDrawer } from "@/components/CartDrawer";
+import { CartDrawer, LeadSync } from "@/components/CartDrawer";
 import { STORE } from "@/config/store";
 import { JsonLd, orgJsonLd } from "@/lib/seo";
 import { RefCapture } from "@/components/RefCapture";
@@ -34,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main id="main" className="flex-1">{children}</main>
         <Footer />
         <CartDrawer />
+        <LeadSync />
         <Suspense><RefCapture /></Suspense>
         <JsonLd data={orgJsonLd()} />
       </body>

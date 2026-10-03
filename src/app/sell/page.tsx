@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/client";
+import { api, type ApiError } from "@/lib/client";
+import { isName, NG_PHONE, normalizePhone } from "@/lib/format";
 import { Field } from "@/components/Field";
 
 export default function Sell() {
@@ -11,11 +12,23 @@ export default function Sell() {
   const [f, setF] = useState({ name: "", slug: "", bio: "", kind: "installer", whatsapp: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState("");
-  useEffect(() => { api<typeof me & object>("/me").then((m) => { setMe(m); if (m.store) router.replace("/account/store"); }); }, [router]);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    api<NonNullable<typeof me>>("/me").then((m) => { setMe(m); if (m.store) router.replace("/account/store"); }).catch((e) => setMsg((e as Error).message));
+  }, [router]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const v = e.target.value;
-    setF((x) => ({ ...x, [k]: v, ...(k === "name" && !x.slug ? {} : {}) }));
+    setF((x) => ({ ...x, [k]: v }));
+    setErrors((x) => ({ ...x, [k]: "" }));
   };
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!isName(f.name)) e.name = "Give your store a name.";
+    if (f.slug.replace(/-/g, "").length < 3) e.slug = "At least 3 letters or numbers.";
+    if (f.whatsapp && !NG_PHONE.test(normalizePhone(f.whatsapp))) e.whatsapp = "Enter a Nigerian number or leave it empty.";
+    setErrors(e);
+    return !Object.keys(e).length;
+  }
   return (
     <>
       <section className="bg-ink text-white">
@@ -36,21 +49,23 @@ export default function Sell() {
           ))}
         </ol>
         <div className="h-fit rounded-2xl border border-line bg-paper p-5">
-          {!me ? <p className="text-mute">Loading…</p> : !me.user ? (
+          {!me ? <p className={msg ? "text-flare" : "text-mute"}>{msg || "Loading…"}</p> : !me.user ? (
             <div><p className="font-semibold">Create an account to open your store.</p><Link href="/account?next=/sell" className="btn btn-ink mt-4 w-full">Sign in or create account</Link></div>
           ) : (
-            <form className="space-y-3" onSubmit={async (e) => {
-              e.preventDefault(); setMsg(""); setErrors({});
-              try { await api("/stores", { body: f }); router.push("/account/store"); } catch (x) { const ex = x as Error & { fields?: Record<string, string> }; setMsg(ex.message); setErrors(ex.fields || {}); }
+            <form noValidate className="space-y-3" onSubmit={async (e) => {
+              e.preventDefault();
+              if (busy || !validate()) return;
+              setMsg(""); setBusy(true);
+              try { await api("/stores", { body: f }); router.push("/account/store"); } catch (x) { const ex = x as ApiError; setMsg(ex.message); setErrors(ex.fields || {}); setBusy(false); }
             }}>
               <p className="font-semibold">Your store</p>
               <Field label="Store name" error={errors.name}><input className="field" maxLength={60} placeholder="e.g. Tunde Solar Works" value={f.name} onChange={set("name")} /></Field>
-              <Field label="Link name" hint={`Your link: /s/${f.slug || "your-name"}`} error={errors.slug}><input className="field" maxLength={30} placeholder="tunde-solar" value={f.slug} onChange={(e) => setF({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") })} /></Field>
+              <Field label="Link name" hint={`Your link: /s/${f.slug || "your-name"}`} error={errors.slug}><input className="field" maxLength={30} placeholder="tunde-solar" value={f.slug} onChange={(e) => { setF({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-") }); setErrors({ ...errors, slug: "" }); }} /></Field>
               <Field label="I am"><select className="field" value={f.kind} onChange={set("kind")}><option value="installer">A solar installer / technician</option><option value="affiliate">Recommending to friends & followers</option></select></Field>
               <Field label="About you (optional)"><textarea className="field" rows={3} maxLength={300} placeholder="e.g. 6 years installing in Lekki and Ajah. Inverter repairs too." value={f.bio} onChange={set("bio")} /></Field>
-              <Field label="WhatsApp number (optional)"><input className="field" type="tel" value={f.whatsapp} onChange={set("whatsapp")} /></Field>
+              <Field label="WhatsApp number (optional)" error={errors.whatsapp}><input className="field" type="tel" inputMode="tel" placeholder="0803 123 4567" value={f.whatsapp} onChange={set("whatsapp")} /></Field>
               {msg && <p role="alert" className="text-sm text-flare">{msg}</p>}
-              <button className="btn btn-sun w-full">Open my store</button>
+              <button className="btn btn-sun w-full" disabled={busy}>{busy ? "Opening…" : "Open my store"}</button>
             </form>
           )}
         </div>

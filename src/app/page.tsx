@@ -22,7 +22,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 pt-10 sm:pt-14">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <h1 className="font-display max-w-2xl text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl">How much solar do you need?</h1>
-            <p className="max-w-sm text-white/70">Tell us what you want to keep on when light goes. We'll match a kit and show the full price, installation included.</p>
+            <p className="max-w-sm text-white/70">Tell us what you want to keep on when light goes. We’ll match a kit and show the full price, installation included.</p>
           </div>
           <div className="mt-8"><PowerPlanner /></div>
           <a href="#packages" className="mx-auto mt-8 flex w-fit items-center gap-2 text-sm text-white/70 hover:text-white">
@@ -65,7 +65,7 @@ export default function Home() {
 
       <section className="mx-auto max-w-7xl px-4 pt-20">
         <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">The things people worry about</h2>
-        <p className="mt-2 max-w-2xl text-ink-2">Most bad solar stories come from fake batteries, wrong sizing and rushed installs. Here's how we handle each one.</p>
+        <p className="mt-2 max-w-2xl text-ink-2">Most bad solar stories come from fake batteries, wrong sizing and rushed installs. Here’s how we handle each one.</p>
         <ul className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {WORRIES.map((w) => (
             <li key={w.q} className="flex flex-col rounded-2xl border border-line bg-paper p-5">

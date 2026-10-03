@@ -39,7 +39,7 @@ export function PackageCard({ t, showSegment = false }: { t: ResolvedTier; showS
         {t.powers.map((x) => <li key={x} className="rounded-full bg-haze px-2.5 py-1 text-xs">{x}</li>)}
       </ul>
       <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-mute">What's in the box</summary>
+        <summary className="cursor-pointer text-mute">What’s in the box</summary>
         <ul className="mt-2 space-y-1">
           {t.lines.map((l) => (
             <li key={l.p.id} className="flex justify-between gap-3"><Link href={`/product/${l.p.slug}`} className="line-clamp-1 hover:underline">{l.qty} × {l.p.name}</Link><span className="num shrink-0">{naira(l.p.price * l.qty)}</span></li>

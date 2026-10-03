@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "./Logo";
 import { useCart } from "@/lib/cart";
+import { useCartLines } from "./CartDrawer";
 
 type Card = { id: string; brand: string; last4: string; nickname: string; expMonth: number; expYear: number };
 type Me = { user: { email: string } | null; cards: Card[] };
 
 export function Header() {
-  const lines = useCart((s) => s.lines);
+  const { count } = useCartLines();
   const setOpen = useCart((s) => s.setOpen);
   const [mounted, setMounted] = useState(false);
   const [me, setMe] = useState<Me | null>(null);
@@ -17,12 +18,12 @@ export function Header() {
   const [menu, setMenu] = useState(false);
   const pop = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const count = lines.reduce((s, l) => s + l.qty, 0);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the cart count comes from localStorage
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!cardsOpen) return;
-    fetch("/api/v1/me").then((r) => r.json()).then(setMe).catch(() => setMe({ user: null, cards: [] }));
+    fetch("/api/v1/me").then((r) => (r.ok ? r.json() : { user: null, cards: [] })).then(setMe).catch(() => setMe({ user: null, cards: [] }));
     const close = (e: MouseEvent) => { if (pop.current && !pop.current.contains(e.target as Node)) setCardsOpen(false); };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
@@ -39,6 +40,7 @@ export function Header() {
           <Link href="/shop" className="hover:text-sun-deep">Shop all</Link>
           <Link href="/packages" className="hover:text-sun-deep">Packages</Link>
           <Link href="/category/complete-systems" className="hover:text-sun-deep">Complete systems</Link>
+          <Link href="/go-solar-me" className="hover:text-sun-deep">Go Solar Me</Link>
           <Link href="/give" className="hover:text-sun-deep">Buy for someone</Link>
         </nav>
         <form
@@ -56,7 +58,7 @@ export function Header() {
             <div className="absolute right-0 mt-2 w-72 rounded-xl border border-line bg-paper p-4 shadow-lg">
               {!me ? <p className="text-sm text-mute">Loading…</p> : !me.user ? (
                 <div className="space-y-3 text-sm">
-                  <p>Sign in to see the cards you've saved.</p>
+                  <p>Sign in to see the cards you’ve saved.</p>
                   <Link href="/account" onClick={() => setCardsOpen(false)} className="btn btn-ink w-full !py-2">Sign in</Link>
                 </div>
               ) : me.cards.length === 0 ? (
@@ -75,7 +77,7 @@ export function Header() {
             </div>
           )}
         </div>
-        <button onClick={() => setOpen(true)} className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-haze" aria-label={`Cart, ${count} items`}>
+        <button onClick={() => setOpen(true)} className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-haze" aria-label={`Cart, ${mounted ? count : 0} items`}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6" /><circle cx="10" cy="20" r="1.3" /><circle cx="17" cy="20" r="1.3" /></svg>
           {mounted && count > 0 && <span className="num absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-sun px-1 text-[11px] font-bold">{count}</span>}
         </button>
@@ -89,6 +91,7 @@ export function Header() {
             <li><Link href="/shop" className="block py-2">Shop all</Link></li>
             <li><Link href="/packages" className="block py-2">Packages</Link></li>
             <li><Link href="/category/complete-systems" className="block py-2">Complete systems</Link></li>
+            <li><Link href="/go-solar-me" className="block py-2">Go Solar Me</Link></li>
             <li><Link href="/give" className="block py-2">Buy for someone</Link></li>
             <li><Link href="/sell" className="block py-2">Sell & earn</Link></li>
             <li><Link href="/account" className="block py-2">My account</Link></li>

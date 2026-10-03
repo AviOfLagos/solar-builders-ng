@@ -38,7 +38,7 @@ export default async function Guide(props: PageProps<"/guides/[slug]">) {
             <p className="mt-2 text-sm text-mute">Live prices. Installation covers labour, cables, breakers, surge protection, mounting and earthing.</p>
             <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-paper">
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="bg-haze text-left"><tr><th className="p-3">Who it's for</th><th className="p-3">Kit</th><th className="p-3">Size</th><th className="p-3 text-right">Kit price</th><th className="p-3 text-right">Typical installed total</th></tr></thead>
+                <thead className="bg-haze text-left"><tr><th className="p-3">Who it’s for</th><th className="p-3">Kit</th><th className="p-3">Size</th><th className="p-3 text-right">Kit price</th><th className="p-3 text-right">Typical installed total</th></tr></thead>
                 <tbody className="divide-y divide-line">
                   {ALL_TIERS.map((t) => (
                     <tr key={t.id}>

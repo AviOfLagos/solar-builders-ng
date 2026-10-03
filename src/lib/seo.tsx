@@ -13,7 +13,7 @@ export function orgJsonLd() {
     logo: abs("/icon.svg"),
     image: abs("/opengraph-image"),
     telephone: STORE.supportPhone,
-    email: STORE.supportEmail,
+    ...(STORE.supportEmail ? { email: STORE.supportEmail } : {}),
     priceRange: "₦₦",
     currenciesAccepted: "NGN",
     paymentAccepted: "Credit card, Debit card",

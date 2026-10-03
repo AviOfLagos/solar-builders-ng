@@ -1,7 +1,7 @@
-import { ok, fail, route } from "@/lib/server/api";
-import { getPool } from "@/lib/server/social";
+import { ok, fail, route, currentUser } from "@/lib/server/api";
+import { poolPage } from "@/lib/server/pools";
 
 export const GET = route(async (_req: Request, ctx: RouteContext<"/api/v1/pools/[id]">) => {
-  const p = await getPool((await ctx.params).id);
-  return p ? ok(p) : fail("This funding page doesn't exist.", 404);
+  const p = await poolPage((await ctx.params).id, await currentUser());
+  return p ? ok(p) : fail("This Go Solar Me page doesn't exist.", 404);
 });

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/client";
 import { naira } from "@/lib/format";
 import { Share } from "@/components/Share";
@@ -17,11 +17,12 @@ type Dash = {
 export default function StoreDash() {
   const [d, setD] = useState<Dash | null>(null);
   const [err, setErr] = useState("");
-  const load = () => api<Dash>("/me/store").then(setD).catch((e) => setErr((e as Error).message));
-  useEffect(() => { load(); }, []);
-  if (err) return <Center><p>{err}</p><Link className="btn btn-ink mt-4" href="/account?next=/account/store">Sign in</Link></Center>;
+  const [status, setStatus] = useState(0);
+  const load = useCallback(() => api<Dash>("/me/store").then(setD).catch((e) => { setErr((e as Error).message); setStatus((e as { status?: number }).status ?? 0); }), []);
+  useEffect(() => { load(); }, [load]);
+  if (err) return <Center><p>{err}</p>{status === 401 ? <Link className="btn btn-ink mt-4" href="/account?next=/account/store">Sign in</Link> : <button className="btn btn-ink mt-4" onClick={() => { setErr(""); load(); }}>Try again</button>}</Center>;
   if (!d) return <Center><p className="text-mute">Loading…</p></Center>;
-  if (!d.store) return <Center><p>You don't have a store yet.</p><Link className="btn btn-ink mt-4" href="/sell">Open your store</Link></Center>;
+  if (!d.store) return <Center><p>You don&apos;t have a store yet.</p><Link className="btn btn-ink mt-4" href="/sell">Open your store</Link></Center>;
   const s = d.store;
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
@@ -31,7 +32,7 @@ export default function StoreDash() {
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
         <Stat label="Orders through you" value={String(d.stats?.orders ?? 0)} />
         <Stat label="Sales" value={naira(d.stats?.sales ?? 0)} />
-        <Stat label="You've earned" value={naira(d.stats?.earned ?? 0)} highlight />
+        <Stat label="You have earned" value={naira(d.stats?.earned ?? 0)} highlight />
       </div>
       <NewBuild onCreated={load} />
       <section className="mt-10">
@@ -60,18 +61,25 @@ function NewBuild({ onCreated }: { onCreated: () => void }) {
   const [f, setF] = useState({ title: "", note: "" });
   const [link, setLink] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
   return (
     <section className="mt-10 rounded-2xl border border-line bg-paper p-5">
       <h2 className="font-display text-xl font-semibold">Share a build with a client</h2>
       {!items.length ? <p className="mt-2 text-sm text-mute">Your cart is empty. <Link className="underline" href="/packages">Add a package</Link> or products, then come back here.</p> : link ? (
         <div className="mt-3"><p className="mb-2 text-sm">Send this link to your client:</p><Share path={link} text={`Here's the solar setup I recommend: ${f.title}`} /></div>
       ) : (
-        <form className="mt-3 space-y-3" onSubmit={async (e) => { e.preventDefault(); setErr(""); try { const r = await api<{ path: string }>("/builds", { body: { ...f, items: items.map((l) => ({ id: l.id, qty: l.qty })) } }); setLink(r.path); onCreated(); } catch (x) { setErr((x as Error).message); } }}>
+        <form className="mt-3 space-y-3" onSubmit={async (e) => {
+          e.preventDefault();
+          if (busy) return;
+          setErr(""); setBusy(true);
+          try { const r = await api<{ path: string }>("/builds", { body: { ...f, items: items.map((l) => ({ id: l.id, qty: l.qty })) } }); setLink(r.path); onCreated(); } catch (x) { setErr((x as Error).message); }
+          setBusy(false);
+        }}>
           <p className="text-sm text-mute">From your cart: {items.length} items, {naira(subtotal)}</p>
           <Field label="Title"><input className="field" maxLength={80} placeholder="e.g. 5kVA for Mrs Ade, Lekki" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></Field>
           <Field label="Note to client (optional)"><textarea className="field" rows={3} maxLength={500} placeholder="What it powers, and that installation is extra." value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></Field>
-          {err && <p className="text-sm text-flare">{err}</p>}
-          <button className="btn btn-ink">Create link</button>
+          {err && <p role="alert" className="text-sm text-flare">{err}</p>}
+          <button className="btn btn-ink" disabled={busy}>{busy ? "Creating…" : "Create link"}</button>
         </form>
       )}
     </section>
