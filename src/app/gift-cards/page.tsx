@@ -42,7 +42,7 @@ export default function GiftCards() {
           <form className="space-y-3" onSubmit={async (e) => { e.preventDefault(); setErr(""); try { setPay(await api("/gift-cards", { body: { ...f, amount } })); } catch (x) { setErr((x as Error).message); } }}>
             <p className="font-semibold">Amount</p>
             <div className="grid grid-cols-3 gap-2">{AMOUNTS.map((a) => <button type="button" key={a} onClick={() => setAmount(a)} className={`rounded-lg border py-2 text-sm ${amount === a ? "border-ink bg-sun/20 font-semibold" : "border-line"}`}>{naira(a)}</button>)}</div>
-            <Field label="Or enter an amount (₦)"><input className="field num" type="number" min={10000} step={5000} value={amount} onChange={(e) => setAmount(Math.floor(+e.target.value))} /></Field>
+            <Field label="Or enter an amount (₦)"><input className="field num" type="number" min={10000} step={1} value={amount} onChange={(e) => setAmount(Math.floor(+e.target.value))} /></Field>
             <Field label="Your name"><input className="field" value={f.fromName} onChange={set("fromName")} /></Field>
             <Field label="Your email"><input className="field" type="email" required value={f.fromEmail} onChange={set("fromEmail")} /></Field>
             <Field label="Their name"><input className="field" value={f.toName} onChange={set("toName")} /></Field>

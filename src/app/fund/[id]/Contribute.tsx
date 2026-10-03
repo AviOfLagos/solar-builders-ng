@@ -29,7 +29,7 @@ export function Contribute({ poolId, remaining }: { poolId: string; remaining: n
           <button type="button" key={i} onClick={() => setAmount(v)} className={`rounded-lg border px-2 py-2 text-sm ${amount === v ? "border-ink bg-sun/20 font-semibold" : "border-line"}`}>{v === remaining ? "Finish it" : naira(v)}</button>
         ))}
       </div>
-      <Field label="Amount (₦)"><input className="field num" type="number" min={1000} max={remaining} step={500} value={amount} onChange={(e) => setAmount(Math.floor(+e.target.value))} /></Field>
+      <Field label="Amount (₦)"><input className="field num" type="number" min={1000} max={remaining} step={1} value={amount} onChange={(e) => setAmount(Math.floor(+e.target.value))} /></Field>
       <Field label="Your name"><input className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
       <Field label="Email for your receipt"><input className="field" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
       <Field label="Message (optional)"><input className="field" maxLength={200} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></Field>
