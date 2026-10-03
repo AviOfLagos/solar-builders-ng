@@ -3,7 +3,7 @@
 export const STORE = {
   name: "Solar Builders NG",
   shortName: "Solar Builders",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://solar-builders-ng.vercel.app",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://solar-ng.vercel.app",
   city: "Lagos",
   country: "NG",
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "hello@solarbuilders.ng",
