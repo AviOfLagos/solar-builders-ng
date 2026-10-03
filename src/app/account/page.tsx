@@ -17,7 +17,9 @@ const POOL_LABEL: Record<string, string> = { open: "Open", ended: "Deadline pass
 
 function Account() {
   const router = useRouter();
-  const next = useSearchParams().get("next");
+  const params = useSearchParams();
+  const next = params.get("next");
+  const googleError = params.get("error") === "google_taken" ? "That email is already linked to a different Google account." : params.get("error") === "google" ? "Google sign-in didn't go through. Try again, or use email." : "";
   const [me, setMe] = useState<Me | null>(null);
   const [loadErr, setLoadErr] = useState("");
   const [mine, setMine] = useState<Mine | null>(null);
@@ -92,7 +94,8 @@ function Account() {
   }
   return (
     <Wrap title={mode === "login" ? "Sign in" : "Create your account"} intro="Track orders, save cards, start a Go Solar Me page or open a store.">
-      <div className="mt-6"><GoogleButton onDone={signedIn} /></div>
+      <div className="mt-6"><GoogleButton next={safeNext(next)} /></div>
+      {googleError && <p role="alert" className="mt-2 text-center text-sm text-flare">{googleError}</p>}
       {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && <p className="my-4 text-center text-xs uppercase tracking-wide text-mute">or with email</p>}
       <form noValidate className="mt-2 space-y-3" onSubmit={async (e) => {
         e.preventDefault();

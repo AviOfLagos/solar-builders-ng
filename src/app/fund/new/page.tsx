@@ -56,7 +56,7 @@ export default function NewFund() {
         <p className="mt-3 text-ink-2">So you can manage it and we can reach you when it&apos;s funded.</p>
         {loadErr && <p className="mt-3 text-sm text-flare">{loadErr}</p>}
         <div className="mt-6 flex flex-col items-center gap-3">
-          <GoogleButton onDone={() => location.reload()} />
+          <GoogleButton next="/fund/new" />
           <Link href="/account?next=/fund/new" className="text-sm underline">Use email instead</Link>
         </div>
       </div>

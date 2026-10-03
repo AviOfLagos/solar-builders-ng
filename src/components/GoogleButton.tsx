@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { api } from "@/lib/client";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 type GIS = {
   accounts: { id: {
-    initialize: (o: { client_id: string; callback: (r: { credential: string }) => void; ux_mode?: string; auto_select?: boolean; itp_support?: boolean }) => void;
+    initialize: (o: Record<string, unknown>) => void;
     renderButton: (el: HTMLElement, o: Record<string, unknown>) => void;
   } };
 };
@@ -26,39 +25,34 @@ function loadGis() {
   return loader;
 }
 
-/** "Continue with Google". Hidden until the Google client id is configured. */
-export function GoogleButton({ onDone, text = "continue_with" }: { onDone: (r: { created: boolean }) => void; text?: "continue_with" | "signin_with" | "signup_with" }) {
+const cookie = (k: string, v: string) => { document.cookie = `${k}=${encodeURIComponent(v)}; path=/; max-age=600; SameSite=None; Secure`; };
+
+/**
+ * "Continue with Google". Uses Google's redirect mode, so it also works inside WhatsApp and
+ * Instagram browsers where pop-ups are blocked. Hidden until the Google client id is configured.
+ */
+export function GoogleButton({ next = "/account", text = "continue_with" }: { next?: string; text?: "continue_with" | "signin_with" | "signup_with" }) {
   const box = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
-  const done = useRef(onDone);
-  useEffect(() => { done.current = onDone; }, [onDone]);
 
   useEffect(() => {
     if (!CLIENT_ID || !box.current) return;
     let alive = true;
     loadGis().then((g) => {
       if (!alive || !box.current) return;
-      g.accounts.id.initialize({
-        client_id: CLIENT_ID,
-        itp_support: true,
-        callback: async ({ credential }) => {
-          setBusy(true); setErr("");
-          try { done.current(await api<{ created: boolean }>("/auth/google", { body: { credential } })); }
-          catch (e) { setErr((e as Error).message); }
-          finally { setBusy(false); }
-        },
-      });
+      const nonce = crypto.randomUUID();
+      cookie("sb_gnonce", nonce);
+      cookie("sb_next", /^\/(?![/\\])/.test(next) ? next : "/account");
+      g.accounts.id.initialize({ client_id: CLIENT_ID, ux_mode: "redirect", login_uri: `${location.origin}/api/v1/auth/google/redirect`, nonce, itp_support: true });
       g.accounts.id.renderButton(box.current, { theme: "outline", size: "large", shape: "pill", text, width: 300 });
     }).catch((e) => alive && setErr((e as Error).message));
     return () => { alive = false; };
-  }, [text]);
+  }, [next, text]);
 
   if (!CLIENT_ID) return null;
   return (
     <div className="flex flex-col items-center gap-2">
-      <div ref={box} className="min-h-[44px]" aria-busy={busy} />
-      {busy && <p className="text-sm text-mute">Signing you in…</p>}
+      <div ref={box} className="min-h-[44px]" />
       {err && <p role="alert" className="text-sm text-flare">{err}</p>}
     </div>
   );

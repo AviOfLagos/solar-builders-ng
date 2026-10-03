@@ -40,12 +40,14 @@ export function googleClientIds() {
 }
 
 /** Checks a Google ID token (from the web button or the app) and returns the verified identity. */
-export async function verifyGoogle(credential: string) {
+export async function verifyGoogle(credential: string, nonce?: string) {
   const audience = googleClientIds();
   if (!audience.length) return null;
   try {
     const { payload } = await jwtVerify(credential, GOOGLE_JWKS, { issuer: ["https://accounts.google.com", "accounts.google.com"], audience });
     if (!payload.sub || !payload.email || payload.email_verified !== true) return null;
+    // Web sign-ins carry a one-time nonce from our own cookie, which stops someone posting their token into your browser.
+    if (nonce !== undefined && payload.nonce !== nonce) return null;
     return { sub: String(payload.sub), email: String(payload.email).toLowerCase(), name: String(payload.name || "") };
   } catch {
     return null;
