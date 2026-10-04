@@ -54,5 +54,7 @@ export async function paymentSummary(ref: string, clientSecret: string, viewer: 
   const [o] = await sql`select id, user_id, buyer, delivery, recipient, installer, status, pool_id, total_paid, gift_card_used from orders where pi_id = ${p.ref}`;
   if (!o) return { ...base, order: null };
   const mine = allowed || (!!viewer && viewer.uid === o.user_id);
-  return { ...base, order: mine ? { ref: o.id, total: o.total_paid + o.gift_card_used, giftUsed: o.gift_card_used, phone: o.delivery.phone, email: o.buyer.email, installer: o.installer, recipient: o.recipient ? { name: o.recipient.name } : null, status: o.status } : { ref: o.id, status: o.status }, error: "error" in r ? r.error : undefined };
+  // A refunded order is over, whatever state the provider shows while the refund settles.
+  const over = o.status === "refunded" ? { ok: false, paymentStatus: "failed" as const, error: "error" in r && r.error ? r.error : "This payment was refunded. It can take 5 to 10 working days to show." } : {};
+  return { ...base, ...over, order: mine ? { ref: o.id, total: o.total_paid + o.gift_card_used, giftUsed: o.gift_card_used, phone: o.delivery.phone, email: o.buyer.email, installer: o.installer, recipient: o.recipient ? { name: o.recipient.name } : null, status: o.status } : { ref: o.id, status: o.status }, error: "error" in r ? r.error : undefined, ...over };
 }

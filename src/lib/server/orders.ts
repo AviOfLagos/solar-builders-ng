@@ -333,25 +333,40 @@ export async function finalizeOrder(p: Paid) {
   if (!ref) return { ok: false, error: "Order not found" };
   const o = await sql.begin(async (tx) => {
     // Matched on our own payment reference and the full amount, so no other payment can complete this order.
-    const [o] = await tx`update orders set status = 'pending', status_at = now() where id = ${ref} and pi_id = ${p.ref} and status = 'awaiting_payment' and total_paid <= ${p.amount} returning *`;
-    if (!o) return null;
-    await ledger(tx, "payment", p.amount, ref, p.ref, "order");
+    const [cur] = await tx`select status, gift_code, gift_card_used from orders where id = ${ref} and pi_id = ${p.ref} and total_paid <= ${p.amount} for update`;
+    if (!cur || (cur.status !== "awaiting_payment" && cur.status !== "expired")) return null;
+    if (cur.status === "expired" && cur.gift_code && cur.gift_card_used > 0) {
+      // Paid after the order lapsed: its gift card hold went back, so take it again or refund instead.
+      const [g] = await tx`update gift_cards set balance = balance - ${cur.gift_card_used} where code = ${cur.gift_code} and status = 'active' and balance >= ${cur.gift_card_used} returning code`;
+      if (!g) return null;
+      await ledger(tx, "gift_hold", cur.gift_card_used, ref, null, `${cur.gift_code} · paid late`);
+    }
+    const [o] = await tx`update orders set status = 'pending', status_at = now() where id = ${ref} returning *`;
+    await ledger(tx, "payment", p.amount, ref, p.ref, cur.status === "expired" ? "order, paid late" : "order");
     if (o.lead_id) await tx`update leads set order_id = ${ref}, updated_at = now() where id = ${o.lead_id}`;
     return o as unknown as OrderRow;
   });
   if (!o) {
-    const [cur] = await sql`select status, pi_id from orders where id = ${ref}`;
-    // Paid after we had given up on it: send the money back rather than keep it.
-    if (cur?.status === "expired" && cur.pi_id === p.ref) {
+    const [cur] = await sql`select status, pi_id, total_paid from orders where id = ${ref}`;
+    if (cur?.pi_id !== p.ref) return { ok: false, error: "Order not found" };
+    // Paid late and the gift card balance is gone: send the money back rather than keep it.
+    if (cur.status === "expired") {
       const [x] = await sql`update orders set status = 'refunded', refunded = total_paid, status_at = now() where id = ${ref} and status = 'expired' returning id`;
       if (x) {
         const r = await refundPayment(p.ref, undefined, "order had expired before payment completed").catch((e: Error) => e);
         if (r instanceof Error) await notifyOwner(`REFUND FAILED for late payment on expired order ${ref} (${naira(p.amount)}): ${r.message}`);
-        else await sql.begin((tx) => ledger(tx, "refund", p.amount, ref, p.ref, "paid after expiry"));
+        else {
+          await sql.begin((tx) => ledger(tx, "refund", p.amount, ref, p.ref, "paid after expiry"));
+          await notifyOwner(`LATE PAYMENT REFUNDED for expired order ${ref} (${naira(p.amount)}): its gift card balance had been used.`);
+        }
       }
       return { ok: false, ref, error: "This order had expired, so the payment was refunded." };
     }
-    if (cur?.status === "refunded" && cur.pi_id === p.ref) return { ok: false, ref, error: "This order had expired, so the payment was refunded." };
+    if (cur.status === "refunded") return { ok: false, ref, error: "This payment was refunded." };
+    if (cur.status === "awaiting_payment") {
+      await notifyOwner(`PAYMENT AMOUNT MISMATCH on ${ref}: got ${naira(p.amount)}, order is ${naira(cur.total_paid)}. Check ${p.ref}.`);
+      return { ok: false, ref, error: "The amount paid doesn't match this order. We'll contact you." };
+    }
     return { ok: true, ref, already: true };
   }
   if (p.stripe) {
