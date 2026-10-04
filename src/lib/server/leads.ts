@@ -5,7 +5,7 @@ import { str, bool, oneOf, HttpError } from "./api";
 import { priceCart, storedItems } from "./rules";
 import type { Session } from "./session";
 
-const SOURCES = ["cart", "checkout", "pool", "calculator", "finance", "gift", "package"] as const;
+const SOURCES = ["cart", "checkout", "pool", "calculator", "finance", "gift", "package", "app"] as const;
 
 /**
  * Saves who someone is and what's in their cart as soon as we have a way to reach them,
