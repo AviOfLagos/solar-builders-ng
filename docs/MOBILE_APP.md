@@ -2,6 +2,14 @@
 
 This brief is for the agents building the iOS and Android app. The backend is finished and live, so the app's job is screens on top of the existing API.
 
+## Decisions locked (4 October 2026)
+
+| Decision | Value |
+|---|---|
+| App repo | `AviOfLagos/go-solar-me-app` — separate repo, not inside `solar-builders-ng` |
+| Bundle ID | `ng.solarbuilders.gosolarme` |
+| Backend prerequisites | `POST /auth/apple`, `POST /me/devices`, `DELETE /me` must be added to **`solar-builders-ng`** (the web repo) before the app submits to the stores. App agents build screens; web agents add those three endpoints. |
+
 - **The API reference:** read [`docs/API.md`](./API.md). It covers every endpoint, request and response.
 - **Product rules:** these live in the Product Spec (Claude doc "Go Solar Me — Product Spec").
 - **Conflicts:** if this brief and the spec disagree, this brief wins for the app. If the brief and `API.md` disagree, `API.md` wins.
