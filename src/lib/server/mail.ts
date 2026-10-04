@@ -18,7 +18,8 @@ export async function sendMail(m: Mail) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
-    body: JSON.stringify({ from, to, subject: m.subject, html: m.html, text: m.text, reply_to: m.replyTo }),
+    // Customer replies land in the team inbox whatever address we send from.
+    body: JSON.stringify({ from, to, subject: m.subject, html: m.html, text: m.text, reply_to: m.replyTo || process.env.ORDER_ALERT_EMAIL || undefined }),
   }).catch((e) => { console.error("[mail]", e); return null; });
   if (!res?.ok) console.error("[mail] Resend error", res?.status, await res?.text());
   return { ok: !!res?.ok };
