@@ -22,8 +22,8 @@ This brief is for the agents building the iOS and Android app. The backend is fi
 |---|---|
 | App name | **Go Solar Me** (store brand: Solar Builders NG) |
 | Backend repo | `github.com/AviOfLagos/solar-builders-ng` (Next.js 16, branch `main`; pushes auto-deploy to Vercel) |
-| API base (now) | `https://solar-ng.vercel.app/api/v1` |
-| API base (soon) | `https://solar.nexprove.com/api/v1`. This switches once two DNS records are added at Namecheap. Later the domain will be `solarbuilders.ng`. |
+| API base (now) | `https://solar.nexprove.com/api/v1` (live since 4 October; `https://solar-ng.vercel.app/api/v1` also works) |
+| API base (later) | `solarbuilders.ng`, when bought |
 | Rule | **Never hard-code the domain.** Read it from `EXPO_PUBLIC_API_BASE`. |
 | Hosting | Vercel team `aviofla`, project `solar-ng`. The database is Neon Postgres, and its tables create and migrate themselves on first use. |
 | Payments | Paystack for naira (card, transfer, USSD) is the default. Stripe takes cards from abroad. Both are in **test mode**. |
