@@ -16,7 +16,11 @@ export type Provider = "paystack" | "stripe";
 export const MIN_CHARGE_NGN = 1000;
 
 /** What the web and the app can offer right now. */
-export const payOptions = () => ({ naira: paystackConfigured(), intl: stripeConfigured(), minCharge: MIN_CHARGE_NGN });
+export const payOptions = () => ({
+  naira: paystackConfigured(), intl: stripeConfigured(), minCharge: MIN_CHARGE_NGN,
+  /** Public key the app's Stripe PaymentSheet needs. Not a secret. */
+  stripePublishableKey: stripeConfigured() ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || null : null,
+});
 
 /** The provider asked for if it is switched on; otherwise naira first. */
 export function pickProvider(asked: unknown): Provider {
