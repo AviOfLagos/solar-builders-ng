@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe, webhookSecret } from "@/lib/server/stripe";
 import { finalizePayment } from "@/lib/server/payments";
+import { fromStripe } from "@/lib/server/pay";
 import { cancelAwaiting } from "@/lib/server/orders";
 import { notifyOwner } from "@/lib/server/mail";
 import { db } from "@/lib/server/db";
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     switch (event.type) {
       case "payment_intent.succeeded":
         // Re-read from Stripe rather than trusting the event body.
-        await finalizePayment(await stripe().paymentIntents.retrieve(event.data.object.id));
+        await finalizePayment(fromStripe(await stripe().paymentIntents.retrieve(event.data.object.id)));
         break;
       case "payment_intent.canceled": {
         const sql = await db();

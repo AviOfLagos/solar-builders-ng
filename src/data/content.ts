@@ -21,7 +21,7 @@ export const FAQ = [
   },
   {
     q: "Which payment methods do you accept?",
-    a: "Visa and Mastercard debit or credit cards, processed securely by Stripe. You can save cards, give each one a name, and pick it at checkout next time.",
+    a: "Pay in naira with a Nigerian card (Verve, Visa, Mastercard), a bank transfer or USSD, through Paystack. Paying from abroad? Use any Visa, Mastercard or Amex card, through Stripe. Signed in, you can save cards, give each one a name, and pick it at checkout next time.",
   },
   {
     q: "When is Solar Friday?",

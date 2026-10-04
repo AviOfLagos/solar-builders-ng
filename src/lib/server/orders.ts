@@ -1,10 +1,11 @@
 import "server-only";
-import type Stripe from "stripe";
 import { STORE, type OrderStatus, FULFILMENT, ORDER_STATUS } from "@/config/store";
 import { naira, ngE164, isEmail, isName, firstName } from "@/lib/format";
 import { db, id, type Tx } from "./db";
 import { str, int, bool, HttpError } from "./api";
-import { stripe, customerFor, ownsCard, MIN_CHARGE_NGN, refund } from "./stripe";
+import { stripe, customerFor, ownsCard } from "./stripe";
+import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, startPaystack, savePaystackCard, paystackCard, chargePaystackCard, type Paid } from "./pay";
+import { newPaystackRef } from "./paystack";
 import { sendMail, shell, esc, notifyOwner } from "./mail";
 import { priceCart, checkCart, compactItems, validateDelivery, deliveryJson, assertValid, type CartLine, type DeliveryInput } from "./rules";
 import { ledger, insertOrder, type OrderRow } from "./ledger";
@@ -49,7 +50,7 @@ function giftSplit(total: number, balance: number) {
   return { giftUsed: used, toPay: total - used };
 }
 
-export async function startGiftCard(input: Record<string, unknown>) {
+export async function startGiftCard(input: Record<string, unknown>, origin?: string) {
   const amount = int(input.amount);
   if (amount < 10_000 || amount > 5_000_000) throw new HttpError(400, "Gift cards are from ₦10,000 to ₦5,000,000.", { fields: { amount: "From ₦10,000 to ₦5,000,000." } });
   const v = {
@@ -62,32 +63,47 @@ export async function startGiftCard(input: Record<string, unknown>) {
   if (v.toName && !isName(v.toName)) errors.toName = "Enter their name or leave it empty.";
   if (v.toEmail && !isEmail(v.toEmail)) errors.toEmail = "Enter a valid email or leave it empty.";
   assertValid(errors);
+  const provider = pickProvider(input.provider);
   const giftCode = ("SG" + id().toUpperCase()).replace(/[^A-Z0-9]/g, "").slice(0, 12);
+  const sql = await db();
+  const row = { code: giftCode, amount, balance: amount, from_name: v.fromName, from_email: v.fromEmail, to_name: v.toName, to_email: v.toEmail, message: v.message };
+  const metadata = { kind: "gift_card", gift_code: giftCode };
+
+  if (provider === "paystack") {
+    const ref = newPaystackRef();
+    await sql`insert into gift_cards ${sql({ ...row, pi_id: ref })}`;
+    const ps = await startPaystack({ email: v.fromEmail, amountNgn: amount, metadata, origin, reference: ref, cancelPath: "/gift-cards" }).catch(async (e) => {
+      await sql`delete from gift_cards where pi_id = ${ref} and status = 'pending'`;
+      throw e;
+    });
+    return { provider, id: ps.ref, authorizationUrl: ps.authorizationUrl, amount };
+  }
+
   const pi = await stripe().paymentIntents.create({
     amount: amount * 100, currency: "ngn", receipt_email: v.fromEmail, allowed_payment_method_types: ["card"],
-    description: `Solar gift card ${naira(amount)}`, metadata: { kind: "gift_card", gift_code: giftCode },
+    description: `Solar gift card ${naira(amount)}`, metadata,
   });
-  const sql = await db();
   try {
-    await sql`insert into gift_cards ${sql({ code: giftCode, amount, balance: amount, from_name: v.fromName, from_email: v.fromEmail, to_name: v.toName, to_email: v.toEmail, message: v.message, pi_id: pi.id })}`;
+    await sql`insert into gift_cards ${sql({ ...row, pi_id: pi.id })}`;
   } catch (e) {
     await stripe().paymentIntents.cancel(pi.id).catch(() => {});
     throw e;
   }
-  return { id: pi.id, clientSecret: pi.client_secret, amount };
+  return { provider, id: pi.id, clientSecret: pi.client_secret, amount };
 }
 
-export async function finalizeGiftCard(pi: Stripe.PaymentIntent) {
+export async function finalizeGiftCard(p: Paid) {
   const sql = await db();
   const g = await sql.begin(async (tx) => {
-    const [g] = await tx`update gift_cards set status = 'active' where pi_id = ${pi.id} and status = 'pending' returning *`;
+    // The amount check means a payment can only ever activate a card it fully paid for.
+    const [g] = await tx`update gift_cards set status = 'active' where pi_id = ${p.ref} and status = 'pending' and amount <= ${p.amount} returning *`;
     if (!g) return null;
-    await ledger(tx, "payment", pi.amount_received / 100, g.code, pi.id, "gift card bought");
-    await ledger(tx, "gift_issued", g.amount, g.code, pi.id);
+    await ledger(tx, "payment", p.amount, g.code, p.ref, "gift card bought");
+    await ledger(tx, "gift_issued", g.amount, g.code, p.ref);
     return g;
   });
   if (!g) {
-    const [cur] = await sql`select code, amount from gift_cards where pi_id = ${pi.id}`;
+    const [cur] = await sql`select code, amount from gift_cards where pi_id = ${p.ref}`;
     return { ok: true, kind: "gift_card", code: cur?.code as string | undefined, amount: cur?.amount as number | undefined, already: true };
   }
   const body = `<p style="font-size:15px">${esc(g.from_name || "Someone")} sent ${esc(g.to_name || "you")} a <b>${naira(g.amount)}</b> Solar Builders gift card.</p>${g.message ? `<p style="font-style:italic">“${esc(g.message)}”</p>` : ""}<p style="font-size:26px;letter-spacing:3px;font-weight:bold">${g.code}</p><p>Use it at checkout on ${STORE.url}. It never expires and can't be exchanged for cash.</p>`;
@@ -108,7 +124,7 @@ export async function issueGiftCard(tx: Tx, amount: number, to: { name: string; 
 
 export type CheckoutInput = DeliveryInput & {
   items: CartLine[]; ref?: string; giftCode?: string; leadId?: string; expectedTotal?: number;
-  saveCard?: boolean; cardNickname?: string; savedCardId?: string; source?: string;
+  saveCard?: boolean; cardNickname?: string; savedCardId?: string; source?: string; provider?: "paystack" | "stripe";
 };
 
 export async function startCheckout(input: Partial<Record<keyof CheckoutInput, unknown>>, user: Session | null, origin: string) {
@@ -162,8 +178,12 @@ export async function startCheckout(input: Partial<Record<keyof CheckoutInput, u
     return { ref: o.id, paid: true, amount: 0 };
   }
 
-  const customer = user ? await customerFor(user.uid) : undefined;
   const savedCardId = str(input.savedCardId, 60);
+  // A saved card decides the provider; otherwise the buyer's choice, naira first.
+  const provider = savedCardId ? (savedCardId.startsWith("pc_") ? "paystack" : "stripe") : pickProvider(input.provider);
+  if (provider === "paystack") return startPaystackCheckout({ row, holdGift, toPay, values, lines: cart.lines.length, user, savedCardId, saveCard: bool(input.saveCard), cardNickname: str(input.cardNickname, 40), origin });
+
+  const customer = user ? await customerFor(user.uid) : undefined;
   if (savedCardId && (!customer || !(await ownsCard(customer, savedCardId)))) throw new HttpError(400, "That card is no longer saved. Pick another.");
   const saveCard = bool(input.saveCard) && !!customer && !savedCardId;
 
@@ -197,37 +217,90 @@ export async function startCheckout(input: Partial<Record<keyof CheckoutInput, u
       await cancelAwaiting(order.id, "card declined");
       throw new HttpError(402, done.message || "Your card was declined. Try another card.");
     }
-    return { ref: order.id, id: pi.id, clientSecret: pi.client_secret, paymentStatus: done.status, amount: toPay };
+    return { provider, ref: order.id, id: pi.id, clientSecret: pi.client_secret, paymentStatus: done.status, amount: toPay };
   }
-  return { ref: order.id, id: pi.id, clientSecret: pi.client_secret, paymentStatus: pi.status, amount: toPay };
+  return { provider, ref: order.id, id: pi.id, clientSecret: pi.client_secret, paymentStatus: pi.status, amount: toPay };
 }
 
-/** Called when a card payment fails in the browser, so the gift card hold is returned at once. */
-export async function abandonPayment(piId: string, clientSecret: string) {
-  const pi = await stripe().paymentIntents.retrieve(piId).catch(() => null);
-  if (!pi || pi.client_secret !== clientSecret || pi.metadata.kind !== "order") return { ok: false };
-  if (pi.status === "succeeded" || pi.status === "processing") return { ok: false, paymentStatus: pi.status };
+/**
+ * Naira checkout. The order and any gift card hold are saved first under our own reference,
+ * then the buyer goes to Paystack's page (or a saved card is charged directly).
+ */
+async function startPaystackCheckout(o: {
+  row: Record<string, unknown>; holdGift: (tx: Tx, ref: string) => Promise<void>; toPay: number; values: { email: string; lga: string };
+  lines: number; user: Session | null; savedCardId: string; saveCard: boolean; cardNickname: string; origin: string;
+}) {
+  const card = o.savedCardId ? (o.user ? await paystackCard(o.user.uid, o.savedCardId) : null) : null;
+  if (o.savedCardId && !card) throw new HttpError(400, "That card is no longer saved. Pick another.");
   const sql = await db();
-  const [o] = await sql`select id from orders where pi_id = ${pi.id} and status = 'awaiting_payment'`;
+  const psRef = newPaystackRef();
+  const order = await sql.begin(async (tx) => {
+    const x = await insertOrder(tx, { ...o.row, pi_id: psRef, status: "awaiting_payment" });
+    await o.holdGift(tx, x.id);
+    return x;
+  });
+  const metadata: Record<string, string> = {
+    kind: "order", order_ref: order.id,
+    ...(o.user && o.saveCard && !card ? { save_card: "1", user_id: o.user.uid, card_nickname: o.cardNickname } : {}),
+  };
+
+  if (card) {
+    const p = await chargePaystackCard(card, o.toPay, psRef, metadata).catch(async (e) => { await cancelAwaiting(order.id, "card charge error"); throw e; });
+    if (p.status === "succeeded") {
+      await finalizeOrder(p);
+      return { provider: "paystack" as const, ref: order.id, id: psRef, paymentStatus: "succeeded", amount: o.toPay };
+    }
+    if (p.authorizationUrl) return { provider: "paystack" as const, ref: order.id, id: psRef, paymentStatus: "requires_action", authorizationUrl: p.authorizationUrl, amount: o.toPay };
+    if (p.status === "processing") return { provider: "paystack" as const, ref: order.id, id: psRef, paymentStatus: "processing", amount: o.toPay };
+    await cancelAwaiting(order.id, "card declined");
+    throw new HttpError(402, "Your bank declined that card. Try another card, or pay by transfer.");
+  }
+
+  try {
+    const ps = await startPaystack({ email: o.values.email, amountNgn: o.toPay, metadata, origin: o.origin, reference: psRef });
+    return { provider: "paystack" as const, ref: order.id, id: psRef, authorizationUrl: ps.authorizationUrl, paymentStatus: "requires_action", amount: o.toPay };
+  } catch (e) {
+    await cancelAwaiting(order.id, "payment page failed to open");
+    throw e;
+  }
+}
+
+/**
+ * Called when a payment fails or is cancelled in the browser, so the gift card hold is returned at once.
+ * Stripe needs the payment's client secret; a Paystack reference is itself unguessable.
+ */
+export async function abandonPayment(ref: string, clientSecret: string) {
+  const p = await fetchPayment(ref);
+  if (!p || p.metadata.kind !== "order") return { ok: false };
+  if (p.provider === "stripe" && p.clientSecret !== clientSecret) return { ok: false };
+  // A Paystack transfer can sit "pending" while the bank confirms; only give up on a clear failure.
+  if (p.provider === "paystack" ? p.status !== "canceled" && p.status !== "failed" : p.status === "succeeded" || p.status === "processing") return { ok: false, paymentStatus: p.status };
+  const sql = await db();
+  const [o] = await sql`select id from orders where pi_id = ${p.ref} and status = 'awaiting_payment'`;
   if (o) await cancelAwaiting(o.id, "payment abandoned");
   return { ok: true };
 }
 
 /**
- * Cancels an unpaid order: cancels its Stripe payment (if Stripe still allows it) and returns
- * any gift card hold. If the payment went through after all, the order is completed instead.
+ * Cancels an unpaid order and returns any gift card hold. A Stripe payment is cancelled too; a Paystack
+ * one can't be, so if it is paid later the money is refunded (see finalizeOrder). If the payment went
+ * through after all, the order is completed instead.
  */
 export async function cancelAwaiting(ref: string, why: string) {
   const sql = await db();
   const [o] = await sql`select id, pi_id, status from orders where id = ${ref}`;
   if (!o || o.status !== "awaiting_payment") return;
-  if (o.pi_id) {
+  if (o.pi_id && providerOf(o.pi_id) === "stripe") {
     const res = await stripe().paymentIntents.cancel(o.pi_id).catch((e: Error) => e);
     if (res instanceof Error) {
-      const pi = await stripe().paymentIntents.retrieve(o.pi_id).catch(() => null);
-      if (pi?.status === "succeeded") await finalizeOrder(pi);
-      if (pi?.status !== "canceled") return;
+      const p = await fetchPayment(o.pi_id);
+      if (p?.status === "succeeded") await finalizeOrder(p);
+      if (p?.status !== "canceled") return;
     }
+  } else if (o.pi_id) {
+    const p = await fetchPayment(o.pi_id);
+    if (p?.status === "succeeded") { await finalizeOrder(p); return; }
+    if (p?.status === "processing") return;
   }
   await sql.begin(async (tx) => {
     const [x] = await tx`update orders set status = 'expired', status_at = now() where id = ${ref} and status = 'awaiting_payment' returning gift_code, gift_card_used`;
@@ -238,43 +311,57 @@ export async function cancelAwaiting(ref: string, why: string) {
   });
 }
 
-/** Unpaid orders older than 30 minutes are cancelled. Scoped to one gift card when one is about to be used. */
+/**
+ * Unpaid orders are cancelled after 30 minutes (Stripe) or 60 minutes (Paystack, where bank transfers
+ * take longer). Scoped to one gift card when one is about to be used.
+ */
 export async function sweepStaleOrders(scope: { giftCode?: string } = {}) {
   const sql = await db();
+  const age = sql`created_at < now() - case when pi_id like 'ps\_%' then interval '60 minutes' else interval '30 minutes' end`;
   const stale = scope.giftCode
-    ? await sql`select id from orders where status = 'awaiting_payment' and gift_code = ${scope.giftCode} and created_at < now() - interval '30 minutes' limit 20`
-    : await sql`select id from orders where status = 'awaiting_payment' and created_at < now() - interval '30 minutes' order by created_at limit 100`;
-  for (const o of stale) await cancelAwaiting(o.id, "not paid within 30 minutes").catch((e) => console.error("[sweep]", o.id, e));
+    ? await sql`select id from orders where status = 'awaiting_payment' and gift_code = ${scope.giftCode} and ${age} limit 20`
+    : await sql`select id from orders where status = 'awaiting_payment' and ${age} order by created_at limit 100`;
+  for (const o of stale) await cancelAwaiting(o.id, "not paid in time").catch((e) => console.error("[sweep]", o.id, e));
   return stale.length;
 }
 
 /* ---------- completing an order ---------- */
 
-export async function finalizeOrder(pi: Stripe.PaymentIntent) {
+export async function finalizeOrder(p: Paid) {
   const sql = await db();
-  const ref = pi.metadata.order_ref || ((await sql`select id from orders where pi_id = ${pi.id}`)[0]?.id as string | undefined);
+  const ref = p.metadata.order_ref || ((await sql`select id from orders where pi_id = ${p.ref}`)[0]?.id as string | undefined);
   if (!ref) return { ok: false, error: "Order not found" };
   const o = await sql.begin(async (tx) => {
-    const [o] = await tx`update orders set status = 'pending', status_at = now() where id = ${ref} and pi_id = ${pi.id} and status = 'awaiting_payment' returning *`;
+    // Matched on our own payment reference and the full amount, so no other payment can complete this order.
+    const [o] = await tx`update orders set status = 'pending', status_at = now() where id = ${ref} and pi_id = ${p.ref} and status = 'awaiting_payment' and total_paid <= ${p.amount} returning *`;
     if (!o) return null;
-    await ledger(tx, "payment", pi.amount_received / 100, ref, pi.id, "order");
+    await ledger(tx, "payment", p.amount, ref, p.ref, "order");
     if (o.lead_id) await tx`update leads set order_id = ${ref}, updated_at = now() where id = ${o.lead_id}`;
     return o as unknown as OrderRow;
   });
   if (!o) {
-    const [cur] = await sql`select status from orders where id = ${ref}`;
+    const [cur] = await sql`select status, pi_id from orders where id = ${ref}`;
     // Paid after we had given up on it: send the money back rather than keep it.
-    if (cur?.status === "expired") {
-      await refund(pi.id, undefined, "order had expired before payment completed").catch((e) => console.error("[refund]", e));
-      await sql`update orders set status = 'refunded', refunded = total_paid, status_at = now() where id = ${ref}`;
-      await sql.begin((tx) => ledger(tx, "refund", pi.amount_received / 100, ref, pi.id, "paid after expiry"));
+    if (cur?.status === "expired" && cur.pi_id === p.ref) {
+      const [x] = await sql`update orders set status = 'refunded', refunded = total_paid, status_at = now() where id = ${ref} and status = 'expired' returning id`;
+      if (x) {
+        const r = await refundPayment(p.ref, undefined, "order had expired before payment completed").catch((e: Error) => e);
+        if (r instanceof Error) await notifyOwner(`REFUND FAILED for late payment on expired order ${ref} (${naira(p.amount)}): ${r.message}`);
+        else await sql.begin((tx) => ledger(tx, "refund", p.amount, ref, p.ref, "paid after expiry"));
+      }
       return { ok: false, ref, error: "This order had expired, so the payment was refunded." };
     }
+    if (cur?.status === "refunded" && cur.pi_id === p.ref) return { ok: false, ref, error: "This order had expired, so the payment was refunded." };
     return { ok: true, ref, already: true };
   }
-  const pmId = typeof pi.payment_method === "string" ? pi.payment_method : pi.payment_method?.id;
-  if (pmId && pi.metadata.card_nickname && pi.setup_future_usage) {
-    await stripe().paymentMethods.update(pmId, { metadata: { nickname: pi.metadata.card_nickname } }).catch(() => {});
+  if (p.stripe) {
+    const pi = p.stripe;
+    const pmId = typeof pi.payment_method === "string" ? pi.payment_method : pi.payment_method?.id;
+    if (pmId && pi.metadata.card_nickname && pi.setup_future_usage) {
+      await stripe().paymentMethods.update(pmId, { metadata: { nickname: pi.metadata.card_nickname } }).catch(() => {});
+    }
+  } else if (p.metadata.save_card === "1" && p.metadata.user_id && p.metadata.user_id === o.user_id) {
+    await savePaystackCard(p, p.metadata.user_id, p.metadata.card_nickname || "").catch((e) => console.error("[save card]", e));
   }
   await orderNotifications(o);
   return { ok: true, ref };
@@ -326,7 +413,7 @@ export async function refundOrder(ref: string, reason: string) {
   if (order.pool_id) {
     const paid = await sql`select id, pi_id, amount from contributions where pool_id = ${order.pool_id} and status = 'paid' and amount > 0`;
     for (const c of paid) {
-      const r = await refund(c.pi_id, c.amount, `order ${ref}: ${reason}`).catch((e: Error) => e);
+      const r = await refundPayment(c.pi_id, c.amount, `order ${ref}: ${reason}`).catch((e: Error) => e);
       if (r instanceof Error) { results.push(`failed ${c.id}: ${r.message}`); continue; }
       await sql.begin(async (tx) => {
         await tx`update contributions set status = 'refunded', refunded = refunded + amount where id = ${c.id}`;
@@ -335,7 +422,7 @@ export async function refundOrder(ref: string, reason: string) {
     }
     await sql`update pools set status = 'cancelled' where id = ${order.pool_id}`;
   } else if (order.pi_id && order.total_paid > 0) {
-    const r = await refund(order.pi_id, undefined, reason).catch((e: Error) => e);
+    const r = await refundPayment(order.pi_id, undefined, reason).catch((e: Error) => e);
     if (r instanceof Error) results.push(`card refund failed: ${r.message}`);
     else await sql.begin((tx) => ledger(tx, "refund", order.total_paid, ref, order.pi_id, reason));
   }

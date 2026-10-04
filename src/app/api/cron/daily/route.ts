@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/server/db";
 import { ensureWebhook, stripeConfigured } from "@/lib/server/stripe";
+import { anyProvider } from "@/lib/server/pay";
 import { sweepStaleOrders } from "@/lib/server/orders";
 import { sweepPools } from "@/lib/server/pools";
 
@@ -12,8 +13,8 @@ export async function GET(req: Request) {
   const step = async (name: string, fn: () => Promise<unknown>) => {
     try { out[name] = await fn(); } catch (e) { console.error(`[cron] ${name}`, e); out[name] = `error: ${(e as Error).message}`; }
   };
-  if (stripeConfigured()) {
-    await step("webhook", ensureWebhook);
+  if (stripeConfigured()) await step("webhook", ensureWebhook);
+  if (anyProvider()) {
     await step("orders", () => sweepStaleOrders());
     await step("pools", sweepPools);
   }

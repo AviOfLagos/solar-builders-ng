@@ -201,6 +201,21 @@ create table if not exists settings (
   value text not null,
   updated_at timestamptz not null default now()
 );
+create table if not exists paystack_cards (
+  id text primary key,
+  user_id text not null references users(id) on delete cascade,
+  authorization_code text not null,
+  signature text not null,
+  email text not null,
+  brand text not null default '',
+  last4 text not null default '',
+  exp_month int not null default 0,
+  exp_year int not null default 0,
+  bank text not null default '',
+  nickname text not null default '',
+  created_at timestamptz not null default now(),
+  unique (user_id, signature)
+);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

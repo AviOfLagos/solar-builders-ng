@@ -6,7 +6,7 @@ import { Logo } from "./Logo";
 import { useCart } from "@/lib/cart";
 import { useCartLines } from "./CartDrawer";
 
-type Card = { id: string; brand: string; last4: string; nickname: string; expMonth: number; expYear: number };
+export type Card = { id: string; provider?: "paystack" | "stripe"; brand: string; last4: string; nickname: string; expMonth: number; expYear: number; bank?: string };
 type Me = { user: { email: string } | null; cards: Card[] };
 
 export function Header() {
@@ -108,7 +108,7 @@ export function CardChip({ c }: { c: Card }) {
       <div className="grid h-8 w-11 place-items-center rounded bg-sun text-[10px] font-bold uppercase text-ink">{c.brand.slice(0, 4)}</div>
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{c.nickname}</p>
-        <p className="num text-xs text-white/70">•••• {c.last4} · {String(c.expMonth).padStart(2, "0")}/{String(c.expYear).slice(-2)}</p>
+        <p className="num truncate text-xs text-white/70">•••• {c.last4} · {String(c.expMonth).padStart(2, "0")}/{String(c.expYear).slice(-2)}{c.provider === "stripe" ? " · international" : c.bank ? ` · ${c.bank}` : ""}</p>
       </div>
     </div>
   );

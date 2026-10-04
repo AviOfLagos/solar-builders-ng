@@ -32,7 +32,7 @@ export default async function StorePage(props: PageProps<"/s/[slug]">) {
             <Link href="/shop" className="btn border border-white/30 text-white hover:bg-white/10">Browse all products</Link>
             {s.whatsapp && <a href={`https://wa.me/${s.whatsapp.replace(/^0/, "234").replace(/^\+/, "")}`} className="btn border border-white/30 text-white hover:bg-white/10">WhatsApp {s.owner || s.name}</a>}
           </div>
-          <p className="mt-6 text-xs text-white/50">Every order is fulfilled by Solar Builders NG: genuine stock, free Lagos delivery, Stripe payments.</p>
+          <p className="mt-6 text-xs text-white/50">Every order is fulfilled by Solar Builders NG: genuine stock, free Lagos delivery, secure payments.</p>
         </div>
       </section>
       {s.builds.length > 0 && (

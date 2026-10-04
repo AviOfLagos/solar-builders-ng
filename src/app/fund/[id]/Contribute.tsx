@@ -5,6 +5,7 @@ import { api, type ApiError } from "@/lib/client";
 import { naira, isEmail, isName } from "@/lib/format";
 import { POOL } from "@/config/store";
 import { StripePay, successUrl } from "@/components/StripePay";
+import { PayWith, usePayOptions, defaultProvider, goToPaystack, type Provider } from "@/components/PayWith";
 import { Field } from "@/components/Field";
 
 type Pool = { id: string; kind: "public" | "squad"; remaining: number; items: { id: string; name: string; price: number; qty: number; funded: number }[]; shares: { id: string; name: string; amount: number; paid: boolean }[] };
@@ -24,6 +25,9 @@ export function Contribute({ pool }: { pool: Pool }) {
   const [f, setF] = useState({ name: "", email: "", message: "", anonymous: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pay, setPay] = useState<{ clientSecret: string; amount: number } | null>(null);
+  const opts = usePayOptions();
+  const [picked, setPicked] = useState<Provider | null>(null);
+  const method = picked ?? defaultProvider(opts);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -55,9 +59,12 @@ export function Contribute({ pool }: { pool: Pool }) {
       if (busy || !validate()) return;
       setErr(""); setBusy(true);
       try {
-        setPay(await api<{ clientSecret: string; amount: number }>(`/pools/${pool.id}/contribute`, {
-          body: { ...f, amount: mode === "amount" ? amount : undefined, piece: mode === "piece" ? piece : undefined, shareId: mode === "share" ? share : undefined },
-        }));
+        const d = await api<{ clientSecret?: string; authorizationUrl?: string; amount: number }>(`/pools/${pool.id}/contribute`, {
+          body: { ...f, provider: method, amount: mode === "amount" ? amount : undefined, piece: mode === "piece" ? piece : undefined, shareId: mode === "share" ? share : undefined },
+        });
+        // Naira: finish on Paystack's page, which brings them back to the thank-you page.
+        if (d.authorizationUrl) { goToPaystack(d.authorizationUrl); return; }
+        if (d.clientSecret) setPay({ clientSecret: d.clientSecret, amount: d.amount });
       } catch (x) { const ex = x as ApiError; setErr(ex.message); setErrors(ex.fields || {}); if (ex.status === 409) router.refresh(); }
       setBusy(false);
     }}>
@@ -112,8 +119,10 @@ export function Contribute({ pool }: { pool: Pool }) {
       <Field label="Email for your receipt" error={errors.email}><input className="field" type="email" inputMode="email" autoComplete="email" maxLength={120} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
       <Field label="Message (optional)"><input className="field" maxLength={200} placeholder="e.g. Happy birthday Mummy!" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></Field>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#10213B]" checked={f.anonymous} onChange={(e) => setF({ ...f, anonymous: e.target.checked })} /> Hide my name on the page</label>
+      <PayWith options={opts} value={method} onChange={setPicked} disabled={busy} />
       {err && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{err}</p>}
-      <button className="btn btn-sun w-full" disabled={busy || value <= 0}>{busy ? "Please wait…" : `Continue with ${naira(value > 0 ? value : 0)}`}</button>
+      <button className="btn btn-sun w-full" disabled={busy || value <= 0 || !opts || (!opts.naira && !opts.intl)}>{busy ? "Please wait…" : `Continue with ${naira(value > 0 ? value : 0)}`}</button>
+      {opts && !opts.naira && !opts.intl && <p className="text-center text-xs text-flare">Online payments are being switched on. Check back soon.</p>}
       <p className="text-center text-xs text-mute">No account needed. If the kit gets funded before your payment lands, we refund you automatically.</p>
     </form>
   );

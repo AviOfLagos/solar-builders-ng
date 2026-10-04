@@ -1,11 +1,12 @@
 import "server-only";
-import type Stripe from "stripe";
 import { getProductById } from "@/lib/catalog";
 import { LAGOS_LGAS, OCCASIONS, POOL } from "@/config/store";
 import { NG_PHONE, normalizePhone, ngE164, isEmail, isName, naira, firstName } from "@/lib/format";
 import { db, code, id, type Tx } from "./db";
 import { str, int, bool, oneOf, HttpError } from "./api";
-import { stripe, MIN_CHARGE_NGN, refund } from "./stripe";
+import { stripe } from "./stripe";
+import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, startPaystack, type Paid } from "./pay";
+import { newPaystackRef } from "./paystack";
 import { notifyOwner } from "./mail";
 import { priceCart, checkCart, compactItems, assertValid } from "./rules";
 import { ledger, insertOrder, type OrderRow } from "./ledger";
@@ -120,7 +121,7 @@ export type PoolPage = NonNullable<Awaited<ReturnType<typeof poolPage>>>;
 
 /* ---------- chip in ---------- */
 
-export async function createContribution(pid: string, input: Record<string, unknown>, user: Session | null) {
+export async function createContribution(pid: string, input: Record<string, unknown>, user: Session | null, origin?: string) {
   const p = await loadPool(pid);
   if (!p) throw new HttpError(404, "This Go Solar Me page doesn't exist.");
   if (p.status === "funded") throw new HttpError(409, "This kit is fully funded. Thank you!");
@@ -157,33 +158,47 @@ export async function createContribution(pid: string, input: Record<string, unkn
     if (amount > remaining) throw new HttpError(400, `Only ${naira(remaining)} is left to reach the goal.`, { fields: { amount: `At most ${naira(remaining)}.` } });
   }
 
+  const provider = pickProvider(input.provider);
   const cid = id();
+  const row = { id: cid, pool_id: p.id, user_id: user?.uid ?? null, name, email, message: str(input.message, 200), amount, anonymous: bool(input.anonymous), piece, share_id: shareId };
+  const metadata = { kind: "contribution", contribution_id: cid, pool_id: p.id };
+
+  if (provider === "paystack") {
+    const ref = newPaystackRef();
+    await sql`insert into contributions ${sql({ ...row, pi_id: ref })}`;
+    const ps = await startPaystack({ email, amountNgn: amount, metadata, origin, reference: ref, cancelPath: `/fund/${p.id}` }).catch(async (e) => {
+      await sql`update contributions set status = 'abandoned' where id = ${cid} and status = 'pending'`;
+      throw e;
+    });
+    return { provider, id: ps.ref, authorizationUrl: ps.authorizationUrl, amount };
+  }
+
   const pi = await stripe().paymentIntents.create({
     amount: amount * 100, currency: "ngn", receipt_email: email, allowed_payment_method_types: ["card"],
-    description: `Go Solar Me: ${p.title} (${p.id})`,
-    metadata: { kind: "contribution", contribution_id: cid, pool_id: p.id },
+    description: `Go Solar Me: ${p.title} (${p.id})`, metadata,
   });
   try {
-    await sql`insert into contributions ${sql({ id: cid, pool_id: p.id, user_id: user?.uid ?? null, name, email, message: str(input.message, 200), amount, anonymous: bool(input.anonymous), pi_id: pi.id, piece, share_id: shareId })}`;
+    await sql`insert into contributions ${sql({ ...row, pi_id: pi.id })}`;
   } catch (e) {
     await stripe().paymentIntents.cancel(pi.id).catch(() => {});
     throw e;
   }
-  return { id: pi.id, clientSecret: pi.client_secret, amount };
+  return { provider, id: pi.id, clientSecret: pi.client_secret, amount };
 }
 
 /**
  * Counts a paid chip-in. Only what the goal still needs is kept: if the kit got funded first,
  * the extra goes straight back to the supporter's card. A gap under ₦1,000 is covered by us.
  */
-export async function finalizeContribution(pi: Stripe.PaymentIntent) {
+export async function finalizeContribution(pay: Paid) {
   const sql = await db();
   const r = await sql.begin(async (tx) => {
-    const [c] = await tx`update contributions set status = 'paid' where pi_id = ${pi.id} and status = 'pending' returning *`;
+    // A chip-in marked abandoned can still be paid late (Paystack pages stay open); count it then too.
+    const [c] = await tx`update contributions set status = 'paid' where pi_id = ${pay.ref} and status in ('pending', 'abandoned') returning *`;
     if (!c) return null;
     const [p] = (await tx`select * from pools where id = ${c.pool_id} for update`) as unknown as PoolRow[];
-    const paid = pi.amount_received / 100;
-    await ledger(tx, "payment", paid, p.id, pi.id, "chip-in");
+    const paid = pay.amount;
+    await ledger(tx, "payment", paid, p.id, pay.ref, "chip-in");
     let accept = 0;
     if (OPEN.includes(p.status)) {
       if (c.share_id) {
@@ -204,11 +219,11 @@ export async function finalizeContribution(pi: Stripe.PaymentIntent) {
     }
     return { c, p, accept, excess, order };
   });
-  if (!r) return { ok: true, kind: "contribution", poolId: pi.metadata.pool_id, already: true };
+  if (!r) return { ok: true, kind: "contribution", poolId: pay.metadata.pool_id, already: true };
   if (r.excess > 0) {
-    const res = await refund(pi.id, r.excess, r.accept ? "more than the goal needed" : "goal already reached").catch((e: Error) => e);
+    const res = await refundPayment(pay.ref, r.excess, r.accept ? "more than the goal needed" : "goal already reached").catch((e: Error) => e);
     if (res instanceof Error) await notifyOwner(`REFUND FAILED for chip-in ${r.c.id} (${naira(r.excess)}): ${res.message}`);
-    else await sql.begin((tx) => ledger(tx, "refund", r.excess, r.p.id, pi.id, "over the goal"));
+    else await sql.begin((tx) => ledger(tx, "refund", r.excess, r.p.id, pay.ref, "over the goal"));
   }
   await notifyOwner(`CHIP-IN ${naira(r.accept)} to ${r.p.title} (${r.p.id}) from ${r.c.anonymous ? "Anonymous" : r.c.name || r.c.email}${r.excess ? ` · refunded ${naira(r.excess)}` : ""}`);
   if (r.order) await orderNotifications(r.order);
@@ -283,7 +298,7 @@ export async function cancelPool(pid: string, why: string) {
   const paid = await sql`select id, pi_id, amount from contributions where pool_id = ${pid} and status = 'paid' and amount > 0`;
   let refunded = 0, failed = 0;
   for (const x of paid) {
-    const r = await refund(x.pi_id, x.amount, why).catch((e: Error) => e);
+    const r = await refundPayment(x.pi_id, x.amount, why).catch((e: Error) => e);
     if (r instanceof Error) { failed++; continue; }
     refunded++;
     await sql.begin(async (tx) => {
@@ -291,7 +306,7 @@ export async function cancelPool(pid: string, why: string) {
       await ledger(tx, "refund", x.amount, pid, x.pi_id, why);
     });
   }
-  await notifyOwner(`GO SOLAR ME ${pid} cancelled (${why}) — ${refunded} refunded${failed ? `, ${failed} FAILED, check Stripe` : ""}`);
+  await notifyOwner(`GO SOLAR ME ${pid} cancelled (${why}) — ${refunded} refunded${failed ? `, ${failed} FAILED, check Paystack/Stripe` : ""}`);
   return { refunded, failed };
 }
 
@@ -317,10 +332,10 @@ export async function sweepPools() {
   // Chip-ins started but never paid.
   const stale = await sql`select id, pi_id from contributions where status = 'pending' and created_at < now() - interval '1 day' limit 100`;
   for (const c of stale) {
-    const pi = await stripe().paymentIntents.retrieve(c.pi_id).catch(() => null);
-    if (!pi || pi.status === "processing") continue;
-    if (pi.status === "succeeded") { await finalizeContribution(pi); continue; }
-    if (pi.status !== "canceled" && (await stripe().paymentIntents.cancel(pi.id).catch(() => null)) === null) continue;
+    const pay = await fetchPayment(c.pi_id).catch(() => null);
+    if (!pay || pay.status === "processing") continue;
+    if (pay.status === "succeeded") { await finalizeContribution(pay); continue; }
+    if (providerOf(c.pi_id) === "stripe" && pay.status !== "canceled" && (await stripe().paymentIntents.cancel(c.pi_id).catch(() => null)) === null) continue;
     await sql`update contributions set status = 'abandoned' where id = ${c.id} and status = 'pending'`;
   }
   return { ended: due.length, staleChipIns: stale.length };

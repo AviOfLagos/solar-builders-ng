@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import type { Stripe as StripeJs } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useCartLines } from "@/components/CartDrawer";
-import { CardChip } from "@/components/Header";
+import { CardChip, type Card } from "@/components/Header";
+import { PayWith, usePayOptions, defaultProvider, goToPaystack, type Provider } from "@/components/PayWith";
 import { stripePromise, stripeAppearance, successUrl } from "@/components/StripePay";
 import { LAGOS_LGAS, STORE } from "@/config/store";
 import { naira, NG_PHONE, INTL_PHONE, normalizePhone, isEmail, isName } from "@/lib/format";
@@ -14,7 +15,6 @@ import { api, getRef, getLeadId, saveLead, type ApiError } from "@/lib/client";
 import { Field, Section } from "@/components/Field";
 
 const MIN_CHARGE = 1000;
-type Card = { id: string; brand: string; last4: string; nickname: string; expMonth: number; expYear: number };
 type Me = { user: { email: string; name?: string; phone?: string } | null; cards: Card[]; lastDelivery: { address: string; lga: string; landmark: string; altPhone: string } | null };
 type Gift = { code: string; balance: number } | null;
 type Form = {
@@ -70,7 +70,9 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
   const { items, subtotal } = useCartLines();
   const router = useRouter();
   const [me, setMe] = useState<Me>({ user: null, cards: [], lastDelivery: null });
-  const [cardChoice, setCardChoice] = useState("new");
+  const opts = usePayOptions();
+  const [method, setMethod] = useState<Provider>("paystack");
+  const [cardChoice, setCardChoice] = useState("auto");
   const [cardReady, setCardReady] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState("");
@@ -84,6 +86,8 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
     name: "", email: "", phone: "", altPhone: "", address: "", lga: "", landmark: "", notes: "", installer: false, cardNickname: "",
   });
   const lastLead = useRef("");
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- pick naira unless only international cards are on
+  useEffect(() => { if (opts) setMethod(defaultProvider(opts)); }, [opts]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads browser-only state once
@@ -93,7 +97,6 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
       setMe(m);
       if (m.user) setF((x) => ({ ...x, email: x.email || m.user!.email, name: x.name || m.user!.name || "", phone: x.phone || m.user!.phone || "" }));
       if (m.lastDelivery) setF((x) => (x.forSomeoneElse || x.address ? x : { ...x, ...m.lastDelivery }));
-      if (m.cards[0]) setCardChoice(m.cards[0].id);
     }).catch(() => {});
   }, []);
 
@@ -141,7 +144,10 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
     finally { setGiftBusy(false); }
   }
 
-  const useSaved = cardChoice !== "new" && me.cards.length > 0;
+  const cards = me.cards.filter((c) => (c.provider ?? "stripe") === method);
+  const choice = cardChoice === "new" ? "new" : cards.find((c) => c.id === cardChoice)?.id ?? cards[0]?.id ?? "new";
+  const useSaved = choice !== "new";
+  const canPay = method === "paystack" ? !!opts?.naira : !!opts?.intl && stripeReady && (useSaved || cardReady);
   const giftUsed = subtotal - toPay;
   const other = f.forSomeoneElse;
   const cancel = (id: string, clientSecret: string) => api(`/payments/${id}/cancel`, { body: { clientSecret } }).catch(() => {});
@@ -154,9 +160,17 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
       router.push(`/checkout/success?order=${d.ref}`);
       return;
     }
+    if (method === "paystack") {
+      const d = await api<{ id: string; authorizationUrl?: string; paymentStatus: string }>("/checkout", {
+        body: { ...base, provider: "paystack", savedCardId: useSaved ? choice : undefined, saveCard: !useSaved && saveCard && !!me.user, cardNickname: saveCard ? f.cardNickname : "" },
+      });
+      if (d.authorizationUrl) { goToPaystack(d.authorizationUrl); return; }
+      router.push(`/checkout/success?reference=${encodeURIComponent(d.id)}`);
+      return;
+    }
     if (!stripe || !elements) throw new Error("The payment form is still loading. Try again in a moment.");
     if (useSaved) {
-      const d = await api<{ id: string; clientSecret: string; paymentStatus: string }>("/checkout", { body: { ...base, savedCardId: cardChoice } });
+      const d = await api<{ id: string; clientSecret: string; paymentStatus: string }>("/checkout", { body: { ...base, provider: "stripe", savedCardId: choice } });
       if (d.paymentStatus === "requires_action") {
         const r = await stripe.handleNextAction({ clientSecret: d.clientSecret });
         if (r.error) { await cancel(d.id, d.clientSecret); throw new Error(r.error.message || "Your bank didn't approve the payment."); }
@@ -169,7 +183,7 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
     }
     const sub = await elements.submit();
     if (sub.error) throw new Error(sub.error.message);
-    const d = await api<{ id: string; clientSecret: string }>("/checkout", { body: { ...base, saveCard: saveCard && !!me.user, cardNickname: saveCard ? f.cardNickname : "" } });
+    const d = await api<{ id: string; clientSecret: string }>("/checkout", { body: { ...base, provider: "stripe", saveCard: saveCard && !!me.user, cardNickname: saveCard ? f.cardNickname : "" } });
     const r = await stripe.confirmPayment({ elements, clientSecret: d.clientSecret, confirmParams: { return_url: `${location.origin}/checkout/success`, receipt_email: f.email.trim() }, redirect: "if_required" });
     if (r.error) { await cancel(d.id, d.clientSecret); throw new Error(r.error.message || "Payment failed. Try again or use another card."); }
     router.push(successUrl(r.paymentIntent.id, d.clientSecret));
@@ -254,40 +268,41 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
           </Section>
 
           <Section title="Payment">
-            {toPay === 0 ? <p className="rounded-xl bg-leaf/10 p-4 text-sm">Your gift card covers this order. No card needed.</p> : !stripeReady ? (
-              <p className="rounded-xl bg-sun/20 p-4 text-sm">Card payments are being switched on. To order now, <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
+            {toPay === 0 ? <p className="rounded-xl bg-leaf/10 p-4 text-sm">Your gift card covers this order. No card needed.</p> : !opts ? (
+              <p className="text-sm text-mute">Loading payment options…</p>
+            ) : !opts.naira && !opts.intl ? (
+              <p className="rounded-xl bg-sun/20 p-4 text-sm">Online payments are being switched on. To order now, <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
             ) : (
               <div className="space-y-3">
-                {me.cards.length > 0 && (
+                <PayWith options={opts} value={method} onChange={setMethod} disabled={busy} />
+                {cards.length > 0 && (
                   <fieldset className="space-y-2">
                     <legend className="mb-2 text-sm text-mute">Your saved cards</legend>
-                    {me.cards.map((c) => (
-                      <label key={c.id} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-2 pr-4 ${cardChoice === c.id ? "border-ink" : "border-line"}`}>
-                        <input type="radio" name="card" className="ml-2 accent-[#10213B]" checked={cardChoice === c.id} onChange={() => setCardChoice(c.id)} />
+                    {cards.map((c) => (
+                      <label key={c.id} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-2 pr-4 ${choice === c.id ? "border-ink" : "border-line"}`}>
+                        <input type="radio" name="card" className="ml-2 accent-[#10213B]" checked={choice === c.id} onChange={() => setCardChoice(c.id)} />
                         <div className="min-w-0 flex-1"><CardChip c={c} /></div>
                       </label>
                     ))}
-                    <label className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${cardChoice === "new" ? "border-ink" : "border-line"}`}>
-                      <input type="radio" name="card" className="accent-[#10213B]" checked={cardChoice === "new"} onChange={() => setCardChoice("new")} />
-                      <span className="font-medium">Use a new card</span>
+                    <label className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${choice === "new" ? "border-ink" : "border-line"}`}>
+                      <input type="radio" name="card" className="accent-[#10213B]" checked={choice === "new"} onChange={() => setCardChoice("new")} />
+                      <span className="font-medium">{method === "paystack" ? "New card, bank transfer or USSD" : "Use a new card"}</span>
                     </label>
                   </fieldset>
                 )}
-                {!useSaved && (
+                {!useSaved && method === "paystack" && (
+                  <div className="space-y-3 rounded-xl border border-line bg-white p-4">
+                    <p className="text-sm text-ink-2">Tap Pay and you&apos;ll finish on Paystack&apos;s secure page with your card, a bank transfer or USSD. Then you come straight back here.</p>
+                    <SaveCard signedIn={!!me.user} saveCard={saveCard} setSaveCard={setSaveCard} nickname={f.cardNickname} onNickname={set("cardNickname")} note="Card payments only." />
+                  </div>
+                )}
+                {!useSaved && method === "stripe" && (stripeReady ? (
                   <div className="space-y-4 rounded-xl border border-line bg-white p-4">
                     <PaymentElement options={{ layout: "tabs" }} onReady={() => setCardReady(true)} onLoadError={() => setFormError("The card form couldn't load. Refresh the page and try again.")} />
                     {!cardReady && <p className="text-sm text-mute">Loading the card form…</p>}
-                    {me.user ? (
-                      <>
-                        <label className="flex items-center gap-3 text-sm">
-                          <input type="checkbox" className="h-4 w-4 accent-[#10213B]" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} />
-                          Save this card for next time
-                        </label>
-                        {saveCard && <Field label="Name this card" hint="e.g. “GTB salary card” or “Business Visa”."><input className="field" maxLength={40} value={f.cardNickname} onChange={set("cardNickname")} placeholder="My card" /></Field>}
-                      </>
-                    ) : <p className="text-xs text-mute"><Link className="underline" href="/account?next=/checkout">Create an account</Link> to save and name cards.</p>}
+                    <SaveCard signedIn={!!me.user} saveCard={saveCard} setSaveCard={setSaveCard} nickname={f.cardNickname} onNickname={set("cardNickname")} />
                   </div>
-                )}
+                ) : <p className="rounded-xl bg-sun/20 p-4 text-sm">Cards from abroad aren&apos;t available right now. Pay in naira, or <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>)}
               </div>
             )}
           </Section>
@@ -324,12 +339,25 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
           </div>
           {ref && <p className="text-xs text-mute">Referred by <b>{ref}</b></p>}
           {formError && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{formError}</p>}
-          <button type="submit" disabled={busy || (toPay > 0 && (!stripeReady || (!useSaved && !cardReady)))} className="btn btn-sun w-full text-base">{busy ? "Processing…" : toPay === 0 ? "Place order" : `Pay ${naira(toPay)}`}</button>
-          <p className="text-center text-xs text-mute">Payments are processed by Stripe. Your order is pending until we confirm it by phone.</p>
+          <button type="submit" disabled={busy || (toPay > 0 && !canPay)} className="btn btn-sun w-full text-base">{busy ? (method === "paystack" && toPay > 0 ? "Opening Paystack…" : "Processing…") : toPay === 0 ? "Place order" : `Pay ${naira(toPay)}`}</button>
+          <p className="text-center text-xs text-mute">{method === "paystack" ? "Secured by Paystack." : "Secured by Stripe."} Your order is pending until we confirm it by phone.</p>
           <p className="text-center text-xs"><Link className="underline" href="/pay-small-small">Pay small small instead</Link> · <Link className="underline" href="/fund/new">Go Solar Me with friends</Link></p>
         </aside>
       </form>
     </div>
+  );
+}
+
+function SaveCard({ signedIn, saveCard, setSaveCard, nickname, onNickname, note }: { signedIn: boolean; saveCard: boolean; setSaveCard: (b: boolean) => void; nickname: string; onNickname: (e: React.ChangeEvent<HTMLInputElement>) => void; note?: string }) {
+  if (!signedIn) return <p className="text-xs text-mute"><Link className="underline" href="/account?next=/checkout">Create an account</Link> to save and name cards.</p>;
+  return (
+    <>
+      <label className="flex items-center gap-3 text-sm">
+        <input type="checkbox" className="h-4 w-4 accent-[#10213B]" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} />
+        <span>Save this card for next time{note ? <span className="text-mute"> · {note}</span> : null}</span>
+      </label>
+      {saveCard && <Field label="Name this card" hint="e.g. “GTB salary card” or “Business Visa”."><input className="field" maxLength={40} value={nickname} onChange={onNickname} placeholder="My card" /></Field>}
+    </>
   );
 }
 

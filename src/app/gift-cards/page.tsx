@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { api, type ApiError } from "@/lib/client";
 import { naira, isEmail, isName } from "@/lib/format";
 import { StripePay, successUrl } from "@/components/StripePay";
+import { PayWith, usePayOptions, defaultProvider, goToPaystack, type Provider } from "@/components/PayWith";
 import { Field } from "@/components/Field";
 
 const AMOUNTS = [25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
@@ -13,6 +14,9 @@ export default function GiftCards() {
   const [amount, setAmount] = useState(100_000);
   const [f, setF] = useState({ fromName: "", fromEmail: "", toName: "", toEmail: "", message: "" });
   const [pay, setPay] = useState<{ clientSecret: string; amount: number } | null>(null);
+  const opts = usePayOptions();
+  const [picked, setPicked] = useState<Provider | null>(null);
+  const method = picked ?? defaultProvider(opts);
   const [err, setErr] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -62,7 +66,11 @@ export default function GiftCards() {
             e.preventDefault();
             if (busy || !validate()) return;
             setErr(""); setBusy(true);
-            try { setPay(await api("/gift-cards", { body: { ...f, amount } })); } catch (x) { setErr((x as Error).message); setErrors((x as ApiError).fields || {}); }
+            try {
+              const d = await api<{ clientSecret?: string; authorizationUrl?: string; amount: number }>("/gift-cards", { body: { ...f, amount, provider: method } });
+              if (d.authorizationUrl) { goToPaystack(d.authorizationUrl); return; }
+              if (d.clientSecret) setPay({ clientSecret: d.clientSecret, amount: d.amount });
+            } catch (x) { setErr((x as Error).message); setErrors((x as ApiError).fields || {}); }
             setBusy(false);
           }}>
             <p className="font-semibold">Amount</p>
@@ -73,8 +81,9 @@ export default function GiftCards() {
             <Field label="Their name (optional)" error={errors.toName}><input className="field" maxLength={60} value={f.toName} onChange={set("toName")} /></Field>
             <Field label="Their email (optional)" error={errors.toEmail}><input className="field" type="email" inputMode="email" maxLength={120} value={f.toEmail} onChange={set("toEmail")} /></Field>
             <Field label="Message (optional)"><textarea className="field" rows={2} maxLength={300} value={f.message} onChange={set("message")} /></Field>
+            <PayWith options={opts} value={method} onChange={setPicked} disabled={busy} />
             {err && <p role="alert" className="text-sm text-flare">{err}</p>}
-            <button className="btn btn-sun w-full" disabled={busy}>{busy ? "Please wait…" : "Continue to payment"}</button>
+            <button className="btn btn-sun w-full" disabled={busy || !opts || (!opts.naira && !opts.intl)}>{busy ? "Please wait…" : "Continue to payment"}</button>
             <p className="text-center text-xs text-mute">You&apos;ll get the code on the next screen to share. Gift cards can&apos;t be exchanged for cash.</p>
           </form>
         )}

@@ -14,7 +14,7 @@ export const LEGAL: LegalDoc[] = [
     sections: [
       { h: "Who we are", p: [`${STORE.name} sells solar products from the brands listed on this site and delivers them within Lagos State, Nigeria. You can reach us on ${contact}.`] },
       { h: "Prices", p: ["Prices are in naira and include our margin on the brand's official price. The price you see at checkout is the price you pay; we never charge more than the total shown before you tap Pay.", "Solar Friday shows a discount against a higher reference price. What you pay on a Friday is the same as our normal price."] },
-      { h: "Payment", p: ["Card payments are processed by Stripe. We never see or store your full card number. Saved cards are stored by Stripe and you can remove them at any time in your account.", `Orders above ${naira(CART.maxTotal)} are arranged on WhatsApp.`] },
+      { h: "Payment", p: ["Naira payments (card, bank transfer, USSD) are processed by Paystack. Cards from outside Nigeria are processed by Stripe. We never see or store your full card number: saved cards are kept as a token from Paystack or Stripe, and you can remove them at any time in your account.", `Orders above ${naira(CART.maxTotal)} are arranged on WhatsApp.`] },
       { h: "Your order", p: ["After payment your order is pending until we call to confirm stock and delivery. If we can't fulfil an order, we refund it in full to the card or gift card it came from."] },
       { h: "Delivery", p: ["We deliver within Lagos State only. Delivery is free unless the checkout says otherwise. We call the number given for the delivery before we come."] },
       { h: "Installation", p: ["Ticking “I need an installer” is a request, not a charge. We connect you with an engineer who quotes the installation separately. Installation is agreed between you and the installer."] },
@@ -55,9 +55,9 @@ export const LEGAL: LegalDoc[] = [
     summary: "What we collect, why, and how to ask us to delete it. Written for the Nigeria Data Protection Act 2023.",
     updated: "2026-10-03",
     sections: [
-      { h: "What we collect", p: ["Your name, email and phone; delivery addresses; what's in your cart; your orders; and for Go Solar Me, what you chipped in and your message. Card details are held by Stripe, not by us."] },
+      { h: "What we collect", p: ["Your name, email and phone; delivery addresses; what's in your cart; your orders; and for Go Solar Me, what you chipped in and your message. Card details are held by Paystack or Stripe, not by us."] },
       { h: "Why", p: ["To deliver your order, call you about it, run Go Solar Me pages and prevent fraud. If you give us your number and don't finish an order, we may message you once or twice about it. Reply STOP and we won't again."] },
-      { h: "Who sees it", p: ["Our team, the installer you asked for, and the services that run the site: Stripe (payments), Vercel (hosting), Neon (database) and Resend (email). We don't sell your data."] },
+      { h: "Who sees it", p: ["Our team, the installer you asked for, and the services that run the site: Paystack and Stripe (payments), Vercel (hosting), Neon (database) and Resend (email). We don't sell your data."] },
       { h: "How long we keep it", p: ["Order records are kept as long as the law requires for accounting. Unfinished carts are deleted after 90 days."] },
       { h: "Your rights", p: [`You can ask for a copy of your data, to correct it or to delete it. Message us on ${contact}.`] },
     ],

@@ -55,9 +55,6 @@ export async function ownsCard(customerId: string, pmId: string) {
   return pm && pm.customer === customerId ? pm : null;
 }
 
-/** Stripe's smallest charge is about US$0.50; keep every naira charge above this. */
-export const MIN_CHARGE_NGN = 1000;
-
 /* ---------- webhook ---------- */
 
 const WEBHOOK_EVENTS: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
