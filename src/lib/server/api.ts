@@ -56,7 +56,7 @@ export async function requireUser(): Promise<Session | Response> {
   const s = await getSession();
   if (!s) return fail("Sign in first.", 401);
   const sql = await db();
-  const [u] = await sql`select 1 from users where id = ${s.uid}`;
+  const [u] = await sql`select 1 from users where id = ${s.uid} and deleted_at is null`;
   return u ? s : fail("Your session has ended. Sign in again.", 401);
 }
 
@@ -83,7 +83,7 @@ export async function currentUser(): Promise<Session | null> {
   const s = await getSession();
   if (!s) return null;
   const sql = await db();
-  const [u] = await sql`select 1 from users where id = ${s.uid}`;
+  const [u] = await sql`select 1 from users where id = ${s.uid} and deleted_at is null`;
   return u ? s : null;
 }
 

@@ -262,11 +262,11 @@ There are five tabs, with Go Solar Me in the middle and emphasised. A shared lin
    - Gate: two test supporters fund a pool, the order appears, and the second payer's overpay is refunded.
 7. **Gift cards, pay small small, installer store.**
    - Gate: a gift code bought in the app pays part of an order.
-8. **Backend additions** (in the **web repo**; same code style, same `route()` and `HttpError` helpers in `src/lib/server/api.ts`).
-   - Build: the endpoints in §9.
-   - Gate: lint, type check and build are clean, the e2e payment checks still pass (`scripts/e2e/README.md`), and the new endpoints are added to `docs/API.md`.
+8. **Account screens.**
+   - Build: profile edit, forgot password (code by email), delete account (with a confirm screen), Apple sign-in on iOS. The endpoints already exist (§9).
+   - Gate: reset a password and delete a test account from the app.
 9. **Push notifications.**
-   - Build: register a token on sign-in; the server sends the §10 events.
+   - Build: ask permission after the first purchase or pool, get the Expo push token, `POST /me/devices` after every sign-in, `DELETE /me/devices/{token}` on sign-out, open the right screen from `data` (§10). The server already sends.
    - Gate: chipping in sends the pool owner a push.
 10. **Store readiness.**
     - Build: Apple sign-in, delete account, privacy labels, icons and splash, EAS builds, TestFlight and Play internal testing.
@@ -274,35 +274,33 @@ There are five tabs, with Go Solar Me in the middle and emphasised. A shared lin
 
 ---
 
-## 9. Backend endpoints still to add (web repo)
+## 9. Backend endpoints for the app
 
-| Endpoint | What it does | Notes |
-|---|---|---|
-| `POST /auth/apple` | `{ identityToken, fullName? }` → `{ user, token }` | Verify against Apple's JWKS (`https://appleid.apple.com/auth/keys`), audience = bundle ID. Mirror `src/lib/server/google.ts`. The column `users.apple_sub` already exists. **Required by Apple** when Google sign-in is offered. |
-| `DELETE /me` | Delete my account | Remove saved Paystack cards (`paystack_cards`) and detach Stripe cards. Anonymise `users` (email → `deleted+{id}@invalid`, clear the name, phone, password and `google_sub`/`apple_sub`). Keep orders and the ledger for records. Close the user's open pools via `cancelPool()`. **Required by Apple 5.1.1(v)** and Google Play. |
-| `PATCH /me` | Edit name and phone | Validate like `/auth/register` |
-| `POST /me/devices` · `DELETE /me/devices/{token}` | Register or remove an Expo push token | New table `devices(token pk, user_id, platform, created_at)` in the `SCHEMA` string in `src/lib/server/db.ts`. Migrations run themselves. |
-| `POST /auth/reset` + `POST /auth/reset/confirm` | Forgot password | Email a 6-digit code with `sendMail()` (Resend works now). The code lasts 15 minutes; rate-limit it. |
-| `POST /pools/{id}/photos` | Owner adds milestone photos | Needs file storage. Use Vercel Blob (`@vercel/blob`); Avi connects it in Vercel. Add a `pool_photos` table. |
-| `GET /orders/{ref}` (optional) | One order with its full items | `/me/orders` already returns everything needed |
+Built, live and tested (`scripts/e2e/account.test.mjs`, 18 checks). Shapes are in `docs/API.md`.
+
+| Endpoint | What it does |
+|---|---|
+| `POST /auth/apple` | Sign in with Apple: `{ identityToken, fullName? }` → `{ user, token }`. Audience = bundle ID (`APPLE_CLIENT_IDS` env, default `ng.solarbuilders.gosolarme`). |
+| `PATCH /me` | Edit name and phone |
+| `DELETE /me` | Delete the account: body `{ confirm: "DELETE" }`. Required by Apple 5.1.1(v) and Google Play. |
+| `POST /me/devices` · `DELETE /me/devices/{token}` | Register or remove an Expo push token |
+| `POST /auth/reset` · `POST /auth/reset/confirm` | Forgot password: a 6-digit code by email, valid 15 minutes |
+
+Still to add, in the web repo: `POST /pools/{id}/photos` (owner milestone photos). It needs Vercel Blob connected by Avi first; then add a `pool_photos` table and use `@vercel/blob`.
 
 ---
 
-## 10. Push notifications (server sends, app shows)
+## 10. Push notifications (the server already sends these; the app shows them)
 
 | Event | To | Tap opens |
 |---|---|---|
 | Order paid / confirmed / out for delivery / delivered / installed | Buyer | Order details |
 | Someone chipped in | Pool owner | Pool page |
-| Pool 25 / 50 / 75 / 100% | Owner (at 100%, every signed-in supporter) | Pool page |
+| Pool 25 / 50 / 75 / 100% | Owner (at 100%, also every signed-in supporter) | Pool page |
 | Pool has 3 days left; deadline passed (choose next step) | Owner | Owner panel |
 | Sale through your store link | Installer | My store |
 
-**Where to send from**
-- `orderNotifications()` and `setOrderStatus()` in `src/lib/server/orders.ts`
-- `finalizeContribution()` and `sweepPools()` in `src/lib/server/pools.ts`
-
-**How:** use Expo's push API (`https://exp.host/--/api/v2/push/send`).
+Each push carries `data` saying what to open: `{ kind: "order", ref }`, `{ kind: "pool", id }` or `{ kind: "store" }`. The sending code is `src/lib/server/push.ts`, called from `orders.ts` and `pools.ts`.
 
 ---
 

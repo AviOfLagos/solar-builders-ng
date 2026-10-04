@@ -216,6 +216,21 @@ create table if not exists paystack_cards (
   created_at timestamptz not null default now(),
   unique (user_id, signature)
 );
+create table if not exists devices (
+  token text primary key,
+  user_id text not null references users(id) on delete cascade,
+  platform text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists devices_user_idx on devices(user_id);
+create table if not exists password_resets (
+  user_id text primary key references users(id) on delete cascade,
+  code_hash text not null,
+  attempts int not null default 0,
+  expires_at timestamptz not null
+);
+alter table users add column if not exists deleted_at timestamptz;
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

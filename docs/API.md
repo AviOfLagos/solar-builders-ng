@@ -16,12 +16,15 @@ Send `Authorization: Bearer <token>` on every call. The website uses an httpOnly
 | `POST /auth/register` | `{ name, email, password (8–128), phone? }` | `{ user: {id,email,name}, token }` |
 | `POST /auth/login` | `{ email, password }` | `{ user, token }` |
 | `POST /auth/google` | `{ credential }` (Google ID token from the native SDK) | `{ user, token, created }` |
-| `POST /auth/logout` | – | `{ ok }` (the app just deletes its token) |
+| `POST /auth/apple` | `{ identityToken, fullName? }` (from `expo-apple-authentication`; Apple sends the name only the first time) | `{ user, token, created }` |
+| `POST /auth/reset` | `{ email }` | `{ ok }`. Emails a 6-digit code valid 15 minutes. Same answer whether or not the account exists. |
+| `POST /auth/reset/confirm` | `{ email, code, password }` | `{ user, token }`: password set and signed in |
+| `POST /auth/logout` | – | `{ ok }` (the app just deletes its token; also call `DELETE /me/devices/{token}`) |
 
 - Tokens last 60 days. A `401` from any call means sign in again.
 - **Google on the app:** create iOS and Android OAuth client IDs in the Google Cloud project `solar-builders-ng` (admin@nexprove.com). Add them, comma-separated, to the Vercel env var `GOOGLE_CLIENT_IDS`. The server accepts tokens whose audience is any of those IDs or the web ID.
 - **Errors for Google:** `409` means the email is already linked to a different Google account. The `email_verified` claim must be true.
-- **Apple:** not built yet. `users.apple_sub` exists. Add `POST /auth/apple` (verify the identity token against Apple's JWKS, mirroring `src/lib/server/google.ts`).
+- **Apple:** tokens must have the app's bundle ID as audience. Allowed IDs come from the `APPLE_CLIENT_IDS` env var (default `ng.solarbuilders.gosolarme`).
 
 ## Errors
 
@@ -63,6 +66,9 @@ A **cart** everywhere is `items: [{ id, qty }]`, using product ids from the cata
     pay: { naira, intl, minCharge, stripePublishableKey } }
   ```
   Use `lastDelivery` to pre-fill checkout.
+- **`PATCH /me`:** `{ name?, phone? }` returns `{ user }`. The email can't change.
+- **`DELETE /me`:** `{ confirm: "DELETE" }` deletes the account. Personal details, saved cards and push devices go. Open Go Solar Me pages close and refund every supporter. Orders stay, without a name, for records. The token stops working.
+- **`POST /me/devices`:** `{ token: "ExponentPushToken[…]", platform: "ios"|"android" }`. Call after every sign-in. `DELETE /me/devices/{token}` on sign-out.
 - **`GET /me/orders`:** `{ orders: [{id, items, subtotal, total_paid, gift_card_used, status, statusLabel, status_at, recipient, delivery:{lga,address}, installer, pool_id, created_at}], pools: [...] }`
 - **`GET /me/store`:** the seller dashboard: `{ store, stats:{orders,sales,earned}, recent[], builds[] }`. **`POST /stores`** with `{ name, slug, bio?, kind: "affiliate"|"installer", whatsapp? }` creates or updates the store.
 - **Cards:**
@@ -241,9 +247,18 @@ The app never calls these:
 - **Fonts:** Bricolage Grotesque (display) and Instrument Sans (body). WOFF files are in `assets/fonts` and `node_modules/@fontsource-variable/*`.
 - **Radius:** 10px on inputs and 12–16px on cards.
 
-## Add before App Store and Play Store submission
+## Push notifications
 
-- **In-app account deletion** (Apple 5.1.1(v)): add `DELETE /me`. It should anonymise the user, remove saved cards, and keep orders for records.
-- **Sign in with Apple:** required by Apple when Google sign-in is offered on iOS.
-- **Push notifications:** a device token table plus sends on order status changes and pool milestones.
-- **Profile edit** (name, phone) and **password reset.** Password reset is currently handled on WhatsApp.
+The server sends these to every registered phone of the right person (Expo push service). `data` tells the app what to open:
+
+| When | To | `data` |
+|---|---|---|
+| Order paid; confirmed, out for delivery, delivered, installed | Buyer | `{ kind: "order", ref }` |
+| Chip-in (title shows "25/50/75% funded" when a milestone is crossed) | Pool owner | `{ kind: "pool", id }` |
+| Pool funded | Owner and signed-in supporters | `{ kind: "pool", id }` |
+| 3 days left; deadline reached | Pool owner | `{ kind: "pool", id }` |
+| Sale through a seller's link | Seller | `{ kind: "store" }` |
+
+## Still to add
+
+- **Milestone photos** (`POST /pools/{id}/photos`): needs Vercel Blob connected first.

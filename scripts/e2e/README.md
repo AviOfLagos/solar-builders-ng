@@ -11,4 +11,6 @@ PAYSTACK_SECRET_KEY=sk_test_mock PAYSTACK_API_BASE=http://localhost:4010 STRIPE_
 DATABASE_URL=postgres://user:pass@localhost:5432/solar node scripts/e2e/payments.test.mjs
 ```
 
-Expect "46 passed, 0 failed". Never point it at production.
+Expect "46 passed, 0 failed". `account.test.mjs` (same setup) checks profile edit, push devices, password reset and account deletion.
+
+Never point either at production.

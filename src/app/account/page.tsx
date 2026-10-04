@@ -6,7 +6,6 @@ import { api, safeNext, type ApiError } from "@/lib/client";
 import { naira, isEmail, isName, NG_PHONE, normalizePhone } from "@/lib/format";
 import { GoogleButton } from "@/components/GoogleButton";
 import { Field } from "@/components/Field";
-import { STORE } from "@/config/store";
 
 type Me = { user: { email: string; name: string; google?: boolean } | null; store: { slug: string; name: string } | null; team?: boolean };
 type Order = { id: string; total_paid: number; gift_card_used: number; status: string; statusLabel: string; created_at: string; recipient: { name: string } | null; pool_id: string | null; delivery: { lga: string; address: string } };
@@ -116,7 +115,7 @@ function Account() {
         {mode === "login" ? "New here? " : "Already have an account? "}
         <button className="font-semibold underline" onClick={() => { setMode(mode === "login" ? "register" : "login"); setErr({ msg: "" }); }}>{mode === "login" ? "Create an account" : "Sign in"}</button>
       </p>
-      {mode === "login" && <p className="mt-2 text-center text-xs text-mute">Forgot your password? <a className="underline" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent("Hi, I need help resetting my Solar Builders password")}`}>Message us on WhatsApp</a>.</p>}
+      {mode === "login" && <p className="mt-2 text-center text-xs text-mute"><Link className="underline" href="/account/reset">Forgot your password?</Link></p>}
     </Wrap>
   );
 }

@@ -1,5 +1,7 @@
 import { db } from "@/lib/server/db";
-import { ok, route, currentUser, isTeam } from "@/lib/server/api";
+import { ok, fail, body, route, currentUser, isTeam, requireUser } from "@/lib/server/api";
+import { updateProfile, deleteAccount } from "@/lib/server/account";
+import { clearSession } from "@/lib/server/session";
 import { savedCards, payOptions } from "@/lib/server/pay";
 
 export const GET = route(async () => {
@@ -15,4 +17,21 @@ export const GET = route(async () => {
     cards: await savedCards(s.uid), store: store ?? null, team: await isTeam(s), pay: payOptions(),
     lastDelivery: d ? { address: d.address, lga: d.lga, landmark: d.landmark, altPhone: d.altPhone } : null,
   });
+});
+
+/** Edit name and/or phone: { name?, phone? }. */
+export const PATCH = route(async (req: Request) => {
+  const s = await requireUser();
+  if (s instanceof Response) return s;
+  return ok(await updateProfile(s.uid, await body(req)));
+});
+
+/** Delete my account. Body must be { confirm: "DELETE" } so it can't happen by accident. */
+export const DELETE = route(async (req: Request) => {
+  const s = await requireUser();
+  if (s instanceof Response) return s;
+  if ((await body<{ confirm: string }>(req)).confirm !== "DELETE") return fail('Send { "confirm": "DELETE" } to delete the account.');
+  const r = await deleteAccount(s.uid);
+  await clearSession();
+  return ok(r);
 });

@@ -8,6 +8,7 @@ import { stripe } from "./stripe";
 import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, startPaystack, type Paid } from "./pay";
 import { newPaystackRef } from "./paystack";
 import { notifyOwner } from "./mail";
+import { pushTo } from "./push";
 import { priceCart, checkCart, compactItems, assertValid } from "./rules";
 import { ledger, insertOrder, type OrderRow } from "./ledger";
 import { storeBySlug, orderNotifications, issueGiftCard } from "./orders";
@@ -227,7 +228,26 @@ export async function finalizeContribution(pay: Paid) {
   }
   await notifyOwner(`CHIP-IN ${naira(r.accept)} to ${r.p.title} (${r.p.id}) from ${r.c.anonymous ? "Anonymous" : r.c.name || r.c.email}${r.excess ? ` · refunded ${naira(r.excess)}` : ""}`);
   if (r.order) await orderNotifications(r.order);
+  if (r.accept > 0) await poolPushes(r.p, r.accept, r.c, !!r.order);
   return { ok: true, kind: "contribution", poolId: r.p.id, accepted: r.accept, refunded: r.excess, funded: !!r.order };
+}
+
+/** Tells the owner about a chip-in and any 25/50/75% milestone it crossed; at 100%, signed-in supporters too. */
+async function poolPushes(p: PoolRow, accept: number, c: { name?: string; anonymous?: boolean; user_id?: string | null }, funded: boolean) {
+  const data = { kind: "pool", id: p.id };
+  const who = c.anonymous || !c.name ? "Someone" : c.name;
+  const before = Math.floor((p.raised / p.goal) * 100), after = Math.floor(((p.raised + accept) / p.goal) * 100);
+  if (funded) {
+    await pushTo([p.user_id], { title: "Funded!", body: `${p.title} reached its goal. We're placing the order.`, data });
+    const sql = await db();
+    const sup = await sql`select distinct user_id from contributions where pool_id = ${p.id} and status = 'paid' and user_id is not null`;
+    await pushTo(sup.map((x) => x.user_id as string).filter((u) => u !== p.user_id), { title: "You helped fund a kit", body: `${p.title} is fully funded. Thank you!`, data });
+    return;
+  }
+  const crossed = [75, 50, 25].find((m) => before < m && after >= m);
+  await pushTo([p.user_id], crossed
+    ? { title: `${crossed}% funded`, body: `${who} chipped in ${naira(accept)}. ${naira(p.goal - p.raised - accept)} to go.`, data }
+    : { title: "New chip-in", body: `${who} chipped in ${naira(accept)} to ${p.title}.`, data });
 }
 
 /** Marks a pool funded and places its order, inside the caller's transaction. */
@@ -326,7 +346,11 @@ export async function setPoolAddress(user: Session, pid: string, b: Record<strin
 /** Daily: end pools past their deadline; refund pools whose owner didn't choose in time. */
 export async function sweepPools() {
   const sql = await db();
-  await sql`update pools set status = 'ended', ended_at = now() where status = 'open' and deadline < now()`;
+  // Runs once a day, so each of these reminders goes out once.
+  const soon = await sql`select id, user_id, title from pools where status = 'open' and deadline between now() + interval '2 days' and now() + interval '3 days'`;
+  for (const p of soon) await pushTo([p.user_id], { title: "3 days left", body: `Share ${p.title} once more to reach the goal.`, data: { kind: "pool", id: p.id } });
+  const ended = await sql`update pools set status = 'ended', ended_at = now() where status = 'open' and deadline < now() returning id, user_id, title`;
+  for (const p of ended) await pushTo([p.user_id], { title: "Deadline reached", body: `Choose what happens to ${p.title}: extend, a smaller kit, or refund.`, data: { kind: "pool", id: p.id } });
   const due = await sql`select id from pools where status = 'ended' and ended_at < now() - make_interval(days => ${POOL.choiceDays}) limit 50`;
   for (const p of due) await cancelPool(p.id, "no choice made after the deadline").catch((e) => console.error("[sweepPools]", p.id, e));
   // Chip-ins started but never paid.
