@@ -13,8 +13,8 @@ Send `Authorization: Bearer <token>` on every call. The website uses an httpOnly
 
 | Call | Body | Returns |
 |---|---|---|
-| `POST /auth/register` | `{ name, email, password (8–128), phone? }` | `{ user: {id,email,name}, token }` |
-| `POST /auth/login` | `{ email, password }` | `{ user, token }` |
+| `POST /auth/register` | `{ name, email, password (8–128), phone? }` | `{ user: {id,email,name}, token }`. `409` with `code: "account_exists"`: offer sign-in. |
+| `POST /auth/login` | `{ email, password }` | `{ user, token }`. `401` with `code: "no_account"` when no account uses that email: offer sign-up. |
 | `POST /auth/google` | `{ credential }` (Google ID token from the native SDK) | `{ user, token, created }` |
 | `POST /auth/apple` | `{ identityToken, fullName? }` (from `expo-apple-authentication`; Apple sends the name only the first time) | `{ user, token, created }` |
 | `POST /auth/reset` | `{ email }` | `{ ok }`. Emails a 6-digit code valid 15 minutes. Same answer whether or not the account exists. |
@@ -70,6 +70,7 @@ A **cart** everywhere is `items: [{ id, qty }]`, using product ids from the cata
 - **`DELETE /me`:** `{ confirm: "DELETE" }` deletes the account. Personal details, saved cards and push devices go. Open Go Solar Me pages close and refund every supporter. Orders stay, without a name, for records. The token stops working.
 - **`POST /me/devices`:** `{ token: "ExponentPushToken[…]", platform: "ios"|"android" }`. Call after every sign-in. `DELETE /me/devices/{token}` on sign-out.
 - **`GET /me/orders`:** `{ orders: [{id, items, subtotal, total_paid, gift_card_used, status, statusLabel, status_at, recipient, delivery:{lga,address}, installer, pool_id, created_at}], pools: [...] }`
+- **`GET /me/builds`:** the lists this person shared: `{ builds: [{ id, title, path, items (count), total, views, created_at }] }`, newest first, priced today.
 - **`GET /me/store`:** the seller dashboard: `{ store, stats:{orders,sales,earned}, recent[], builds[] }`. **`POST /stores`** with `{ name, slug, bio?, kind: "affiliate"|"installer", whatsapp? }` creates or updates the store.
 - **Cards:**
   - `PATCH /cards/{id}` with `{ nickname }` renames a card.

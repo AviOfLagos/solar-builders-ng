@@ -10,7 +10,8 @@ export const POST = route(async (req: Request) => {
   if (!email || !password) return fail("Enter your email and password.", 400);
   await limit(`login-email:${email}`, 10, 900);
   const sql = await db();
-  const [u] = await sql`select id, email, name, password_hash, google_sub from users where email = ${email}`;
+  const [u] = await sql`select id, email, name, password_hash, google_sub from users where email = ${email} and deleted_at is null`;
+  if (!u) return fail("There's no account with this email yet.", 401, { code: "no_account" });
   const good = await checkPassword(password, u?.password_hash);
   if (!good) {
     if (u && !u.password_hash && u.google_sub) return fail("This account signs in with Google. Use the Google button.", 401);

@@ -18,7 +18,7 @@ export const POST = route(async (req: Request) => {
   if (Object.keys(fields).length) return fail("Check the highlighted fields.", 400, { fields });
   const sql = await db();
   const [exists] = await sql`select 1 from users where email = ${email}`;
-  if (exists) return fail("An account with this email already exists. Sign in instead.", 409, { fields: { email: "Already registered." } });
+  if (exists) return fail("An account with this email already exists. Sign in instead.", 409, { fields: { email: "Already registered." }, code: "account_exists" });
   const uid = id();
   await sql`insert into users ${sql({ id: uid, email, name, phone: phone ? ngE164(phone) : "", password_hash: await hashPassword(password) })}`;
   const token = await createSession({ uid, email, name });
