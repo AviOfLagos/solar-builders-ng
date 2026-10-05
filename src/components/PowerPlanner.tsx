@@ -80,7 +80,7 @@ export function PowerPlanner() {
           {APPLIANCES.map((a) => {
             const n = load[a.key];
             return (
-              <li key={a.key} className={`flex flex-col gap-2 rounded-xl border p-2.5 sm:flex-row sm:items-center sm:pl-3 ${n ? "border-ink bg-sun/15" : "border-line"}`}>
+              <li key={a.key} className={`flex flex-col gap-2 rounded-xl border p-2.5 sm:flex-row sm:items-center sm:pl-3 ${n ? "border-ink bg-mint-tint" : "border-line"}`}>
                 <span className="min-w-0 flex-1 leading-tight">
                   <span className="block text-sm font-medium sm:truncate">{a.label}</span>
                   <span className="text-[11px] text-mute">{a.w}W each</span>
@@ -96,7 +96,7 @@ export function PowerPlanner() {
         </ul>
         <label className="mt-5 block">
           <span className="flex justify-between text-sm font-semibold"><span>3. Hours without light each day</span><span className="num">{hours} hours</span></span>
-          <input type="range" min={2} max={24} value={hours} onChange={(e) => setHours(+e.target.value)} className="mt-3 w-full accent-[#10213B]" />
+          <input type="range" min={2} max={24} value={hours} onChange={(e) => setHours(+e.target.value)} className="mt-3 w-full accent-[#17201B]" />
         </label>
       </div>
 
@@ -118,7 +118,7 @@ export function PowerPlanner() {
           <div className="mt-5 flex flex-1 flex-col rounded-xl bg-paper p-4">
             <p className="text-xs font-semibold text-mute">Best match · {top.segment.name}</p>
             <div className="mt-1 flex items-start gap-3">
-              <span className="relative h-16 w-16 shrink-0 rounded-lg border border-line bg-white"><Image src={top.lines[0].p.image} alt="" fill sizes="64px" className="object-contain p-1" /></span>
+              <span className="relative h-16 w-16 shrink-0 rounded-xl border border-line bg-white"><Image src={top.lines[0].p.image} alt="" fill sizes="64px" className="object-contain p-1" /></span>
               <div className="min-w-0">
                 <p className="font-display text-xl font-bold leading-tight">{top.name}</p>
                 <p className="text-sm text-ink-2">{top.tagline}</p>

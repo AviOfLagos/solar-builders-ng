@@ -25,7 +25,7 @@ export default function Give() {
       </section>
       <section className="mx-auto grid max-w-5xl gap-4 px-4 pt-12 sm:grid-cols-2">
         {WAYS.map((w) => (
-          <div key={w.title} className="flex flex-col rounded-2xl border border-line bg-paper p-6">
+          <div key={w.title} className="flex flex-col card p-6">
             <h2 className="font-display text-2xl font-bold">{w.title}</h2>
             <p className="mt-2 flex-1 text-ink-2">{w.text}</p>
             {w.note && <p className="mt-3 text-xs text-mute">{w.note}</p>}

@@ -1,17 +1,16 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useCart } from "@/lib/cart";
+import { encodeItems } from "@/lib/sizing";
 import { naira } from "@/lib/format";
 import type { ResolvedTier } from "@/data/packages";
 
-export function KitButton({ t, className = "btn btn-sun w-full" }: { t: ResolvedTier; className?: string }) {
-  const addMany = useCart((s) => s.addMany);
-  return (
-    <button className={className} onClick={() => addMany(t.lines.map((l) => ({ id: l.p.id, qty: l.qty })))}>
-      Add kit to cart
-    </button>
-  );
+/** Opens "How would you like to pay?" for this kit (same as the app). */
+export const kitHref = (t: ResolvedTier, who?: string) =>
+  `/kit?items=${encodeURIComponent(encodeItems(t.lines.map((l) => ({ id: l.p.id, qty: l.qty }))))}&name=${encodeURIComponent(t.name)}${who ? `&who=${who}` : ""}`;
+
+export function KitButton({ t, className = "btn btn-ink w-full", label = "Choose this kit" }: { t: ResolvedTier; className?: string; label?: string }) {
+  return <Link className={className} href={kitHref(t)}>{label}</Link>;
 }
 
 export function installedRange(t: ResolvedTier) {
@@ -21,14 +20,14 @@ export function installedRange(t: ResolvedTier) {
 export function PackageCard({ t, showSegment = false }: { t: ResolvedTier; showSegment?: boolean }) {
   const range = installedRange(t);
   return (
-    <article id={t.id} className={`relative flex flex-col rounded-2xl border bg-paper p-5 ${t.best ? "border-ink ring-2 ring-sun" : "border-line"}`}>
-      {t.best && <span className="absolute -top-3 left-5 rounded-full bg-sun px-3 py-1 text-xs font-bold">Most picked</span>}
+    <article id={t.id} className={`relative flex flex-col rounded-3xl bg-paper p-5 ${t.best ? "ring-2 ring-ink" : ""}`}>
+      {t.best && <span className="tag absolute -top-3 left-5">Most picked</span>}
       {showSegment && <Link href={`/packages/${t.segment.slug}`} className="text-xs font-semibold text-mute hover:underline">{t.segment.name}</Link>}
-      <h3 className="font-display text-2xl font-bold">{t.name}</h3>
+      <h3 className="text-2xl font-semibold">{t.name}</h3>
       <p className="mt-1 text-sm text-ink-2">{t.tagline}</p>
       <div className="mt-4 flex gap-2">
         {t.lines.slice(0, 3).map((l) => (
-          <div key={l.p.id} className="relative h-16 w-16 rounded-lg border border-line bg-white">
+          <div key={l.p.id} className="relative h-16 w-16 rounded-2xl bg-haze">
             <Image src={l.p.image} alt="" fill sizes="64px" className="object-contain p-1" />
             {l.qty > 1 && <span className="num absolute -right-1.5 -top-1.5 rounded-full bg-ink px-1.5 text-[11px] font-bold text-white">×{l.qty}</span>}
           </div>
@@ -36,7 +35,7 @@ export function PackageCard({ t, showSegment = false }: { t: ResolvedTier; showS
       </div>
       <p className="mt-4 text-xs font-semibold text-mute">Powers</p>
       <ul className="mt-1 flex flex-wrap gap-1.5">
-        {t.powers.map((x) => <li key={x} className="rounded-full bg-haze px-2.5 py-1 text-xs">{x}</li>)}
+        {t.powers.map((x) => <li key={x} className="rounded-xl bg-haze px-2.5 py-1 text-xs font-semibold">{x}</li>)}
       </ul>
       <details className="mt-3 text-sm">
         <summary className="cursor-pointer text-mute">What’s in the box</summary>
@@ -47,7 +46,7 @@ export function PackageCard({ t, showSegment = false }: { t: ResolvedTier; showS
         </ul>
       </details>
       <div className="mt-auto pt-5">
-        <p className="font-display num text-3xl font-bold">{naira(t.price)}</p>
+        <p className="num text-3xl font-light tracking-tight">{naira(t.price)}</p>
         <p className="mt-1 text-xs text-mute">
           {range ? <>Typical installed total in Lagos: <span className="num font-semibold text-ink">{naira(range[0])}–{naira(range[1])}</span></> : "No installation needed. Plug in and go."}
         </p>

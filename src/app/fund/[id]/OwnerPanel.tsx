@@ -32,7 +32,7 @@ export function OwnerPanel({ pool }: { pool: P }) {
       {pool.needsAddress && <AddressForm id={pool.id} onSaved={() => router.refresh()} />}
       {open && (
         <div className="space-y-3 text-sm">
-          {pool.status === "ended" && <p className="rounded-lg bg-sun/20 p-3">The deadline has passed. Choose what happens next{pool.choiceEnds ? ` by ${new Date(pool.choiceEnds).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}` : ""}. If you don&apos;t, everyone is refunded automatically.</p>}
+          {pool.status === "ended" && <p className="rounded-xl bg-mint-tint p-3">The deadline has passed. Choose what happens next{pool.choiceEnds ? ` by ${new Date(pool.choiceEnds).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}` : ""}. If you don&apos;t, everyone is refunded automatically.</p>}
           {!pool.extended && (
             <button type="button" className="btn btn-ghost w-full !py-2 text-sm" disabled={!!busy} onClick={() => act("extend", { action: "extend" }, () => `Extended by ${POOL.extendDays} days.`)}>
               {busy === "extend" ? "Extending…" : `Extend the deadline by ${POOL.extendDays} days (once)`}
@@ -40,7 +40,7 @@ export function OwnerPanel({ pool }: { pool: P }) {
           )}
           <p className="text-mute">To finish it yourself, chip in the rest using the form above.</p>
           {smaller.length > 0 && (
-            <details className="rounded-lg border border-line p-3">
+            <details className="rounded-xl border border-line p-3">
               <summary className="cursor-pointer font-semibold">Switch to a kit the {naira(pool.raised)} covers</summary>
               <p className="mt-2 text-mute">We order it now. Anything left over becomes a gift card in your name, never cash.</p>
               <ul className="mt-2 space-y-2">
@@ -56,7 +56,7 @@ export function OwnerPanel({ pool }: { pool: P }) {
             </details>
           )}
           {confirm === "cancel" ? (
-            <div className="rounded-lg border border-flare/40 p-3">
+            <div className="rounded-xl border border-flare/40 p-3">
               <p>Close the page and refund everyone to their card? This can&apos;t be undone.</p>
               <div className="mt-2 flex gap-2">
                 <button type="button" className="btn btn-ink !py-1.5 text-xs" disabled={!!busy} onClick={() => act("cancel", { action: "cancel" }, (r) => `Closed. ${r.refunded ?? 0} refund(s) sent${r.failed ? `, ${r.failed} need our attention (we'll handle them)` : ""}.`)}>{busy === "cancel" ? "Closing…" : "Yes, close and refund"}</button>
@@ -66,8 +66,8 @@ export function OwnerPanel({ pool }: { pool: P }) {
           ) : <button type="button" className="text-flare underline" onClick={() => setConfirm("cancel")}>Close the page and refund everyone</button>}
         </div>
       )}
-      {msg && <p role="status" className="rounded-lg bg-leaf/10 p-3 text-sm">{msg}</p>}
-      {err && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{err}</p>}
+      {msg && <p role="status" className="rounded-xl bg-leaf/10 p-3 text-sm">{msg}</p>}
+      {err && <p role="alert" className="rounded-xl bg-flare/10 p-3 text-sm text-flare">{err}</p>}
     </div>
   );
 }
@@ -77,7 +77,7 @@ function AddressForm({ id, onSaved }: { id: string; onSaved: () => void }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   return (
-    <form noValidate className="space-y-2 rounded-lg bg-sun/15 p-3" onSubmit={async (e) => {
+    <form noValidate className="space-y-2 rounded-xl bg-mint-tint p-3" onSubmit={async (e) => {
       e.preventDefault();
       if (f.address.replace(/\s/g, "").length < 8) { setErrors({ address: "House number, street, area." }); return; }
       setBusy(true);

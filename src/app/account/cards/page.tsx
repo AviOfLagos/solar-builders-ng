@@ -39,13 +39,13 @@ export default function CardsPage() {
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="font-display text-4xl font-bold tracking-tight">Saved cards</h1>
       <p className="mt-2 text-mute">{data.user.email}. Your newest card shows first and is picked by default at checkout.</p>
-      {saved && <p role="status" className="mt-4 rounded-lg bg-leaf/10 p-3 text-sm">{saved}</p>}
+      {saved && <p role="status" className="mt-4 rounded-xl bg-leaf/10 p-3 text-sm">{saved}</p>}
       <ul className="mt-8 space-y-3">
         {data.cards.length === 0 && <li className="rounded-xl border border-dashed border-line bg-paper p-6 text-center text-mute">No saved cards yet. Add one below or tick “Save this card” at checkout.</li>}
         {data.cards.map((c, i) => <CardRow key={c.id} c={c} latest={i === 0} onChange={load} />)}
       </ul>
 
-      <section className="mt-10 rounded-2xl border border-line bg-paper p-6">
+      <section className="mt-10 card p-6">
         <h2 className="font-display text-xl font-semibold">Add a card</h2>
         {!opts ? <p className="mt-2 text-sm text-mute">Loading…</p> : (!opts.naira && !opts.intl) || (method === "stripe" && !stripePromise) ? <p className="mt-2 text-sm text-mute">Card saving will be available once payments are switched on.</p> : !adding ? (
           <div className="mt-4 space-y-3">

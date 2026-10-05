@@ -1,6 +1,6 @@
 "use client";
 /** Tiny JSON fetch helper for /api/v1. Throws with the server's message on failure. */
-export type ApiError = Error & { fields?: Record<string, string>; status?: number; data?: Record<string, unknown> };
+export type ApiError = Error & { fields?: Record<string, string>; status?: number; code?: string; data?: Record<string, unknown> };
 
 export async function api<T = Record<string, unknown>>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   let res: Response;
@@ -14,7 +14,7 @@ export async function api<T = Record<string, unknown>>(path: string, init: { met
     throw Object.assign(new Error("No connection. Check your internet and try again."), { status: 0 });
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(data.error || "Something went wrong. Please try again."), { fields: data.fields as Record<string, string> | undefined, status: res.status, data });
+  if (!res.ok) throw Object.assign(new Error(data.error || "Something went wrong. Please try again."), { fields: data.fields as Record<string, string> | undefined, status: res.status, code: data.code as string | undefined, data });
   return data as T;
 }
 

@@ -10,7 +10,7 @@ export function Field({ label, hint, error, children, className = "" }: { label:
 
 export function Section({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-2xl border border-line bg-paper p-5 sm:p-6 ${className}`}>
+    <section className={`card p-5 sm:p-6 ${className}`}>
       <h2 className="font-display mb-4 text-xl font-semibold">{title}</h2>
       {children}
     </section>

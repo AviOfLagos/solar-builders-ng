@@ -21,7 +21,7 @@ export default async function BrandPage(props: PageProps<"/brands/[slug]">) {
   const b = getBrand((await props.params).slug);
   if (!b) notFound();
   const items = products.filter((p) => p.brand === b.slug);
-  const crumbs: [string, string][] = [["Home", "/"], ["Brands", "/shop"], [b.name, `/brands/${b.slug}`]];
+  const crumbs: [string, string][] = [["Home", "/"], ["Brands", "/brands"], [b.name, `/brands/${b.slug}`]];
   return (
     <>
       <PageHead title={`${b.name} in Lagos`} intro={b.tagline} crumbs={crumbs} />

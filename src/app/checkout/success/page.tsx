@@ -7,6 +7,7 @@ import { naira, ngLocal } from "@/lib/format";
 import { api, setLeadId } from "@/lib/client";
 import { Share } from "@/components/Share";
 import { STORE } from "@/config/store";
+import { Icon } from "@/components/ui/Icon";
 
 type Result = {
   ok?: boolean; kind?: string; provider?: "paystack" | "stripe"; paymentStatus?: string; amount?: number; emailed?: boolean; error?: string;
@@ -48,8 +49,9 @@ function Success() {
 
   if (orderRef)
     return (
-      <Shell title="Thank you. We've got your order.">
-        <p className="text-lg text-ink-2">Order <b className="text-ink">{orderRef}</b> was paid with your gift card and is <b className="text-ink">pending</b>. We&apos;ll call shortly to arrange delivery.</p>
+      <Shell win title="You're going solar!">
+        <p className="text-lg text-ink-2">Order <b className="text-ink">{orderRef}</b> was paid with your gift card.</p>
+        <NextSteps />
         <GoingSolar refId={orderRef} />
         <Actions />
       </Shell>
@@ -62,18 +64,18 @@ function Success() {
     return (
       <Shell title={r.paymentStatus === "canceled" ? "Payment cancelled" : "Your payment didn't go through"}>
         <p className="text-ink-2">{r.error || (r.paymentStatus === "canceled" ? "You cancelled before paying. Nothing was charged." : "The payment was not completed. You have not been charged for this attempt.")}</p>
-        <div className="mt-6 flex flex-wrap gap-3"><Link href={r.kind === "contribution" && r.pool ? `/fund/${r.pool.id}` : "/checkout"} className="btn btn-sun">Try again</Link><a className="btn btn-ghost" href={`https://wa.me/${STORE.whatsapp}`}>Get help on WhatsApp</a></div>
+        <div className="mt-6 flex flex-wrap gap-3"><Link href={r.kind === "contribution" && r.pool ? `/fund/${r.pool.id}` : "/checkout"} className="btn btn-ink">Try again</Link><a className="btn btn-ghost" href={`https://wa.me/${STORE.whatsapp}`}>Get help on WhatsApp</a></div>
       </Shell>
     );
 
   if (r.kind === "contribution" && r.pool) {
     const p = r.pool;
     return (
-      <Shell title={r.accepted ? "Thank you for chipping in!" : "The kit was already funded"}>
+      <Shell win={!!r.accepted} icon="people" tone="lemon" title={r.accepted ? "Thank you for chipping in!" : "The kit was already funded"}>
         {r.accepted ? (
           <p className="text-lg text-ink-2">You added <b className="num text-ink">{naira(r.accepted)}</b> to <b className="text-ink">{p.title}</b>. It&apos;s now at <b className="num text-ink">{naira(p.raised)}</b> of {naira(p.goal)}{p.status === "funded" ? ". Goal reached, so we're placing the order!" : "."}</p>
         ) : <p className="text-lg text-ink-2">Someone finished it just before you. Nothing was kept: your full payment is on its way back to you.</p>}
-        {!!r.refunded && !!r.accepted && <p className="mt-3 rounded-lg bg-haze p-3 text-sm">Only {naira(r.accepted)} was needed to finish it, so we&apos;ve refunded the other <b className="num">{naira(r.refunded)}</b> to the card or account you paid from. Refunds can take 5 to 10 working days to show.</p>}
+        {!!r.refunded && !!r.accepted && <p className="mt-3 rounded-xl bg-haze p-3 text-sm">Only {naira(r.accepted)} was needed to finish it, so we&apos;ve refunded the other <b className="num">{naira(r.refunded)}</b> to the card or account you paid from. Refunds can take 5 to 10 working days to show.</p>}
         {!!r.accepted && <div className="mt-6"><Share path={`/fund/${p.id}`} text={`I just helped with "${p.title}". Chip in too:`} images={[{ label: "Story picture", href: `/api/v1/share/pool/${p.id}?f=story` }]} /></div>}
         <div className="mt-6 flex flex-wrap gap-3"><Link href={`/fund/${p.id}`} className="btn btn-ink">Back to the page</Link><Link href="/fund/new" className="btn btn-ghost">Start your own</Link></div>
       </Shell>
@@ -82,7 +84,7 @@ function Success() {
 
   if (r.kind === "gift_card")
     return (
-      <Shell title="Your gift card is ready">
+      <Shell win icon="gift" tone="lemon" title="Your gift card is ready">
         {r.gift ? (
           <>
             <p className="text-lg text-ink-2">A <b className="num text-ink">{naira(r.gift.amount)}</b> solar gift card{r.gift.toName ? ` for ${r.gift.toName}` : ""}. Share this code. It works at checkout on this site and never expires.</p>
@@ -96,11 +98,12 @@ function Success() {
 
   const o = r.order;
   return (
-    <Shell title="Thank you. We've got your order.">
+    <Shell win title={o?.recipient ? `${o.recipient.name} is going solar!` : "You're going solar!"}>
       <p className="text-lg leading-relaxed text-ink-2">
-        Order <b className="text-ink">{o?.ref}</b> for <b className="num text-ink">{naira(o?.total ?? r.amount ?? 0)}</b>{o?.giftUsed ? ` (${naira(o.giftUsed)} on your gift card)` : ""} is <b className="text-ink">pending</b>.{" "}
-        {o?.phone ? <>We&apos;ll call {o.recipient ? <b className="text-ink">{o.recipient.name}</b> : "you"} on <b className="text-ink">{ngLocal(o.phone)}</b> shortly to arrange delivery{o.installer ? " and installation" : ""}.</> : "We'll call shortly to arrange delivery."}
+        Order <b className="text-ink">{o?.ref}</b> · <b className="num text-ink">{naira(o?.total ?? r.amount ?? 0)}</b>{o?.giftUsed ? ` (${naira(o.giftUsed)} on your gift card)` : ""}.{" "}
+        {o?.phone ? <>We&apos;ll call {o.recipient ? <b className="text-ink">{o.recipient.name}</b> : "you"} on <b className="text-ink">{ngLocal(o.phone)}</b>.</> : null}
       </p>
+      <NextSteps installer={o?.installer} who={o?.recipient?.name} />
       {r.emailed && o?.email && <p className="mt-3 text-mute">A copy has been sent to {o.email}.</p>}
       {o?.ref && <GoingSolar refId={o.ref} />}
       <Actions />
@@ -113,7 +116,7 @@ const waiting = (r: Result) => r.paymentStatus === "processing" || (r.provider =
 
 function GoingSolar({ refId }: { refId: string }) {
   return (
-    <div className="mt-6 rounded-xl border border-line p-4">
+    <div className="mt-6 rounded-3xl border border-line p-5">
       <p className="font-semibold">Tell people you&apos;re going solar</p>
       <p className="mt-1 text-sm text-mute">We made you a picture. Post it on your status; it carries a link to our calculator.</p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -125,15 +128,51 @@ function GoingSolar({ refId }: { refId: string }) {
 }
 
 function Actions() {
-  return <div className="mt-8 flex flex-wrap gap-3"><Link href="/shop" className="btn btn-ink">Continue shopping</Link><Link href="/account" className="btn btn-ghost">My account</Link></div>;
+  return <div className="mt-8 flex flex-wrap gap-3"><Link href="/account" className="btn btn-ink">Track my order</Link><Link href="/" className="btn btn-ghost">Back home</Link></div>;
 }
 
-function Shell({ title, children }: { title: string; children: React.ReactNode }) {
+/** A short, calm "done" moment: only for real wins (paid, chipped in, gift card ready). */
+function Celebrate({ icon = "check", tone = "mint" }: { icon?: string; tone?: "mint" | "lemon" }) {
+  return (
+    <div className="relative mb-6 grid h-28 w-28 place-items-center" aria-hidden>
+      {Array.from({ length: 8 }, (_, i) => (
+        <span key={i} className={`rise absolute h-4 w-1.5 rounded-full ${tone === "mint" ? "bg-mint" : "bg-lemon"}`} style={{ transform: `rotate(${i * 45}deg) translateY(-54px)`, animationDelay: `${0.25 + i * 0.03}s` }} />
+      ))}
+      <span className={`pop grid h-20 w-20 place-items-center rounded-full ${tone === "mint" ? "bg-mint" : "bg-lemon"}`}><Icon name={icon} size={38} stroke={2.4} /></span>
+    </div>
+  );
+}
+
+/** "What happens next": the order's road from paid to lights on. */
+function NextSteps({ installer, who }: { installer?: boolean; who?: string }) {
+  const steps = [
+    ["Paid", "Done. Your receipt is on its way.", true],
+    ["We call to confirm", `Usually within a few hours${who ? `, on ${who}'s number` : ""}.`, false],
+    ["Delivery in Lagos", "Free. We agree a day that works.", false],
+    ...(installer ? [["Installation", "Our engineer sets it up and shows how it works.", false]] : []),
+    ["Lights on", "No more fuel runs.", false],
+  ] as [string, string, boolean][];
+  return (
+    <ol className="mt-6 rounded-3xl bg-haze p-5">
+      {steps.map(([t, d, done], i) => (
+        <li key={t} className="flex gap-3">
+          <span className="flex flex-col items-center">
+            <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${done ? "bg-sun-deep text-white" : "bg-paper text-mute"}`}>{done ? <Icon name="check" size={14} stroke={3} /> : i + 1}</span>
+            {i < steps.length - 1 && <span className="min-h-5 w-0.5 flex-1 bg-line" />}
+          </span>
+          <span className="pb-4"><span className="block font-semibold">{t}</span><span className="text-sm text-ink-2">{d}</span></span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function Shell({ title, children, win, icon, tone }: { title: string; children: React.ReactNode; win?: boolean; icon?: string; tone?: "mint" | "lemon" }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:py-20">
-      <div className="rounded-2xl border border-line bg-paper p-6 sm:p-10">
-        <div className="mb-6 grid h-14 w-14 place-items-center rounded-full bg-sun text-2xl" aria-hidden>☀</div>
-        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
+      <div className="rounded-[2rem] bg-paper p-6 sm:p-10">
+        {win ? <Celebrate icon={icon} tone={tone} /> : <div className="mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-haze" aria-hidden><Icon name="sun" /></div>}
+        <h1 className="font-display text-4xl leading-tight sm:text-5xl">{title}</h1>
         <div className="mt-4">{children}</div>
       </div>
     </div>

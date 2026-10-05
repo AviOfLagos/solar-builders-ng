@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/bricolage-grotesque";
-import "@fontsource-variable/instrument-sans";
+import "@fontsource-variable/manrope";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -10,6 +9,9 @@ import { STORE } from "@/config/store";
 import { JsonLd, orgJsonLd } from "@/lib/seo";
 import { RefCapture } from "@/components/RefCapture";
 import { Suspense } from "react";
+import { FocusGate } from "@/components/FocusGate";
+import { Helper } from "@/components/Helper";
+import { JourneyHydrator } from "@/lib/journey";
 
 export const metadata: Metadata = {
   metadataBase: new URL(STORE.url),
@@ -22,19 +24,20 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const viewport: Viewport = { themeColor: "#10213B" };
+export const viewport: Viewport = { themeColor: "#F3F2EC" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en-NG" className="antialiased">
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-sun focus:p-3">Skip to content</a>
-        <PromoBar />
+        <FocusGate><PromoBar /></FocusGate>
         <Header />
         <main id="main" className="flex-1">{children}</main>
-        <Footer />
+        <FocusGate><Footer /><Helper /></FocusGate>
         <CartDrawer />
         <LeadSync />
+        <JourneyHydrator />
         <Suspense><RefCapture /></Suspense>
         <JsonLd data={orgJsonLd()} />
       </body>

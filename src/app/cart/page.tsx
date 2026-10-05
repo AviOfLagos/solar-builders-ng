@@ -35,7 +35,7 @@ function Cart() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="font-display text-4xl font-bold tracking-tight">Your cart</h1>
-      {note && <p role="status" className="mt-3 rounded-lg bg-haze p-3 text-sm">{note}</p>}
+      {note && <p role="status" className="mt-3 rounded-xl bg-haze p-3 text-sm">{note}</p>}
       {items.length === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-line bg-paper p-10 text-center">
           <p>Your cart is empty.</p>
@@ -46,7 +46,7 @@ function Cart() {
           <ul className="divide-y divide-line rounded-xl border border-line bg-paper">
             {items.map((l) => (
               <li key={l.id} className="flex gap-4 p-4">
-                <div className="relative h-20 w-20 shrink-0 rounded-lg border border-line bg-white sm:h-24 sm:w-24"><Image src={l.p.image} alt="" fill sizes="96px" className="object-contain p-2" /></div>
+                <div className="relative h-20 w-20 shrink-0 rounded-xl border border-line bg-white sm:h-24 sm:w-24"><Image src={l.p.image} alt="" fill sizes="96px" className="object-contain p-2" /></div>
                 <div className="flex min-w-0 flex-1 flex-col">
                   <p className="text-xs text-mute">{brandName(l.p.brand)}</p>
                   <Link href={`/product/${l.p.slug}`} className="font-medium hover:underline">{l.p.name}</Link>

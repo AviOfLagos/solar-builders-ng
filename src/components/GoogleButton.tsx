@@ -44,7 +44,7 @@ export function GoogleButton({ next = "/account", text = "continue_with" }: { ne
       cookie("sb_gnonce", nonce);
       cookie("sb_next", /^\/(?![/\\])/.test(next) ? next : "/account");
       g.accounts.id.initialize({ client_id: CLIENT_ID, ux_mode: "redirect", login_uri: `${location.origin}/api/v1/auth/google/redirect`, nonce, itp_support: true });
-      g.accounts.id.renderButton(box.current, { theme: "outline", size: "large", shape: "pill", text, width: 300 });
+      g.accounts.id.renderButton(box.current, { theme: "outline", size: "large", shape: "rectangular", text, width: 320, logo_alignment: "center" });
     }).catch((e) => alive && setErr((e as Error).message));
     return () => { alive = false; };
   }, [next, text]);

@@ -45,15 +45,15 @@ export default async function GoSolarMe() {
           <h1 className="font-display mt-2 text-4xl font-bold leading-tight tracking-tight sm:text-6xl">Light for someone you love, funded together.</h1>
           <p className="mt-4 max-w-2xl text-lg text-white/75">Mum&apos;s birthday, your shared flat, your church. Start a page for a solar kit and let people chip in, or split it equally with your squad.</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/" className="btn btn-sun">Pick a kit</Link>
-            <Link href="/fund/new" className="btn btn-ghost !border-white/30 !text-white">I already have a kit in my cart</Link>
+            <Link href="/find" className="btn btn-sun">Find my kit</Link>
+            <Link href="/fund/new" className="btn btn-ghost !border-white/30 !bg-transparent !text-white">I already have a kit in my cart</Link>
           </div>
         </div>
       </section>
       <section className="mx-auto max-w-5xl px-4 pt-12">
         <ol className="grid gap-4 sm:grid-cols-3">
           {STEPS.map(([t, d], i) => (
-            <li key={t} className="rounded-2xl border border-line bg-paper p-5">
+            <li key={t} className="card p-5">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-sun font-bold">{i + 1}</span>
               <h2 className="font-display mt-3 text-xl font-semibold">{t}</h2>
               <p className="mt-1 text-ink-2">{d}</p>
@@ -62,11 +62,11 @@ export default async function GoSolarMe() {
         </ol>
       </section>
       <section className="mx-auto grid max-w-5xl gap-4 px-4 pt-10 sm:grid-cols-2">
-        <div className="rounded-2xl border border-line bg-paper p-6">
+        <div className="card p-6">
           <h2 className="font-display text-2xl font-bold">Anyone chips in</h2>
           <p className="mt-2 text-ink-2">Any amount from ₦1,000, or fund a whole part like a panel or the battery. No account needed to give.</p>
         </div>
-        <div className="rounded-2xl border border-line bg-paper p-6">
+        <div className="card p-6">
           <h2 className="font-display text-2xl font-bold">Split with your squad</h2>
           <p className="mt-2 text-ink-2">2 to {POOL.squadMax} housemates or siblings. Everyone gets an equal share and their own pay button. The kit orders when the last share is paid.</p>
           <Link href="/fund/new?kind=squad" className="mt-3 inline-block text-sm font-semibold underline">Start a squad split</Link>

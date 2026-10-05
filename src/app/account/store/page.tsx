@@ -63,7 +63,7 @@ function NewBuild({ onCreated }: { onCreated: () => void }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   return (
-    <section className="mt-10 rounded-2xl border border-line bg-paper p-5">
+    <section className="mt-10 card p-5">
       <h2 className="font-display text-xl font-semibold">Share a build with a client</h2>
       {!items.length ? <p className="mt-2 text-sm text-mute">Your cart is empty. <Link className="underline" href="/packages">Add a package</Link> or products, then come back here.</p> : link ? (
         <div className="mt-3"><p className="mb-2 text-sm">Send this link to your client:</p><Share path={link} text={`Here's the solar setup I recommend: ${f.title}`} /></div>

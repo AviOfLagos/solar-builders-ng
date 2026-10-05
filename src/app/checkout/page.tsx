@@ -12,7 +12,8 @@ import { stripePromise, stripeAppearance, successUrl } from "@/components/Stripe
 import { LAGOS_LGAS, STORE } from "@/config/store";
 import { naira, NG_PHONE, INTL_PHONE, normalizePhone, isEmail, isName } from "@/lib/format";
 import { api, getRef, getLeadId, saveLead, type ApiError } from "@/lib/client";
-import { Field, Section } from "@/components/Field";
+import { Field } from "@/components/Field";
+import { Flow, Next } from "@/components/ui/Flow";
 
 const MIN_CHARGE = 1000;
 type Me = { user: { email: string; name?: string; phone?: string } | null; cards: Card[]; lastDelivery: { address: string; lga: string; landmark: string; altPhone: string } | null };
@@ -41,9 +42,9 @@ export default function CheckoutPage() {
   if (!items.length)
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
-        <h1 className="font-display text-3xl font-bold">Your cart is empty</h1>
-        <p className="mt-3 text-ink-2">Not sure what you need? The calculator picks a kit in a few taps.</p>
-        <div className="mt-6 flex justify-center gap-3"><Link href="/" className="btn btn-sun">Use the calculator</Link><Link href="/packages" className="btn btn-ghost">See packages</Link></div>
+        <h1 className="font-display text-4xl">Your cart is empty</h1>
+        <p className="mt-3 text-ink-2">Find the right kit in three quick questions.</p>
+        <div className="mt-6 flex justify-center gap-3"><Link href="/find" className="btn btn-ink">Find my kit</Link><Link href="/shop" className="btn btn-ghost">Browse the shop</Link></div>
       </div>
     );
   const { toPay } = split(subtotal, gift);
@@ -86,6 +87,8 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
     name: "", email: "", phone: "", altPhone: "", address: "", lga: "", landmark: "", notes: "", installer: false, cardNickname: "",
   });
   const lastLead = useRef("");
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [more, setMore] = useState({ alt: false, notes: false, gift: false });
   // eslint-disable-next-line react-hooks/set-state-in-effect -- pick naira unless only international cards are on
   useEffect(() => { if (opts) setMethod(defaultProvider(opts)); }, [opts]);
 
@@ -118,22 +121,30 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
     saveLead({ name: f.name, phone: okPhone ? phone : "", email: okEmail ? f.email.trim() : "", consent: true, source: "checkout", items: items.map((l) => ({ id: l.id, qty: l.qty })) }).catch(() => {});
   }
 
-  function validate() {
+  // Each step checks only its own fields (docs/DESIGN.md rule 3).
+  const STEP_FIELDS: Record<1 | 2, string[]> = { 1: ["name", "email", "phone", "recipientName", "recipientPhone", "altPhone"], 2: ["address", "lga"] };
+  function validate(which: 1 | 2 | "all" = "all") {
     const e: Record<string, string> = {};
-    if (!isName(f.name)) e.name = "Enter your full name.";
-    if (!isEmail(f.email.trim())) e.email = "Enter a valid email address.";
-    const phone = normalizePhone(f.phone);
-    if (f.forSomeoneElse) {
-      if (!isName(f.recipientName)) e.recipientName = "Enter the name of the person receiving it.";
-      if (!NG_PHONE.test(normalizePhone(f.recipientPhone))) e.recipientPhone = "Enter their Nigerian mobile number.";
-      if (phone && !NG_PHONE.test(phone) && !INTL_PHONE.test(phone)) e.phone = "Enter a valid number with country code, or leave it empty.";
-    } else if (!NG_PHONE.test(phone)) e.phone = "Enter a Nigerian mobile number, e.g. 0803 123 4567.";
-    if (f.altPhone && !NG_PHONE.test(normalizePhone(f.altPhone))) e.altPhone = "Enter a valid Nigerian number or leave it empty.";
-    if (f.address.replace(/\s/g, "").length < 8) e.address = "Enter the full delivery address.";
-    if (!f.lga) e.lga = "We deliver within Lagos only. Pick the LGA.";
+    if (which !== 2) {
+      if (!isName(f.name)) e.name = "Enter your full name.";
+      if (!isEmail(f.email.trim())) e.email = "Enter a valid email address.";
+      const phone = normalizePhone(f.phone);
+      if (f.forSomeoneElse) {
+        if (!isName(f.recipientName)) e.recipientName = "Enter the name of the person receiving it.";
+        if (!NG_PHONE.test(normalizePhone(f.recipientPhone))) e.recipientPhone = "Enter their Nigerian mobile number.";
+        if (phone && !NG_PHONE.test(phone) && !INTL_PHONE.test(phone)) e.phone = "Enter a valid number with country code, or leave it empty.";
+      } else if (!NG_PHONE.test(phone)) e.phone = "Enter a Nigerian mobile number, e.g. 0803 123 4567.";
+      if (f.altPhone && !NG_PHONE.test(normalizePhone(f.altPhone))) e.altPhone = "Enter a valid Nigerian number or leave it empty.";
+    }
+    if (which !== 1) {
+      if (f.address.replace(/\s/g, "").length < 8) e.address = "Enter the full delivery address.";
+      if (!f.lga) e.lga = "We deliver within Lagos only. Pick the LGA.";
+    }
     setErrors(e);
+    if (which === "all") { if (Object.keys(e).some((k) => STEP_FIELDS[1].includes(k))) setStep(1); else if (Object.keys(e).length) setStep(2); }
     return Object.keys(e).length === 0;
   }
+  const next = (from: 1 | 2) => { if (validate(from)) { if (from === 1) captureLead(); setStep((from + 1) as 2 | 3); scrollTo({ top: 0 }); } };
 
   async function applyGift(code = giftInput) {
     const c = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -189,162 +200,194 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
     router.push(successUrl(r.paymentIntent.id, d.clientSecret));
   }
 
-  const contactDone = isName(f.name) && isEmail(f.email.trim()) && (other ? isName(f.recipientName) && NG_PHONE.test(normalizePhone(f.recipientPhone)) : NG_PHONE.test(normalizePhone(f.phone)));
-  const deliveryDone = f.address.replace(/\s/g, "").length >= 8 && !!f.lga;
+  async function submit() {
+    if (busy) return;
+    setFormError("");
+    if (!validate()) { setFormError("Check the highlighted fields."); return; }
+    setBusy(true);
+    try { await pay(); } catch (err) {
+      const ex = err as ApiError;
+      if (ex.fields) {
+        setErrors(ex.fields);
+        const bad = Object.keys(ex.fields);
+        if (bad.some((k) => STEP_FIELDS[1].includes(k))) setStep(1); else if (bad.some((k) => STEP_FIELDS[2].includes(k))) setStep(2);
+      }
+      if (ex.data?.code === "gift_changed") setGift(null);
+      if (ex.data?.code === "amount_changed" && gift) await applyGift(gift.code);
+      setFormError(ex.message || "Payment failed. Try again.");
+      setBusy(false);
+    }
+  }
+
+  const back = () => (step === 1 ? router.back() : setStep((step - 1) as 1 | 2));
+  const count = items.reduce((n, l) => n + l.qty, 0);
+  const totalLine = (
+    <div className="flex items-center justify-between px-1 text-sm">
+      <span className="font-semibold text-ink-2">{count} item{count === 1 ? "" : "s"} · free Lagos delivery</span>
+      <span className="num text-base font-bold">{naira(toPay)}</span>
+    </div>
+  );
+  const summary = (
+    <div className="card sticky top-6 space-y-4 p-5">
+      <p className="text-sm font-semibold text-ink-2">Your order</p>
+      <ul className="space-y-3">
+        {items.map((l) => (
+          <li key={l.id} className="flex items-center gap-3 text-sm">
+            <span className="relative h-12 w-12 shrink-0 rounded-xl bg-haze"><Image src={l.p.image} alt="" fill sizes="48px" className="object-contain p-1" /></span>
+            <span className="min-w-0 flex-1"><span className="line-clamp-2 font-semibold">{l.p.name}</span><span className="text-mute">Qty {l.qty}</span></span>
+            <span className="num font-semibold">{naira(l.p.price * l.qty)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="space-y-1.5 border-t border-line pt-3 text-sm">
+        <div className="flex justify-between"><span>Subtotal</span><span className="num">{naira(subtotal)}</span></div>
+        <div className="flex justify-between"><span>Delivery (Lagos)</span><span className="font-semibold text-sun-deep">Free</span></div>
+        {giftUsed > 0 && <div className="flex justify-between text-leaf"><span>Gift card</span><span className="num">−{naira(giftUsed)}</span></div>}
+        {f.installer && <div className="flex justify-between text-mute"><span>Installation</span><span>Quoted after order</span></div>}
+        <div className="flex justify-between pt-2 text-lg font-semibold"><span>To pay</span><span className="num">{naira(toPay)}</span></div>
+      </div>
+      {ref && <p className="text-xs text-mute">Referred by <b>{ref}</b></p>}
+    </div>
+  );
+
+  if (step === 1)
+    return (
+      <Flow step={1} total={3} onBack={back} aside={summary}
+        title={other ? <>Who&apos;s it <span className="hl">for</span>?</> : <>Your <span className="hl">details</span></>}
+        sub={other ? "We'll call them to arrange delivery." : "We call to confirm your order before delivery."}
+        footer={<>{totalLine}<Next onClick={() => next(1)}>Next: delivery</Next></>}>
+        {!me.user && <p className="text-sm text-mute">Have an account? <Link href="/account?next=/checkout" className="font-semibold text-ink underline">Sign in</Link> to fill this in for you.</p>}
+        <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Who is this for?">
+          {([["For me", false], ["For someone else", true]] as const).map(([l, v]) => (
+            <button type="button" key={l} role="radio" aria-checked={other === v} onClick={() => setF((x) => ({ ...x, forSomeoneElse: v }))}
+              className={`rounded-2xl border-[1.5px] p-4 text-left font-bold ${other === v ? "border-ink bg-mint-tint" : "border-transparent bg-paper"}`}>{l}</button>
+          ))}
+        </div>
+        {other && (
+          <div className="card grid gap-4 p-5 sm:grid-cols-2">
+            <Field label="Their full name" error={errors.recipientName}><input className="field" autoComplete="off" value={f.recipientName} onChange={set("recipientName")} aria-invalid={!!errors.recipientName} /></Field>
+            <Field label="Their phone number" error={errors.recipientPhone}><input className="field" type="tel" inputMode="tel" placeholder="0803 123 4567" value={f.recipientPhone} onChange={set("recipientPhone")} aria-invalid={!!errors.recipientPhone} /></Field>
+            <Field label="A note for them (optional)" className="sm:col-span-2"><input className="field" maxLength={300} placeholder="No more NEPA wahala, Mum" value={f.giftMessage} onChange={set("giftMessage")} /></Field>
+          </div>
+        )}
+        <div className="card grid gap-4 p-5 sm:grid-cols-2">
+          {other && <p className="text-sm font-semibold text-ink-2 sm:col-span-2">About you</p>}
+          <Field label="Full name" error={errors.name}><input className="field" autoComplete="name" value={f.name} onChange={set("name")} onBlur={captureLead} aria-invalid={!!errors.name} /></Field>
+          <Field label={other ? "Your phone (any country, optional)" : "Phone number"} error={errors.phone}><input className="field" type="tel" inputMode="tel" autoComplete="tel" placeholder={other ? "+44 7700 900123" : "0803 123 4567"} value={f.phone} onChange={set("phone")} onBlur={captureLead} aria-invalid={!!errors.phone} /></Field>
+          <Field label="Email" hint="For your receipt." error={errors.email} className="sm:col-span-2"><input className="field" type="email" inputMode="email" autoComplete="email" value={f.email} onChange={set("email")} onBlur={captureLead} aria-invalid={!!errors.email} /></Field>
+          {more.alt || f.altPhone ? (
+            <Field label="Another Nigerian number (optional)" error={errors.altPhone}><input className="field" type="tel" inputMode="tel" placeholder="0812 345 6789" value={f.altPhone} onChange={set("altPhone")} aria-invalid={!!errors.altPhone} /></Field>
+          ) : <button type="button" onClick={() => setMore((m) => ({ ...m, alt: true }))} className="text-left text-sm font-semibold sm:col-span-2">+ Add another number</button>}
+        </div>
+        <p className="text-xs text-mute">If you don&apos;t finish, we may message you once on WhatsApp about this order. Nothing else.</p>
+      </Flow>
+    );
+
+  if (step === 2)
+    return (
+      <Flow step={2} total={3} onBack={back} aside={summary}
+        title={other ? <>Where should it <span className="hl">go</span>?</> : <>Where should we <span className="hl">deliver</span>?</>}
+        sub="Free delivery anywhere in Lagos State."
+        footer={<>{totalLine}<Next onClick={() => next(2)}>Next: payment</Next></>}>
+        <div className="card grid gap-4 p-5 sm:grid-cols-2">
+          <Field label="Local government area" error={errors.lga}>
+            <select className="field" value={f.lga} onChange={set("lga")} aria-invalid={!!errors.lga}>
+              <option value="">Choose the LGA</option>
+              {LAGOS_LGAS.map((l) => <option key={l}>{l}</option>)}
+            </select>
+          </Field>
+          <Field label="Nearest landmark (optional)"><input className="field" maxLength={120} placeholder="e.g. opposite Shoprite" value={f.landmark} onChange={set("landmark")} /></Field>
+          <Field label="Street address" error={errors.address} className="sm:col-span-2"><input className="field" maxLength={300} autoComplete="street-address" placeholder="House number, street, area" value={f.address} onChange={set("address")} aria-invalid={!!errors.address} /></Field>
+          {more.notes || f.notes ? (
+            <Field label="Delivery notes (optional)" className="sm:col-span-2"><textarea className="field" rows={2} maxLength={300} value={f.notes} onChange={set("notes")} /></Field>
+          ) : <button type="button" onClick={() => setMore((m) => ({ ...m, notes: true }))} className="text-left text-sm font-semibold sm:col-span-2">+ Add a delivery note</button>}
+        </div>
+        <button type="button" role="switch" aria-checked={f.installer} onClick={() => setF((x) => ({ ...x, installer: !x.installer }))}
+          className={`flex w-full items-center gap-4 rounded-3xl border-[1.5px] p-5 text-left ${f.installer ? "border-ink bg-mint-tint" : "border-transparent bg-paper"}`}>
+          <span className="flex-1"><span className="block font-bold">Install it for {other ? "them" : "me"}</span><span className="text-sm text-ink-2">No charge now. We quote after the order and connect an engineer.</span></span>
+          <span className={`flex h-8 w-14 items-center rounded-full p-1 transition-colors ${f.installer ? "justify-end bg-ink" : "justify-start bg-line"}`}><span className={`h-6 w-6 rounded-full ${f.installer ? "bg-mint" : "bg-white"}`} /></span>
+        </button>
+      </Flow>
+    );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="font-display text-4xl font-bold tracking-tight">Checkout</h1>
-      <Steps steps={[["Contact", contactDone], ["Delivery", deliveryDone], ["Pay", false]]} />
-      {!me.user && <p className="mt-3 text-sm text-mute">Have an account? <Link href="/account?next=/checkout" className="font-semibold text-ink underline">Sign in</Link> to use saved cards and your last address.</p>}
-      <form noValidate className="mt-6 grid gap-8 lg:grid-cols-[1fr_380px]" onSubmit={async (e) => {
-        e.preventDefault();
-        if (busy) return;
-        setFormError("");
-        if (!validate()) { setFormError("Check the highlighted fields."); return; }
-        setBusy(true);
-        try { await pay(); } catch (err) {
-          const ex = err as ApiError;
-          if (ex.fields) setErrors(ex.fields);
-          if (ex.data?.code === "gift_changed") setGift(null);
-          if (ex.data?.code === "amount_changed" && gift) await applyGift(gift.code);
-          setFormError(ex.message || "Payment failed. Try again.");
-          setBusy(false);
-        }
-      }}>
-        <fieldset disabled={busy} className="min-w-0 space-y-8">
-          <Section title="Who is this for?">
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Who is this for?">
-              {([["Me", false], ["Someone else", true]] as const).map(([l, v]) => (
-                <button type="button" key={l} role="radio" aria-checked={other === v} onClick={() => setF((x) => ({ ...x, forSomeoneElse: v }))}
-                  className={`rounded-xl border p-4 text-left ${other === v ? "border-ink bg-sun/15" : "border-line"}`}>
-                  <span className="block font-semibold">{l}</span>
-                  <span className="text-sm text-mute">{v ? "Family, a friend, staff. Pay from anywhere." : "Delivered to my address."}</span>
-                </button>
-              ))}
+    <Flow step={3} total={3} onBack={back} label="Last step" aside={summary}
+      title={<>Review and <span className="hl">pay</span></>}
+      footer={
+        <>
+          {formError && <p role="alert" className="rounded-2xl bg-flare/10 p-3 text-sm text-flare">{formError}</p>}
+          <Next icon="lock" busy={busy} disabled={toPay > 0 && !canPay} onClick={submit}>{toPay === 0 ? "Place order" : method === "paystack" ? `Pay ${naira(toPay)} with Paystack` : `Pay ${naira(toPay)}`}</Next>
+          <p className="text-center text-xs text-mute">{method === "paystack" ? "Secured by Paystack." : "Secured by Stripe."} We call to confirm before delivery.</p>
+        </>
+      }>
+      <div className="card space-y-2 p-5 text-sm lg:hidden">
+        <div className="flex justify-between"><span>{count} item{count === 1 ? "" : "s"}</span><span className="num">{naira(subtotal)}</span></div>
+        {giftUsed > 0 && <div className="flex justify-between text-leaf"><span>Gift card</span><span className="num">−{naira(giftUsed)}</span></div>}
+        <div className="flex justify-between text-base font-semibold"><span>To pay</span><span className="num">{naira(toPay)}</span></div>
+      </div>
+      <div className="card flex items-start justify-between gap-4 p-5 text-sm">
+        <span>
+          <span className="block font-semibold">{other ? `For ${f.recipientName}` : f.name}</span>
+          <span className="text-ink-2">{f.address}, {f.lga}{f.installer ? " · with installation" : ""}</span>
+        </span>
+        <button type="button" onClick={() => setStep(2)} className="shrink-0 font-semibold underline">Change</button>
+      </div>
+
+      {gift || more.gift ? (
+        <div className="card p-5">
+          {gift ? (
+            <div className="flex items-center justify-between text-sm"><span>Gift card {gift.code} · {naira(gift.balance)}</span><button type="button" className="underline" disabled={busy} onClick={() => setGift(null)}>Remove</button></div>
+          ) : (
+            <div className="flex gap-2">
+              <input className="field uppercase" placeholder="Gift card code" maxLength={20} value={giftInput} onChange={(e) => { setGiftInput(e.target.value); setGiftMsg(""); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyGift(); } }} aria-label="Gift card code" />
+              <button type="button" className="btn btn-ghost shrink-0" disabled={giftBusy || busy} onClick={() => applyGift()}>{giftBusy ? "…" : "Apply"}</button>
             </div>
-            {other && (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <Field label="Their full name" error={errors.recipientName}><input className="field" autoComplete="off" value={f.recipientName} onChange={set("recipientName")} aria-invalid={!!errors.recipientName} /></Field>
-                <Field label="Their phone number" hint="We call them to arrange delivery." error={errors.recipientPhone}><input className="field" type="tel" inputMode="tel" placeholder="0803 123 4567" value={f.recipientPhone} onChange={set("recipientPhone")} aria-invalid={!!errors.recipientPhone} /></Field>
-                <Field label="A note for them (optional)" className="sm:col-span-2"><input className="field" maxLength={300} placeholder="e.g. Happy birthday Mum, no more NEPA wahala" value={f.giftMessage} onChange={set("giftMessage")} /></Field>
+          )}
+          {giftMsg && <p role="alert" className="mt-1 text-xs text-flare">{giftMsg}</p>}
+        </div>
+      ) : <button type="button" onClick={() => setMore((m) => ({ ...m, gift: true }))} className="text-sm font-semibold">+ Use a gift card</button>}
+
+      <fieldset disabled={busy} className="min-w-0">
+        {toPay === 0 ? <p className="rounded-2xl bg-mint-tint p-4 text-sm">Your gift card covers this order. No card needed.</p> : !opts ? (
+          <p className="text-sm text-mute">Loading payment options…</p>
+        ) : !opts.naira && !opts.intl ? (
+          <p className="rounded-2xl bg-lemon-tint p-4 text-sm">Online payments are being switched on. To order now, <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
+        ) : (
+          <div className="card space-y-3 p-5">
+            <PayWith options={opts} value={method} onChange={setMethod} disabled={busy} />
+            {cards.length > 0 && (
+              <fieldset className="space-y-2">
+                <legend className="mb-2 text-sm text-mute">Your saved cards</legend>
+                {cards.map((c) => (
+                  <label key={c.id} className={`flex cursor-pointer items-center gap-3 rounded-2xl border-[1.5px] p-2 pr-4 ${choice === c.id ? "border-ink" : "border-line"}`}>
+                    <input type="radio" name="card" className="ml-2 accent-[#17201B]" checked={choice === c.id} onChange={() => setCardChoice(c.id)} />
+                    <div className="min-w-0 flex-1"><CardChip c={c} /></div>
+                  </label>
+                ))}
+                <label className={`flex cursor-pointer items-center gap-3 rounded-2xl border-[1.5px] p-4 ${choice === "new" ? "border-ink" : "border-line"}`}>
+                  <input type="radio" name="card" className="accent-[#17201B]" checked={choice === "new"} onChange={() => setCardChoice("new")} />
+                  <span className="font-medium">{method === "paystack" ? "New card, bank transfer or USSD" : "Use a new card"}</span>
+                </label>
+              </fieldset>
+            )}
+            {!useSaved && method === "paystack" && (
+              <div className="space-y-3 rounded-2xl bg-haze p-4">
+                <p className="text-sm text-ink-2">You&apos;ll finish on Paystack&apos;s secure page with your card, a bank transfer or USSD, then come straight back here.</p>
+                <SaveCard signedIn={!!me.user} saveCard={saveCard} setSaveCard={setSaveCard} nickname={f.cardNickname} onNickname={set("cardNickname")} note="Card payments only." />
               </div>
             )}
-          </Section>
-
-          <Section title={other ? "Your details" : "Contact"}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label={other ? "Your phone (any country, optional)" : "Phone number"} hint={other ? undefined : "We call this number to confirm your order."} error={errors.phone}><input className="field" type="tel" inputMode="tel" autoComplete="tel" placeholder={other ? "+44 7700 900123" : "0803 123 4567"} value={f.phone} onChange={set("phone")} onBlur={captureLead} aria-invalid={!!errors.phone} /></Field>
-              <Field label="Full name" error={errors.name}><input className="field" autoComplete="name" value={f.name} onChange={set("name")} onBlur={captureLead} aria-invalid={!!errors.name} /></Field>
-              <Field label="Email" hint="For your receipt." error={errors.email}><input className="field" type="email" inputMode="email" autoComplete="email" value={f.email} onChange={set("email")} onBlur={captureLead} aria-invalid={!!errors.email} /></Field>
-              <Field label="Alternate Nigerian number (optional)" error={errors.altPhone}><input className="field" type="tel" inputMode="tel" placeholder="0812 345 6789" value={f.altPhone} onChange={set("altPhone")} aria-invalid={!!errors.altPhone} /></Field>
-            </div>
-            <p className="mt-3 text-xs text-mute">If you don&apos;t finish, we may message you once on WhatsApp about this order. Nothing else.</p>
-          </Section>
-
-          <Section title={other ? "Their address in Lagos" : "Delivery in Lagos"}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Local government area" error={errors.lga}>
-                <select className="field" value={f.lga} onChange={set("lga")} aria-invalid={!!errors.lga}>
-                  <option value="">Choose the LGA</option>
-                  {LAGOS_LGAS.map((l) => <option key={l}>{l}</option>)}
-                </select>
-              </Field>
-              <Field label="Nearest landmark (optional)"><input className="field" maxLength={120} placeholder="e.g. opposite Shoprite" value={f.landmark} onChange={set("landmark")} /></Field>
-              <Field label="Street address" error={errors.address} className="sm:col-span-2"><input className="field" maxLength={300} autoComplete="street-address" placeholder="House number, street, area" value={f.address} onChange={set("address")} aria-invalid={!!errors.address} /></Field>
-              <Field label="Delivery notes (optional)" className="sm:col-span-2"><textarea className="field" rows={2} maxLength={300} value={f.notes} onChange={set("notes")} /></Field>
-            </div>
-            <p className="mt-3 text-sm text-mute">We only deliver within Lagos State. Delivery is free.</p>
-          </Section>
-
-          <Section title="Installation">
-            <label className={`flex cursor-pointer gap-3 rounded-xl border p-4 ${f.installer ? "border-ink bg-sun/15" : "border-line bg-white"}`}>
-              <input type="checkbox" className="mt-1 h-5 w-5 accent-[#10213B]" checked={f.installer} onChange={set("installer")} />
-              <span>
-                <span className="block font-semibold">I need an installer</span>
-                <span className="block text-sm text-mute">No charge now. We&apos;ll contact {other ? "them" : "you"} after the order to connect an engineer and quote the installation.</span>
-              </span>
-            </label>
-          </Section>
-
-          <Section title="Payment">
-            {toPay === 0 ? <p className="rounded-xl bg-leaf/10 p-4 text-sm">Your gift card covers this order. No card needed.</p> : !opts ? (
-              <p className="text-sm text-mute">Loading payment options…</p>
-            ) : !opts.naira && !opts.intl ? (
-              <p className="rounded-xl bg-sun/20 p-4 text-sm">Online payments are being switched on. To order now, <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
-            ) : (
-              <div className="space-y-3">
-                <PayWith options={opts} value={method} onChange={setMethod} disabled={busy} />
-                {cards.length > 0 && (
-                  <fieldset className="space-y-2">
-                    <legend className="mb-2 text-sm text-mute">Your saved cards</legend>
-                    {cards.map((c) => (
-                      <label key={c.id} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-2 pr-4 ${choice === c.id ? "border-ink" : "border-line"}`}>
-                        <input type="radio" name="card" className="ml-2 accent-[#10213B]" checked={choice === c.id} onChange={() => setCardChoice(c.id)} />
-                        <div className="min-w-0 flex-1"><CardChip c={c} /></div>
-                      </label>
-                    ))}
-                    <label className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${choice === "new" ? "border-ink" : "border-line"}`}>
-                      <input type="radio" name="card" className="accent-[#10213B]" checked={choice === "new"} onChange={() => setCardChoice("new")} />
-                      <span className="font-medium">{method === "paystack" ? "New card, bank transfer or USSD" : "Use a new card"}</span>
-                    </label>
-                  </fieldset>
-                )}
-                {!useSaved && method === "paystack" && (
-                  <div className="space-y-3 rounded-xl border border-line bg-white p-4">
-                    <p className="text-sm text-ink-2">Tap Pay and you&apos;ll finish on Paystack&apos;s secure page with your card, a bank transfer or USSD. Then you come straight back here.</p>
-                    <SaveCard signedIn={!!me.user} saveCard={saveCard} setSaveCard={setSaveCard} nickname={f.cardNickname} onNickname={set("cardNickname")} note="Card payments only." />
-                  </div>
-                )}
-                {!useSaved && method === "stripe" && (stripeReady ? (
-                  <div className="space-y-4 rounded-xl border border-line bg-white p-4">
-                    <PaymentElement options={{ layout: "tabs" }} onReady={() => setCardReady(true)} onLoadError={() => setFormError("The card form couldn't load. Refresh the page and try again.")} />
-                    {!cardReady && <p className="text-sm text-mute">Loading the card form…</p>}
-                    <SaveCard signedIn={!!me.user} saveCard={saveCard} setSaveCard={setSaveCard} nickname={f.cardNickname} onNickname={set("cardNickname")} />
-                  </div>
-                ) : <p className="rounded-xl bg-sun/20 p-4 text-sm">Cards from abroad aren&apos;t available right now. Pay in naira, or <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>)}
+            {!useSaved && method === "stripe" && (stripeReady ? (
+              <div className="space-y-4 rounded-2xl bg-haze p-4">
+                <PaymentElement options={{ layout: "tabs" }} onReady={() => setCardReady(true)} onLoadError={() => setFormError("The card form couldn't load. Refresh the page and try again.")} />
+                {!cardReady && <p className="text-sm text-mute">Loading the card form…</p>}
+                <SaveCard signedIn={!!me.user} saveCard={saveCard} setSaveCard={setSaveCard} nickname={f.cardNickname} onNickname={set("cardNickname")} />
               </div>
-            )}
-          </Section>
-        </fieldset>
-
-        <aside className="h-fit space-y-4 rounded-2xl border border-line bg-paper p-5 lg:sticky lg:top-24">
-          <h2 className="font-display text-xl font-semibold">Order summary</h2>
-          <ul className="space-y-3">
-            {items.map((l) => (
-              <li key={l.id} className="flex gap-3 text-sm">
-                <span className="relative h-14 w-14 shrink-0 rounded-lg border border-line bg-white"><Image src={l.p.image} alt="" fill sizes="56px" className="object-contain p-1" /></span>
-                <span className="min-w-0 flex-1"><span className="line-clamp-2">{l.p.name}</span><span className="text-mute">Qty {l.qty}</span></span>
-                <span className="num font-medium">{naira(l.p.price * l.qty)}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="border-t border-line pt-3">
-            {gift ? (
-              <div className="flex items-center justify-between rounded-lg bg-leaf/10 p-2 text-sm"><span>Gift card {gift.code} · {naira(gift.balance)}</span><button type="button" className="underline" disabled={busy} onClick={() => setGift(null)}>Remove</button></div>
-            ) : (
-              <div className="flex gap-2">
-                <input className="field !py-2 text-sm uppercase" placeholder="Gift card code" maxLength={20} value={giftInput} onChange={(e) => { setGiftInput(e.target.value); setGiftMsg(""); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyGift(); } }} aria-label="Gift card code" />
-                <button type="button" className="btn btn-ghost !px-3 !py-2 text-sm" disabled={giftBusy || busy} onClick={() => applyGift()}>{giftBusy ? "…" : "Apply"}</button>
-              </div>
-            )}
-            {giftMsg && <p role="alert" className="mt-1 text-xs text-flare">{giftMsg}</p>}
+            ) : <p className="rounded-2xl bg-lemon-tint p-4 text-sm">Cards from abroad aren&apos;t available right now. Pay in naira, or <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>)}
           </div>
-          <div className="space-y-1.5 border-t border-line pt-3 text-sm">
-            <div className="flex justify-between"><span>Subtotal</span><span className="num">{naira(subtotal)}</span></div>
-            <div className="flex justify-between"><span>Delivery (Lagos)</span><span>Free</span></div>
-            {giftUsed > 0 && <div className="flex justify-between text-leaf"><span>Gift card</span><span className="num">−{naira(giftUsed)}</span></div>}
-            {f.installer && <div className="flex justify-between text-mute"><span>Installation</span><span>Quoted after order</span></div>}
-            <div className="flex justify-between pt-2 text-lg font-semibold"><span>To pay</span><span className="num font-display">{naira(toPay)}</span></div>
-          </div>
-          {ref && <p className="text-xs text-mute">Referred by <b>{ref}</b></p>}
-          {formError && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{formError}</p>}
-          <button type="submit" disabled={busy || (toPay > 0 && !canPay)} className="btn btn-sun w-full text-base">{busy ? (method === "paystack" && toPay > 0 ? "Opening Paystack…" : "Processing…") : toPay === 0 ? "Place order" : `Pay ${naira(toPay)}`}</button>
-          <p className="text-center text-xs text-mute">{method === "paystack" ? "Secured by Paystack." : "Secured by Stripe."} Your order is pending until we confirm it by phone.</p>
-          <p className="text-center text-xs"><Link className="underline" href="/pay-small-small">Pay small small instead</Link> · <Link className="underline" href="/fund/new">Go Solar Me with friends</Link></p>
-        </aside>
-      </form>
-    </div>
+        )}
+      </fieldset>
+      <p className="text-center text-sm text-mute"><Link className="underline" href="/pay-small-small">Pay small small instead</Link> · <Link className="underline" href="/fund/new">Go Solar Me with friends</Link></p>
+    </Flow>
   );
 }
 
@@ -353,26 +396,10 @@ function SaveCard({ signedIn, saveCard, setSaveCard, nickname, onNickname, note 
   return (
     <>
       <label className="flex items-center gap-3 text-sm">
-        <input type="checkbox" className="h-4 w-4 accent-[#10213B]" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} />
+        <input type="checkbox" className="h-4 w-4 accent-[#17201B]" checked={saveCard} onChange={(e) => setSaveCard(e.target.checked)} />
         <span>Save this card for next time{note ? <span className="text-mute"> · {note}</span> : null}</span>
       </label>
       {saveCard && <Field label="Name this card" hint="e.g. “GTB salary card” or “Business Visa”."><input className="field" maxLength={40} value={nickname} onChange={onNickname} placeholder="My card" /></Field>}
     </>
-  );
-}
-
-function Steps({ steps }: { steps: [string, boolean][] }) {
-  const current = steps.findIndex(([, done]) => !done);
-  return (
-    <ol className="mt-4 flex items-center gap-2 text-sm" aria-label="Checkout progress">
-      {steps.map(([label, done], i) => (
-        <li key={label} className="flex items-center gap-2">
-          <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-bold ${done ? "bg-leaf text-white" : i === current ? "bg-ink text-white" : "bg-haze text-mute"}`} aria-hidden>{done ? "✓" : i + 1}</span>
-          <span className={i === current ? "font-semibold" : "text-mute"}>{label}</span>
-          {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-line" aria-hidden />}
-        </li>
-      ))}
-      {current === steps.length - 1 && <li className="ml-2 hidden text-mute sm:block">One step from lights on</li>}
-    </ol>
   );
 }

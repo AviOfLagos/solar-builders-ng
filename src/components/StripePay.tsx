@@ -6,7 +6,7 @@ import { naira } from "@/lib/format";
 
 const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 export const stripePromise = pk ? loadStripe(pk) : null;
-export const stripeAppearance = { theme: "stripe" as const, variables: { colorPrimary: "#10213B", borderRadius: "10px", fontFamily: "Instrument Sans Variable, system-ui, sans-serif" } };
+export const stripeAppearance = { theme: "stripe" as const, variables: { colorPrimary: "#17201B", borderRadius: "10px", fontFamily: "Instrument Sans Variable, system-ui, sans-serif" } };
 
 /** Where to go after a card payment, carrying the secret that lets the success page show details. */
 export const successUrl = (id: string, clientSecret: string) =>
@@ -44,7 +44,7 @@ function Inner({ amount, label, clientSecret, onPaid }: { amount: number; label:
     }}>
       <PaymentElement onReady={() => setReady(true)} onLoadError={() => setErr("The card form couldn't load. Refresh the page and try again.")} />
       {!ready && !err && <p className="text-sm text-mute">Loading the card form…</p>}
-      {err && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{err}</p>}
+      {err && <p role="alert" className="rounded-xl bg-flare/10 p-3 text-sm text-flare">{err}</p>}
       <button className="btn btn-sun w-full" disabled={busy || !stripe || !ready}>{busy ? "Processing…" : `${label} ${naira(amount)}`}</button>
     </form>
   );

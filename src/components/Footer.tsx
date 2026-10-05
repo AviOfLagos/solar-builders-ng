@@ -21,7 +21,7 @@ export function Footer() {
   const socials = Object.entries(STORE.socials).filter(([, h]) => h);
   const wa = `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent("Hi Solar Builders, I need help choosing a solar setup.")}`;
   return (
-    <footer className="mt-24 bg-ink text-white">
+    <footer className="mt-24 bg-night pb-24 text-white lg:pb-0">
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid gap-8 border-b border-white/10 py-12 lg:grid-cols-2 lg:items-center">
           <div>

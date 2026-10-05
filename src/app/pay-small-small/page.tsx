@@ -46,17 +46,17 @@ export default function PaySmallSmall() {
       {!mounted ? null : !items.length ? (
         <div className="mt-10 rounded-2xl border border-dashed border-line bg-paper p-8 text-center"><p>Your cart is empty. Pick a kit first.</p><Link href="/packages" className="btn btn-ink mt-4">See packages</Link></div>
       ) : subtotal < FINANCE.minTotal ? (
-        <div className="mt-10 rounded-2xl border border-line bg-paper p-8 text-center"><p>Pay small small starts from {naira(FINANCE.minTotal)}. Your cart is {naira(subtotal)}. <Link className="underline" href="/fund/new">Go Solar Me with friends</Link> instead?</p></div>
+        <div className="mt-10 card p-8 text-center"><p>Pay small small starts from {naira(FINANCE.minTotal)}. Your cart is {naira(subtotal)}. <Link className="underline" href="/fund/new">Go Solar Me with friends</Link> instead?</p></div>
       ) : done ? (
         <div className="mt-10 rounded-2xl bg-leaf/10 p-8"><p className="font-display text-2xl font-bold">Request sent.</p><p className="mt-2 text-ink-2">We&apos;ll call you on {f.phone} to complete the application with our lending partner. Nothing has been charged.</p></div>
       ) : (
         <div className="mt-10 grid gap-8 lg:grid-cols-2">
-          <div className="rounded-2xl border border-line bg-paper p-5">
+          <div className="card p-5">
             <p className="font-semibold">Your plan for {naira(subtotal)}</p>
             <p className="mt-4 text-sm">Down payment</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">{FINANCE.downPayments.map((d) => <button key={d} type="button" onClick={() => setDown(d)} className={`rounded-lg border py-2 text-sm ${down === d ? "border-ink bg-sun/20 font-semibold" : "border-line"}`}>{d}%</button>)}</div>
+            <div className="mt-2 grid grid-cols-3 gap-2">{FINANCE.downPayments.map((d) => <button key={d} type="button" onClick={() => setDown(d)} className={`rounded-xl border py-2 text-sm ${down === d ? "border-ink bg-mint-tint font-semibold" : "border-line"}`}>{d}%</button>)}</div>
             <p className="mt-4 text-sm">Spread over</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">{FINANCE.months.map((m) => <button key={m} type="button" onClick={() => setMonths(m)} className={`rounded-lg border py-2 text-sm ${months === m ? "border-ink bg-sun/20 font-semibold" : "border-line"}`}>{m} months</button>)}</div>
+            <div className="mt-2 grid grid-cols-3 gap-2">{FINANCE.months.map((m) => <button key={m} type="button" onClick={() => setMonths(m)} className={`rounded-xl border py-2 text-sm ${months === m ? "border-ink bg-mint-tint font-semibold" : "border-line"}`}>{m} months</button>)}</div>
             <dl className="mt-6 space-y-2 text-sm">
               <div className="flex justify-between"><dt>Pay today</dt><dd className="num font-semibold">{naira(downAmt)}</dd></div>
               <div className="flex justify-between"><dt>Financed by partner</dt><dd className="num">{naira(rest)}</dd></div>
@@ -64,7 +64,7 @@ export default function PaySmallSmall() {
             </dl>
             <p className="mt-4 text-xs text-mute">Interest and final terms are set by the lending partner after they assess your application. This is an estimate, not an offer.</p>
           </div>
-          <form noValidate className="space-y-3 rounded-2xl border border-line bg-paper p-5" onSubmit={async (e) => {
+          <form noValidate className="space-y-3 card p-5" onSubmit={async (e) => {
             e.preventDefault();
             if (busy || !validate()) return;
             setErr(""); setBusy(true);

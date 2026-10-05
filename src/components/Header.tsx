@@ -1,111 +1,131 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./Logo";
+import { Icon } from "./ui/Icon";
 import { useCart } from "@/lib/cart";
 import { useCartLines } from "./CartDrawer";
+import { OpenLinkDialog } from "./OpenLink";
 
 export type Card = { id: string; provider?: "paystack" | "stripe"; brand: string; last4: string; nickname: string; expMonth: number; expYear: number; bank?: string };
-type Me = { user: { email: string } | null; cards: Card[] };
+
+/** Everything is reachable by everyone, whatever their role. */
+export const NAV = [
+  { href: "/shop", label: "Shop" },
+  { href: "/brands", label: "Brands" },
+  { href: "/packages", label: "Packages" },
+  { href: "/go-solar-me", label: "Go Solar Me" },
+  { href: "/pay-small-small", label: "Pay small small" },
+  { href: "/gift-cards", label: "Gift cards" },
+  { href: "/sell", label: "For installers" },
+] as const;
+
+/** Flows that should feel like an app screen: no full header, no floating bar. */
+const FOCUSED = ["/find", "/start", "/checkout", "/kit", "/fund/new"];
 
 export function Header() {
   const { count } = useCartLines();
   const setOpen = useCart((s) => s.setOpen);
   const [mounted, setMounted] = useState(false);
-  const [me, setMe] = useState<Me | null>(null);
-  const [cardsOpen, setCardsOpen] = useState(false);
   const [menu, setMenu] = useState(false);
-  const pop = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const router = useRouter();
-
+  const path = usePathname();
   // eslint-disable-next-line react-hooks/set-state-in-effect -- the cart count comes from localStorage
   useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    if (!cardsOpen) return;
-    fetch("/api/v1/me").then((r) => (r.ok ? r.json() : { user: null, cards: [] })).then(setMe).catch(() => setMe({ user: null, cards: [] }));
-    const close = (e: MouseEvent) => { if (pop.current && !pop.current.contains(e.target as Node)) setCardsOpen(false); };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [cardsOpen]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- close overlays when the page changes
+  useEffect(() => { setMenu(false); setSearch(false); }, [path]);
+
+  const focused = FOCUSED.some((p) => path === p || path.startsWith(p + "/")) && !path.startsWith("/checkout/success");
+  const badge = mounted && count > 0 ? count : 0;
+  const goSearch = (q: string) => router.push(`/shop?q=${encodeURIComponent(q)}`);
+
+  if (focused) return null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-        <button className="lg:hidden -ml-1 p-2" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-        </button>
-        <Link href="/" aria-label="Solar Builders NG home"><Logo /></Link>
-        <nav className="ml-6 hidden items-center gap-5 whitespace-nowrap text-[0.95rem] font-medium lg:flex">
-          <Link href="/shop" className="hover:text-sun-deep">Shop all</Link>
-          <Link href="/packages" className="hover:text-sun-deep">Packages</Link>
-          <Link href="/category/complete-systems" className="hover:text-sun-deep">Complete systems</Link>
-          <Link href="/go-solar-me" className="hover:text-sun-deep">Go Solar Me</Link>
-          <Link href="/give" className="hover:text-sun-deep">Buy for someone</Link>
-        </nav>
-        <form
-          className="ml-auto hidden xl:block"
-          role="search"
-          onSubmit={(e) => { e.preventDefault(); const q = new FormData(e.currentTarget).get("q"); router.push(`/shop?q=${encodeURIComponent(String(q || ""))}`); }}
-        >
-          <input name="q" type="search" placeholder="Search 5kVA, lithium, EcoFlow…" className="field !w-64 !rounded-full !py-2 text-sm" aria-label="Search products" />
-        </form>
-        <div className="relative ml-auto xl:ml-0" ref={pop}>
-          <button onClick={() => setCardsOpen((o) => !o)} className="grid h-10 w-10 place-items-center rounded-full hover:bg-haze" aria-label="Saved cards" aria-expanded={cardsOpen}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 9.5h19M6 15h4" /></svg>
-          </button>
-          {cardsOpen && (
-            <div className="absolute right-0 mt-2 w-72 rounded-xl border border-line bg-paper p-4 shadow-lg">
-              {!me ? <p className="text-sm text-mute">Loading…</p> : !me.user ? (
-                <div className="space-y-3 text-sm">
-                  <p>Sign in to see the cards you’ve saved.</p>
-                  <Link href="/account" onClick={() => setCardsOpen(false)} className="btn btn-ink w-full !py-2">Sign in</Link>
-                </div>
-              ) : me.cards.length === 0 ? (
-                <div className="space-y-3 text-sm">
-                  <p>No saved cards yet for {me.user.email}.</p>
-                  <Link href="/account/cards" onClick={() => setCardsOpen(false)} className="btn btn-ghost w-full !py-2">Add a card</Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-mute">Latest card</p>
-                  <CardChip c={me.cards[0]} />
-                  {me.cards.length > 1 && <p className="text-xs text-mute">+ {me.cards.length - 1} more saved</p>}
-                  <Link href="/account/cards" onClick={() => setCardsOpen(false)} className="btn btn-ghost w-full !py-2 text-sm">Manage cards</Link>
-                </div>
-              )}
-            </div>
-          )}
+    <>
+      <header className="sticky top-0 z-40 border-b border-line/70 bg-haze/85 backdrop-blur-md">
+        <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-2 px-4">
+          <Link href="/" aria-label="Solar Builders NG home" className="mr-2 shrink-0"><Logo /></Link>
+          <nav className="ml-4 hidden items-center gap-1 lg:flex" aria-label="Main">
+            {NAV.map((n) => (
+              <Link key={n.href} href={n.href}
+                className={`whitespace-nowrap rounded-xl px-3 py-2 text-[0.92rem] font-semibold transition-colors ${path.startsWith(n.href) ? "bg-paper text-ink" : "text-ink-2 hover:bg-paper/70 hover:text-ink"}`}>
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-1">
+            {search ? (
+              <form role="search" className="flex items-center" onSubmit={(e) => { e.preventDefault(); goSearch(String(new FormData(e.currentTarget).get("q") || "")); }}>
+                <input name="q" type="search" autoFocus placeholder="Search 5kVA, lithium, EcoFlow…" className="field !w-56 !py-2 text-sm sm:!w-72" aria-label="Search products" onBlur={(e) => !e.currentTarget.value && setSearch(false)} />
+              </form>
+            ) : (
+              <IconBtn label="Search" onClick={() => setSearch(true)}><Icon name="search" /></IconBtn>
+            )}
+            <IconBtn label="Open a link or code" onClick={() => setLinkOpen(true)} className="hidden sm:grid"><Icon name="link" /></IconBtn>
+            <Link href="/account" aria-label="My account" className="hidden h-11 w-11 place-items-center rounded-xl hover:bg-paper sm:grid"><Icon name="user" /></Link>
+            <IconBtn label={`Cart, ${badge} items`} onClick={() => setOpen(true)}>
+              <Icon name="cart" />
+              {badge > 0 && <span className="num absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[11px] font-bold text-mint">{badge}</span>}
+            </IconBtn>
+            <Link href="/find" className="btn btn-ink ml-2 hidden !py-2.5 text-sm xl:inline-flex">Find my kit</Link>
+          </div>
         </div>
-        <button onClick={() => setOpen(true)} className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-haze" aria-label={`Cart, ${mounted ? count : 0} items`}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6" /><circle cx="10" cy="20" r="1.3" /><circle cx="17" cy="20" r="1.3" /></svg>
-          {mounted && count > 0 && <span className="num absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-sun px-1 text-[11px] font-bold">{count}</span>}
-        </button>
-      </div>
+      </header>
+
+      {/* Phones: the app's floating bar. */}
+      <nav aria-label="Quick" className="fixed inset-x-0 bottom-3 z-40 flex justify-center px-3 lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div className="flex items-center gap-1 rounded-3xl bg-paper p-1.5 shadow-[0_8px_30px_rgba(23,32,27,0.14)]">
+          <BarLink href="/" icon="home" label="Home" on={path === "/"} />
+          <BarLink href="/shop" icon="grid" label="Shop" on={path.startsWith("/shop") || path.startsWith("/product") || path.startsWith("/category") || path.startsWith("/brands")} />
+          <BarLink href="/find" icon="sun" label="Find kit" on={false} accent />
+          <BarLink href="/account" icon="user" label="Account" on={path.startsWith("/account")} />
+          <button onClick={() => setMenu(true)} aria-label="More" className="grid h-12 w-12 place-items-center rounded-2xl text-ink-2"><Icon name="menu" /></button>
+        </div>
+      </nav>
+
       {menu && (
-        <nav className="border-t border-line bg-paper px-4 py-3 lg:hidden" onClick={() => setMenu(false)}>
-          <form role="search" className="mb-3" onSubmit={(e) => { e.preventDefault(); const q = new FormData(e.currentTarget).get("q"); router.push(`/shop?q=${encodeURIComponent(String(q || ""))}`); setMenu(false); }} onClick={(e) => e.stopPropagation()}>
-            <input name="q" type="search" placeholder="Search products" className="field !rounded-full" aria-label="Search products" />
-          </form>
-          <ul className="grid grid-cols-2 gap-2 text-sm font-medium">
-            <li><Link href="/shop" className="block py-2">Shop all</Link></li>
-            <li><Link href="/packages" className="block py-2">Packages</Link></li>
-            <li><Link href="/category/complete-systems" className="block py-2">Complete systems</Link></li>
-            <li><Link href="/go-solar-me" className="block py-2">Go Solar Me</Link></li>
-            <li><Link href="/give" className="block py-2">Buy for someone</Link></li>
-            <li><Link href="/sell" className="block py-2">Sell & earn</Link></li>
-            <li><Link href="/account" className="block py-2">My account</Link></li>
-          </ul>
-        </nav>
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <button className="absolute inset-0 bg-ink/30" aria-label="Close menu" onClick={() => setMenu(false)} />
+          <div className="rise absolute inset-x-3 bottom-3 rounded-3xl bg-paper p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <Logo />
+              <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-haze" aria-label="Close"><Icon name="close" size={18} /></button>
+            </div>
+            <ul className="mt-4 grid grid-cols-2 gap-2">
+              {NAV.map((n) => <li key={n.href}><Link href={n.href} className="block rounded-2xl bg-haze px-4 py-3.5 font-semibold">{n.label}</Link></li>)}
+              <li><button onClick={() => { setMenu(false); setLinkOpen(true); }} className="flex w-full items-center gap-2 rounded-2xl bg-haze px-4 py-3.5 text-left font-semibold"><Icon name="link" size={18} />Open a link</button></li>
+            </ul>
+            <Link href="/find" className="btn btn-ink mt-4 w-full">Find my kit in 3 questions</Link>
+          </div>
+        </div>
       )}
-    </header>
+      <OpenLinkDialog open={linkOpen} onClose={() => setLinkOpen(false)} />
+    </>
+  );
+}
+
+function IconBtn({ label, onClick, children, className = "" }: { label: string; onClick: () => void; children: React.ReactNode; className?: string }) {
+  return <button onClick={onClick} aria-label={label} className={`relative grid h-11 w-11 place-items-center rounded-xl hover:bg-paper ${className}`}>{children}</button>;
+}
+
+function BarLink({ href, icon, label, on, accent }: { href: string; icon: string; label: string; on: boolean; accent?: boolean }) {
+  return (
+    <Link href={href} aria-label={label} aria-current={on ? "page" : undefined}
+      className={`flex h-12 items-center gap-2 whitespace-nowrap rounded-2xl px-3.5 text-sm font-bold ${on ? "bg-ink text-white" : accent ? "bg-mint text-ink" : "text-ink-2"}`}>
+      <Icon name={icon} size={21} className={on ? "text-mint" : ""} />
+      {(on || accent) && <span>{label}</span>}
+    </Link>
   );
 }
 
 export function CardChip({ c }: { c: Card }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg bg-ink p-3 text-white">
-      <div className="grid h-8 w-11 place-items-center rounded bg-sun text-[10px] font-bold uppercase text-ink">{c.brand.slice(0, 4)}</div>
+    <div className="flex items-center gap-3 rounded-2xl bg-night p-3 text-white">
+      <div className="grid h-8 w-11 place-items-center rounded-xl bg-mint text-[10px] font-bold uppercase text-ink">{c.brand.slice(0, 4)}</div>
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{c.nickname}</p>
         <p className="num truncate text-xs text-white/70">•••• {c.last4} · {String(c.expMonth).padStart(2, "0")}/{String(c.expYear).slice(-2)}{c.provider === "stripe" ? " · international" : c.bank ? ` · ${c.bank}` : ""}</p>

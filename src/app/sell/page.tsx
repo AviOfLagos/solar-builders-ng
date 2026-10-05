@@ -40,7 +40,7 @@ export default function Sell() {
       <div className="mx-auto grid max-w-5xl gap-10 px-4 pt-12 lg:grid-cols-[1fr_420px]">
         <ol className="space-y-5">
           {[
-            ["Open your store", "Pick a link like solar-ng.vercel.app/s/your-name. It shows all our products and your own setups."],
+            ["Open your store", "Pick a link like solar.nexprove.com/s/your-name. It shows all our products and your own setups."],
             ["Build for a client", "Add the right inverter, battery and panels to your cart, then “Share this build”. Send the link on WhatsApp."],
             ["They pay us directly", "Your client pays by card, splits it with friends or pays small small. We deliver and you install."],
             ["You earn", "Every order through your link or build earns you a commission, tracked on your dashboard."],
@@ -48,7 +48,7 @@ export default function Sell() {
             <li key={t} className="flex gap-4"><span className="font-display grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sun text-lg font-bold">{i + 1}</span><span><span className="block font-semibold">{t}</span><span className="text-ink-2">{d}</span></span></li>
           ))}
         </ol>
-        <div className="h-fit rounded-2xl border border-line bg-paper p-5">
+        <div className="h-fit card p-5">
           {!me ? <p className={msg ? "text-flare" : "text-mute"}>{msg || "Loading…"}</p> : !me.user ? (
             <div><p className="font-semibold">Create an account to open your store.</p><Link href="/account?next=/sell" className="btn btn-ink mt-4 w-full">Sign in or create account</Link></div>
           ) : (

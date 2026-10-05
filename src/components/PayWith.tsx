@@ -32,7 +32,7 @@ export function PayWith({ options, value, onChange, disabled }: { options: PayOp
     <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How do you want to pay?">
       {choices.map(([p, title, sub]) => (
         <button type="button" key={p} role="radio" aria-checked={value === p} disabled={disabled} onClick={() => onChange(p)}
-          className={`rounded-xl border p-3 text-left ${value === p ? "border-ink bg-sun/15" : "border-line bg-white"}`}>
+          className={`rounded-xl border p-3 text-left ${value === p ? "border-ink bg-mint-tint" : "border-line bg-white"}`}>
           <span className="block text-sm font-semibold">{title}</span>
           <span className="block text-xs text-mute">{sub}</span>
         </button>

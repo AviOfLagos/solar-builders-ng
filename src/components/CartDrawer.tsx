@@ -39,9 +39,9 @@ function QuoteCapture() {
   const [phone, setPhone] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">(() => (getLeadId() ? "done" : "idle"));
   const [err, setErr] = useState("");
-  if (state === "done") return <p className="rounded-lg bg-leaf/10 p-3 text-xs">We&apos;ve saved your cart. Questions? <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`} target="_blank" rel="noopener">WhatsApp us</a>.</p>;
+  if (state === "done") return <p className="rounded-xl bg-leaf/10 p-3 text-xs">We&apos;ve saved your cart. Questions? <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`} target="_blank" rel="noopener">WhatsApp us</a>.</p>;
   return (
-    <form noValidate className="rounded-lg bg-haze p-3" onSubmit={async (e) => {
+    <form noValidate className="rounded-xl bg-haze p-3" onSubmit={async (e) => {
       e.preventDefault();
       if (!NG_PHONE.test(normalizePhone(phone))) { setErr("Enter a Nigerian WhatsApp number, e.g. 0803 123 4567."); return; }
       setState("busy"); setErr("");
@@ -103,7 +103,7 @@ export function CartDrawer() {
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {items.map((l) => (
                 <li key={l.id} className="flex gap-3 py-4">
-                  <div className="relative h-20 w-20 shrink-0 rounded-lg border border-line bg-white">
+                  <div className="relative h-20 w-20 shrink-0 rounded-xl border border-line bg-white">
                     <Image src={l.p.image} alt="" fill sizes="80px" className="object-contain p-1.5" />
                   </div>
                   <div className="min-w-0 flex-1">

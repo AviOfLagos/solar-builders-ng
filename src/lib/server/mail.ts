@@ -27,10 +27,10 @@ export async function sendMail(m: Mail) {
 
 export const esc = (x: unknown) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export const shell = (title: string, body: string) => `<!doctype html><html><body style="margin:0;background:#E9EEF2;font-family:Arial,Helvetica,sans-serif;color:#10213B">
+export const shell = (title: string, body: string) => `<!doctype html><html><body style="margin:0;background:#E9EEF2;font-family:Arial,Helvetica,sans-serif;color:#17201B">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px">
 <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:14px;overflow:hidden">
-<tr><td style="background:#10213B;color:#FFC21A;padding:18px 24px;font-size:18px;font-weight:bold">Solar Builders NG</td></tr>
+<tr><td style="background:#17201B;color:#BDF0A6;padding:18px 24px;font-size:18px;font-weight:bold">Solar Builders NG</td></tr>
 <tr><td style="padding:24px"><h1 style="font-size:20px;margin:0 0 12px">${title}</h1>${body}</td></tr>
 <tr><td style="padding:16px 24px;background:#F4F7F9;font-size:12px;color:#5B6B80">Solar Builders NG, Lagos, Nigeria</td></tr>
 </table></td></tr></table></body></html>`;

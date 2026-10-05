@@ -1,45 +1,75 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens, shared with the Go Solar Me app (go-solar-me-app/docs/DESIGN.md).
+ * Old names (sun, haze, paper…) are kept so every page picks up the new look.
+ */
 @theme {
-  --color-ink: #10213b;
-  --color-ink-2: #3a4b63;
-  --color-mute: #5b6b80;
-  --color-haze: #e9eef2;
+  --color-ink: #17201b;
+  --color-ink-2: #3b4540;
+  --color-mute: #6e7670;
+  --color-haze: #f3f2ec;
   --color-paper: #ffffff;
-  --color-line: #d5dee6;
-  --color-sun: #ffc21a;
-  --color-sun-deep: #e89b00;
-  --color-leaf: #0e8a5f;
-  --color-flare: #e5482d;
-  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-line: #e5e3db;
+  --color-sun: #bdf0a6;       /* brand accent: mint */
+  --color-sun-deep: #2f7d4f;  /* accent text on light backgrounds */
+  --color-mint: #bdf0a6;
+  --color-mint-deep: #2f7d4f;
+  --color-mint-tint: #ebf8e3;
+  --color-lemon: #f4f1a8;
+  --color-lemon-tint: #fbfae3;
+  --color-night: #1d2621;
+  --color-night-soft: #2a3530;
+  --color-leaf: #2f7d4f;
+  --color-flare: #c9432a;
+  --font-display: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
 }
 
 html { -webkit-text-size-adjust: 100%; }
-body { background: var(--color-haze); color: var(--color-ink); font-family: var(--font-sans); }
-.font-display { font-family: var(--font-display); font-optical-sizing: auto; }
+body { background: var(--color-haze); color: var(--color-ink); font-family: var(--font-sans); font-weight: 450; }
 .num { font-variant-numeric: tabular-nums; }
-:focus-visible { outline: 3px solid var(--color-sun-deep); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 3px solid var(--color-mint-deep); outline-offset: 2px; border-radius: 8px; }
 
+/* Headings: big ones are light, small ones semibold (outside layers, so they win over font-bold). */
+.font-display { font-weight: 650; letter-spacing: -0.01em; }
+h1.font-display, h2.font-display, .display-light { font-weight: 300; letter-spacing: -0.03em; }
+.hl { background: var(--color-mint); padding: 0 .18em; border-radius: .25em; font-weight: 600; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+/* Component classes sit in a layer so Tailwind utilities (hidden, w-full…) still win. */
+@layer components {
 .field {
-  width: 100%; border: 1px solid var(--color-line); background: #fff; border-radius: 10px;
-  padding: 0.7rem 0.85rem; font-size: 0.95rem; color: var(--color-ink);
+  width: 100%; border: 1px solid var(--color-line); background: #fff; border-radius: 14px;
+  padding: 0.8rem 0.95rem; font-size: 0.98rem; color: var(--color-ink); font-weight: 500;
 }
-.field:focus { outline: none; border-color: var(--color-ink); box-shadow: 0 0 0 3px rgb(255 194 26 / 0.45); }
+.field:focus { outline: none; border-color: var(--color-ink); box-shadow: 0 0 0 3px rgb(189 240 166 / 0.6); }
 .field[aria-invalid="true"] { border-color: var(--color-flare); }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: 999px; font-weight: 600; padding: .8rem 1.4rem; transition: background-color .15s, transform .1s; }
-.btn:active { transform: translateY(1px); }
-.btn-sun { background: var(--color-sun); color: var(--color-ink); }
-.btn-sun:hover { background: #ffd04d; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: 16px; font-weight: 700; padding: .9rem 1.4rem; transition: background-color .15s, transform .1s, opacity .15s; }
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn-sun { background: var(--color-mint); color: var(--color-ink); }
+.btn-sun:hover { background: #ade89a; }
 .btn-ink { background: var(--color-ink); color: #fff; }
-.btn-ink:hover { background: #1b3157; }
+.btn-ink:hover { background: #2a3530; }
 .btn-ghost { border: 1px solid var(--color-line); background: #fff; }
 .btn-ghost:hover { border-color: var(--color-ink); }
-.btn[disabled] { opacity: .55; pointer-events: none; }
+.btn[disabled] { opacity: .5; pointer-events: none; }
+
+.card { background: #fff; border-radius: 1.5rem; }
+.chip { display: inline-flex; align-items: center; border-radius: 12px; border: 1px solid var(--color-line); background: #fff; padding: .5rem .9rem; font-size: .9rem; font-weight: 600; }
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { background: var(--color-ink); border-color: var(--color-ink); color: #fff; }
+.tag { display: inline-flex; align-items: center; gap: .3rem; border-radius: 8px; padding: .25rem .6rem; font-size: .75rem; font-weight: 700; background: var(--color-mint); color: var(--color-ink); }
+}
 
 /* The battery used by the power planner. */
 .cell { transition: background-color .25s ease; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+.pop { animation: pop .5s cubic-bezier(.2,.8,.2,1) both; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }

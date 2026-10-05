@@ -3,8 +3,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCartLines } from "@/components/CartDrawer";
-import { Field, Section } from "@/components/Field";
+import { Field } from "@/components/Field";
 import { GoogleButton } from "@/components/GoogleButton";
+import { Flow, Next, Option } from "@/components/ui/Flow";
 import { api, getRef, type ApiError } from "@/lib/client";
 import { naira, firstName, isName, NG_PHONE, normalizePhone } from "@/lib/format";
 import { LAGOS_LGAS, OCCASIONS, POOL, type Occasion } from "@/config/store";
@@ -14,13 +15,19 @@ const FOR = [
   { key: "house", label: "Our house" }, { key: "shop", label: "My shop" }, { key: "church", label: "Our church" }, { key: "other", label: "Someone else" },
 ] as const;
 type Me = { user: { name: string; phone: string } | null };
+const TOTAL = 4;
 
+/**
+ * Start a Go Solar Me page, one question per screen (same as the app):
+ * 1. how people pay  2. who it's for (or the squad)  3. the page  4. delivery
+ */
 export default function NewFund() {
   const { items, subtotal } = useCartLines();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<Me["user"] | undefined>(undefined);
   const [loadErr, setLoadErr] = useState("");
+  const [step, setStep] = useState(1);
   const [kind, setKind] = useState<"public" | "squad">("public");
   const [forKey, setForKey] = useState<(typeof FOR)[number]["key"]>("me");
   const [forName, setForName] = useState("");
@@ -29,6 +36,7 @@ export default function NewFund() {
   const [people, setPeople] = useState<string[]>(["", ""]);
   const [d, setD] = useState({ recipientName: "", recipientPhone: "", lga: "", address: "", landmark: "", installer: true });
   const [custom, setCustom] = useState({ title: "", story: "" });
+  const [writeOwn, setWriteOwn] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -47,19 +55,25 @@ export default function NewFund() {
     }).catch((e) => { setLoadErr((e as Error).message); setUser(null); });
   }, []);
 
-  if (!mounted || user === undefined) return <div className="mx-auto max-w-3xl px-4 py-16 text-mute">Loading…</div>;
-  if (!items.length) return <Empty title="Pick the kit first" text="Choose a package or add products to your cart, then come back to start your Go Solar Me page." />;
+  const exit = () => router.back();
+  if (!mounted || user === undefined) return <div className="mx-auto max-w-xl px-4 py-16 text-mute">Loading…</div>;
+  if (!items.length)
+    return (
+      <Flow step={1} total={1} onBack={exit} label="" title="Pick the kit first." sub="Three quick questions find the right one. Then come back here to let people chip in.">
+        <Link href="/find" className="btn btn-ink w-full">Find my kit</Link>
+        <Link href="/packages" className="btn btn-ghost w-full">See all packages</Link>
+      </Flow>
+    );
   if (!user)
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <h1 className="font-display text-3xl font-bold">Sign in to start your page</h1>
-        <p className="mt-3 text-ink-2">So you can manage it and we can reach you when it&apos;s funded.</p>
-        {loadErr && <p className="mt-3 text-sm text-flare">{loadErr}</p>}
-        <div className="mt-6 flex flex-col items-center gap-3">
+      <Flow step={1} total={TOTAL} onBack={exit} label="Before we start" title="Sign in to start your page." sub="So you can manage it and we can reach you when it's funded. Chipping in never needs an account.">
+        {loadErr && <p role="alert" className="text-sm text-flare">{loadErr}</p>}
+        <div className="card space-y-4 p-6">
           <GoogleButton next="/fund/new" />
-          <Link href="/account?next=/fund/new" className="text-sm underline">Use email instead</Link>
+          <Link href="/account?mode=signup&next=/fund/new" className="btn btn-ghost w-full">Use email instead</Link>
+          <p className="text-center text-sm text-mute">Already have an account? <Link href="/account?next=/fund/new" className="font-semibold text-ink underline">Sign in</Link></p>
         </div>
-      </div>
+      </Flow>
     );
 
   const pickFor = (k: (typeof FOR)[number]) => {
@@ -75,120 +89,136 @@ export default function NewFund() {
   const story = custom.story || OCCASIONS.find((o) => o.slug === occasion)!.story(shownName);
   const n = people.length;
   const share = Math.floor(subtotal / n);
+  const back = () => (step > 1 ? setStep(step - 1) : exit());
 
-  function validate() {
+  function checkWho() {
     const e: Record<string, string> = {};
-    if (!isName(forName)) e.forName = "A first name is enough.";
-    if (!isName(d.recipientName)) e.recipientName = "Who receives the kit?";
-    if (!NG_PHONE.test(normalizePhone(d.recipientPhone))) e.recipientPhone = "The Nigerian number we call for delivery.";
-    if (!d.lga) e.lga = "Pick the LGA.";
-    if (d.address && d.address.replace(/\s/g, "").length < 8) e.address = "Enter the full address, or leave it for later.";
+    if (kind === "public" && !isName(forName)) e.forName = "A first name is enough.";
     if (kind === "squad" && share < 1000) e.shares = "Each share must be at least ₦1,000. Use fewer people.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!isName(d.recipientName)) e.recipientName = "Who receives the kit?";
+    if (!NG_PHONE.test(normalizePhone(d.recipientPhone))) e.recipientPhone = "The Nigerian number we call for delivery.";
+    if (!d.lga) e.lga = "Pick the LGA.";
+    if (d.address && d.address.replace(/\s/g, "").length < 8) e.address = "Enter the full address, or leave it for later.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+  async function create() {
+    if (busy) return;
+    setMsg("");
+    if (!validate()) return;
+    setBusy(true);
+    try {
+      const r = await api<{ path: string }>("/pools", {
+        body: {
+          kind, forName: kind === "squad" ? forName || firstName(user!.name) : forName, occasion, deadlineDays: days, title: custom.title, story: custom.story, ref: getRef(),
+          items: items.map((l) => ({ id: l.id, qty: l.qty })), ...d,
+          shares: kind === "squad" ? people.map((p, i) => ({ name: p.trim() || `Person ${i + 1}` })) : undefined,
+        },
+      });
+      router.push(r.path);
+    } catch (x) {
+      const ex = x as ApiError;
+      const f = ex.fields || {};
+      setMsg(ex.message); setErrors(f); setBusy(false);
+      if (f.forName || f.shares) setStep(2);
+    }
+  }
+
+  const preview = (
+    <div className="card sticky top-6 overflow-hidden">
+      <div className="bg-night p-5 text-white">
+        <p className="text-xs font-semibold uppercase tracking-wider text-mint">Your page preview</p>
+        <p className="font-display mt-2 text-2xl">{title}</p>
+      </div>
+      <div className="space-y-3 p-5">
+        <p className="line-clamp-4 text-sm text-ink-2">{story}</p>
+        <div className="h-2 overflow-hidden rounded-full bg-line"><div className="h-full w-[3%] rounded-full bg-mint-deep" /></div>
+        <p className="num text-sm"><b>₦0</b> of {naira(subtotal)} · {days} days</p>
+      </div>
+    </div>
+  );
+
+  if (step === 1)
+    return (
+      <Flow step={1} total={TOTAL} onBack={back} title={<>How should people <span className="hl">pay</span>?</>} sub="Money comes to us, never to anyone's account, and only becomes solar."
+        footer={<Next onClick={() => setStep(2)}>{kind === "squad" ? "Next: your squad" : "Next: who it's for"}</Next>} aside={preview}>
+        <div role="radiogroup" className="space-y-3">
+          <Option icon="megaphone" title="Anyone chips in" sub="Family, friends, even strangers. Any amount." on={kind === "public"} onClick={() => setKind("public")} />
+          <Option icon="split" title="Split with my squad" sub="Housemates or siblings. Fixed equal shares, a pay button each." on={kind === "squad"} onClick={() => setKind("squad")} />
+        </div>
+        <div className="flex items-center justify-between rounded-3xl bg-paper p-5"><span className="text-ink-2">Goal · {items.length} {items.length === 1 ? "item" : "items"}</span><span className="num text-2xl font-light">{naira(subtotal)}</span></div>
+      </Flow>
+    );
+
+  if (step === 2)
+    return kind === "squad" ? (
+      <Flow step={2} total={TOTAL} onBack={back} title="Who's in the squad?" sub="Names are optional. Each person gets their own pay button."
+        footer={<Next onClick={() => checkWho() && setStep(3)}>Next: your page</Next>} aside={preview}>
+        <div className="card space-y-2 p-4">
+          {people.map((p, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input className="field" maxLength={40} placeholder={i === 0 ? "You" : `Person ${i + 1}`} value={p} onChange={(e) => setPeople(people.map((x, j) => (j === i ? e.target.value : x)))} aria-label={`Person ${i + 1}`} />
+              <span className="num w-28 shrink-0 text-right text-sm font-semibold">{naira(share)}</span>
+              {n > POOL.squadMin && <button type="button" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-haze" aria-label="Remove" onClick={() => setPeople(people.filter((_, j) => j !== i))}>✕</button>}
+            </div>
+          ))}
+          {n < POOL.squadMax && <button type="button" className="w-full rounded-xl py-3 text-sm font-semibold hover:bg-haze" onClick={() => setPeople([...people, ""])}>+ Add a person</button>}
+        </div>
+        {errors.shares && <p role="alert" className="text-sm text-flare">{errors.shares}</p>}
+      </Flow>
+    ) : (
+      <Flow step={2} total={TOTAL} onBack={back} title="Who is it for?" sub="It shapes the page. You can edit the words next."
+        footer={<Next onClick={() => checkWho() && setStep(3)}>Next: your page</Next>} aside={preview}>
+        <div className="flex flex-wrap gap-2">{FOR.map((k) => <Chip key={k.key} on={forKey === k.key} onClick={() => pickFor(k)}>{k.label}</Chip>)}</div>
+        <Field label="Their first name" error={errors.forName}><input className="field" maxLength={40} value={forName} onChange={(e) => setForName(e.target.value)} placeholder="e.g. Mama Tunde" /></Field>
+      </Flow>
+    );
+
+  if (step === 3)
+    return (
+      <Flow step={3} total={TOTAL} onBack={back} title="What's the occasion?" sub="We write the page for you. Change anything you like."
+        footer={<Next onClick={() => { setErrors({}); setStep(4); }}>Next: delivery</Next>} aside={preview}>
+        <div className="flex flex-wrap gap-2">{OCCASIONS.map((o) => <Chip key={o.slug} on={occasion === o.slug} onClick={() => setOccasion(o.slug)}>{o.label}</Chip>)}</div>
+        <p className="pt-2 text-sm font-semibold">How long should it run?</p>
+        <div className="flex flex-wrap gap-2">{POOL.deadlineDays.map((x) => <Chip key={x} on={days === x} onClick={() => setDays(x)}>{x} days</Chip>)}</div>
+        <div className="card space-y-2 p-5 lg:hidden">
+          <p className="font-display text-xl">{title}</p>
+          <p className="text-sm text-ink-2">{story}</p>
+        </div>
+        {writeOwn ? (
+          <div className="space-y-3">
+            <Field label="Title"><input className="field" maxLength={80} value={custom.title} placeholder={title} onChange={(e) => setCustom({ ...custom, title: e.target.value })} /></Field>
+            <Field label="Story"><textarea className="field" rows={4} maxLength={1000} value={custom.story} placeholder={story} onChange={(e) => setCustom({ ...custom, story: e.target.value })} /></Field>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setWriteOwn(true)} className="text-sm font-semibold underline underline-offset-4">Write your own title or story</button>
+        )}
+      </Flow>
+    );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <p className="text-sm font-semibold text-sun-deep">Go Solar Me</p>
-      <h1 className="font-display mt-1 text-4xl font-bold tracking-tight">Fund this kit together</h1>
-      <p className="mt-2 text-ink-2">Takes about a minute. Money goes to us, never to anyone&apos;s account, and only becomes solar.</p>
-      <form noValidate className="mt-8 space-y-6" onSubmit={async (e) => {
-        e.preventDefault();
-        if (busy) return;
-        setMsg("");
-        if (!validate()) { setMsg("Check the highlighted fields."); return; }
-        setBusy(true);
-        try {
-          const r = await api<{ path: string }>("/pools", {
-            body: {
-              kind, forName, occasion, deadlineDays: days, title: custom.title, story: custom.story, ref: getRef(),
-              items: items.map((l) => ({ id: l.id, qty: l.qty })), ...d,
-              shares: kind === "squad" ? people.map((p, i) => ({ name: p.trim() || `Person ${i + 1}` })) : undefined,
-            },
-          });
-          router.push(r.path);
-        } catch (x) { const ex = x as ApiError; setMsg(ex.message); setErrors(ex.fields || {}); setBusy(false); }
-      }}>
-        <fieldset disabled={busy} className="min-w-0 space-y-6">
-          <Section title="How should people pay?">
-            <div className="grid gap-2 sm:grid-cols-2" role="radiogroup">
-              {([["public", "Anyone chips in", "Family, friends, even strangers. Any amount."], ["squad", "Split with my squad", "Housemates or siblings. Fixed equal shares."]] as const).map(([k, l, t]) => (
-                <button type="button" key={k} role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`rounded-xl border p-4 text-left ${kind === k ? "border-ink bg-sun/15" : "border-line"}`}>
-                  <span className="block font-semibold">{l}</span><span className="text-sm text-mute">{t}</span>
-                </button>
-              ))}
-            </div>
-            {kind === "squad" && (
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-mute">Names are optional. Each person gets their own pay button.</p>
-                {people.map((p, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input className="field" maxLength={40} placeholder={i === 0 ? "You" : `Person ${i + 1}`} value={p} onChange={(e) => setPeople(people.map((x, j) => (j === i ? e.target.value : x)))} aria-label={`Person ${i + 1}`} />
-                    <span className="num w-28 shrink-0 text-right text-sm">{naira(share)}</span>
-                    {n > POOL.squadMin && <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-haze" aria-label="Remove" onClick={() => setPeople(people.filter((_, j) => j !== i))}>✕</button>}
-                  </div>
-                ))}
-                {n < POOL.squadMax && <button type="button" className="text-sm font-semibold underline" onClick={() => setPeople([...people, ""])}>+ Add a person</button>}
-                {errors.shares && <p className="text-sm text-flare">{errors.shares}</p>}
-              </div>
-            )}
-          </Section>
-
-          <Section title="Who is it for?">
-            <div className="flex flex-wrap gap-2">
-              {FOR.map((k) => <Chip key={k.key} on={forKey === k.key} onClick={() => pickFor(k)}>{k.label}</Chip>)}
-            </div>
-            <Field label="Their first name" error={errors.forName} className="mt-4"><input className="field" maxLength={40} value={forName} onChange={(e) => setForName(e.target.value)} placeholder="e.g. Mama Tunde" /></Field>
-            <p className="mb-2 mt-5 text-sm font-medium">Occasion</p>
-            <div className="flex flex-wrap gap-2">{OCCASIONS.map((o) => <Chip key={o.slug} on={occasion === o.slug} onClick={() => setOccasion(o.slug)}>{o.label}</Chip>)}</div>
-            <p className="mb-2 mt-5 text-sm font-medium">Deadline</p>
-            <div className="flex flex-wrap gap-2">{POOL.deadlineDays.map((x) => <Chip key={x} on={days === x} onClick={() => setDays(x)}>{x} days</Chip>)}</div>
-          </Section>
-
-          <Section title="Delivery">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Who receives it" error={errors.recipientName}><input className="field" maxLength={80} value={d.recipientName} onChange={(e) => setD({ ...d, recipientName: e.target.value })} /></Field>
-              <Field label="Their phone" hint="We call this number to deliver." error={errors.recipientPhone}><input className="field" type="tel" inputMode="tel" placeholder="0803 123 4567" value={d.recipientPhone} onChange={(e) => setD({ ...d, recipientPhone: e.target.value })} /></Field>
-              <Field label="LGA in Lagos" error={errors.lga}><select className="field" value={d.lga} onChange={(e) => setD({ ...d, lga: e.target.value })}><option value="">Choose the LGA</option>{LAGOS_LGAS.map((l) => <option key={l}>{l}</option>)}</select></Field>
-              <Field label="Landmark (optional)"><input className="field" maxLength={120} value={d.landmark} onChange={(e) => setD({ ...d, landmark: e.target.value })} /></Field>
-              <Field label="Street address (optional now)" hint="You can add it once the kit is funded." error={errors.address} className="sm:col-span-2"><input className="field" maxLength={300} value={d.address} onChange={(e) => setD({ ...d, address: e.target.value })} /></Field>
-            </div>
-            <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#10213B]" checked={d.installer} onChange={(e) => setD({ ...d, installer: e.target.checked })} /> Ask for an installer too (quoted separately)</label>
-            <p className="mt-3 text-xs text-mute">The address and phone stay private. The public page shows only the LGA.</p>
-          </Section>
-
-          <Section title="Your page">
-            <p className="font-display text-2xl font-semibold">{title}</p>
-            <p className="mt-2 text-ink-2">{story}</p>
-            <details className="mt-3 text-sm">
-              <summary className="cursor-pointer font-semibold underline">Write your own title or story</summary>
-              <div className="mt-3 space-y-3">
-                <Field label="Title"><input className="field" maxLength={80} value={custom.title} placeholder={title} onChange={(e) => setCustom({ ...custom, title: e.target.value })} /></Field>
-                <Field label="Story"><textarea className="field" rows={4} maxLength={1000} value={custom.story} placeholder={story} onChange={(e) => setCustom({ ...custom, story: e.target.value })} /></Field>
-              </div>
-            </details>
-          </Section>
-        </fieldset>
-
-        <div className="flex items-center justify-between rounded-xl bg-paper p-4"><span>{items.length} {items.length === 1 ? "item" : "items"} · goal</span><span className="font-display num text-2xl font-bold">{naira(subtotal)}</span></div>
-        {msg && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{msg}</p>}
-        <button className="btn btn-sun w-full text-base" disabled={busy}>{busy ? "Creating…" : "Create my Go Solar Me page"}</button>
-      </form>
-    </div>
+    <Flow step={4} total={TOTAL} onBack={back} title="Where should it go?" sub="We deliver free in Lagos once it's funded. The public page shows only the LGA."
+      footer={<>
+        {msg && <p role="alert" className="rounded-xl bg-flare/10 p-3 text-sm text-flare">{msg}</p>}
+        <Next icon="sparkle" busy={busy} onClick={create}>Create my page</Next>
+      </>} aside={preview}>
+      <fieldset disabled={busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <Field label="Who receives it" error={errors.recipientName}><input className="field" maxLength={80} value={d.recipientName} onChange={(e) => setD({ ...d, recipientName: e.target.value })} /></Field>
+        <Field label="Their phone" hint="We call this number to deliver." error={errors.recipientPhone}><input className="field" type="tel" inputMode="tel" placeholder="0803 123 4567" value={d.recipientPhone} onChange={(e) => setD({ ...d, recipientPhone: e.target.value })} /></Field>
+        <Field label="LGA in Lagos" error={errors.lga}><select className="field" value={d.lga} onChange={(e) => setD({ ...d, lga: e.target.value })}><option value="">Choose the LGA</option>{LAGOS_LGAS.map((l) => <option key={l}>{l}</option>)}</select></Field>
+        <Field label="Landmark (optional)"><input className="field" maxLength={120} value={d.landmark} onChange={(e) => setD({ ...d, landmark: e.target.value })} /></Field>
+        <Field label="Street address (optional now)" hint="You can add it once the kit is funded." error={errors.address} className="sm:col-span-2"><input className="field" maxLength={300} value={d.address} onChange={(e) => setD({ ...d, address: e.target.value })} /></Field>
+      </fieldset>
+      <Option icon="tools" title="Ask for an installer too" sub="Quoted separately. You decide later." on={d.installer} onClick={() => setD({ ...d, installer: !d.installer })} />
+    </Flow>
   );
 }
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button type="button" aria-pressed={on} onClick={onClick} className={`rounded-full border px-4 py-2 text-sm ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}>{children}</button>;
-}
-
-function Empty({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="mx-auto max-w-xl px-4 py-20 text-center">
-      <h1 className="font-display text-3xl font-bold">{title}</h1>
-      <p className="mt-3 text-ink-2">{text}</p>
-      <div className="mt-6 flex justify-center gap-3"><Link href="/" className="btn btn-sun">Use the calculator</Link><Link href="/packages" className="btn btn-ghost">See packages</Link></div>
-    </div>
-  );
+  return <button type="button" aria-pressed={on} onClick={onClick} className="chip">{children}</button>;
 }

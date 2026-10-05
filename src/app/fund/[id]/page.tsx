@@ -57,14 +57,14 @@ export default async function FundPage(props: PageProps<"/fund/[id]">) {
           </>
         )}
       </div>
-      <aside className="h-fit min-w-0 space-y-5 rounded-2xl border border-line bg-paper p-5 lg:sticky lg:top-24">
+      <aside className="h-fit min-w-0 space-y-5 card p-5 lg:sticky lg:top-24">
         <div>
           <p className="font-display num text-3xl font-bold">{naira(p.raised)}</p>
           <p className="text-sm text-mute">raised of {naira(p.goal)}</p>
           <div className="mt-3 h-3 overflow-hidden rounded-full bg-haze" role="progressbar" aria-label="Funded" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-leaf" style={{ width: `${pct}%` }} /></div>
           <p className="mt-1 text-xs text-mute">{pct}% funded{open && p.raised < p.goal ? ` · ${naira(p.goal - p.raised)} to go` : ""}</p>
         </div>
-        {p.status === "ended" && <p className="rounded-xl bg-sun/20 p-3 text-sm">The deadline has passed. You can still chip in while {p.owner} decides what&apos;s next.</p>}
+        {p.status === "ended" && <p className="rounded-xl bg-mint-tint p-3 text-sm">The deadline has passed. You can still chip in while {p.owner} decides what&apos;s next.</p>}
         {open ? (
           <Contribute pool={{ id: p.id, kind: p.kind, remaining: p.goal - p.raised, items: p.items, shares: p.shares }} />
         ) : p.status === "funded" ? (

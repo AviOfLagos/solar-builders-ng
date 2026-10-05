@@ -74,9 +74,9 @@ export function Contribute({ pool }: { pool: Pool }) {
         <fieldset className="space-y-2">
           <legend className="sr-only">Whose share</legend>
           {pool.shares.map((s) => (
-            <label key={s.id} className={`flex items-center justify-between gap-3 rounded-lg border p-3 text-sm ${s.paid ? "border-line bg-haze text-mute" : share === s.id ? "border-ink bg-sun/15" : "border-line"}`}>
+            <label key={s.id} className={`flex items-center justify-between gap-3 rounded-xl border p-3 text-sm ${s.paid ? "border-line bg-haze text-mute" : share === s.id ? "border-ink bg-mint-tint" : "border-line"}`}>
               <span className="flex items-center gap-2">
-                <input type="radio" name="share" className="accent-[#10213B]" disabled={s.paid} checked={share === s.id} onChange={() => setShare(s.id)} />
+                <input type="radio" name="share" className="accent-[#17201B]" disabled={s.paid} checked={share === s.id} onChange={() => setShare(s.id)} />
                 {s.name}
               </span>
               <span className="num font-semibold">{s.paid ? "Paid ✓" : naira(s.amount)}</span>
@@ -87,7 +87,7 @@ export function Contribute({ pool }: { pool: Pool }) {
       ) : (
         <>
           {pieces.length > 0 && (
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-haze p-1 text-sm" role="tablist">
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-haze p-1 text-sm" role="tablist">
               <button type="button" role="tab" aria-selected={mode === "amount"} className={`rounded-md py-1.5 ${mode === "amount" ? "bg-white font-semibold shadow-sm" : ""}`} onClick={() => setMode("amount")}>Any amount</button>
               <button type="button" role="tab" aria-selected={mode === "piece"} className={`rounded-md py-1.5 ${mode === "piece" ? "bg-white font-semibold shadow-sm" : ""}`} onClick={() => setMode("piece")}>Fund a part</button>
             </div>
@@ -96,7 +96,7 @@ export function Contribute({ pool }: { pool: Pool }) {
             <>
               <div className="grid grid-cols-3 gap-2">
                 {[...chips.slice(0, 2), remaining].map((v, i) => (
-                  <button type="button" key={i} onClick={() => setAmount(v)} className={`rounded-lg border px-2 py-2 text-sm ${amount === v ? "border-ink bg-sun/20 font-semibold" : "border-line"}`}>{v === remaining ? "The rest" : naira(v)}</button>
+                  <button type="button" key={i} onClick={() => setAmount(v)} className={`rounded-xl border px-2 py-2 text-sm ${amount === v ? "border-ink bg-mint-tint font-semibold" : "border-line"}`}>{v === remaining ? "The rest" : naira(v)}</button>
                 ))}
               </div>
               <Field label="Or type an amount (₦)" error={errors.amount}><input className="field num" type="number" inputMode="numeric" min={min} max={remaining} step={1} value={Number.isFinite(amount) && amount > 0 ? amount : ""} onChange={(e) => setAmount(Math.floor(Number(e.target.value)))} /></Field>
@@ -105,8 +105,8 @@ export function Contribute({ pool }: { pool: Pool }) {
             <fieldset className="space-y-2">
               <legend className="sr-only">Which part</legend>
               {pieces.map((i) => (
-                <label key={i.id} className={`flex items-center justify-between gap-3 rounded-lg border p-3 text-sm ${piece === i.id ? "border-ink bg-sun/15" : "border-line"}`}>
-                  <span className="flex min-w-0 items-center gap-2"><input type="radio" name="piece" className="accent-[#10213B]" checked={piece === i.id} onChange={() => setPiece(i.id)} /><span className="line-clamp-2">{i.name}{i.qty > 1 ? ` (${i.funded} of ${i.qty} funded)` : ""}</span></span>
+                <label key={i.id} className={`flex items-center justify-between gap-3 rounded-xl border p-3 text-sm ${piece === i.id ? "border-ink bg-mint-tint" : "border-line"}`}>
+                  <span className="flex min-w-0 items-center gap-2"><input type="radio" name="piece" className="accent-[#17201B]" checked={piece === i.id} onChange={() => setPiece(i.id)} /><span className="line-clamp-2">{i.name}{i.qty > 1 ? ` (${i.funded} of ${i.qty} funded)` : ""}</span></span>
                   <span className="num shrink-0 font-semibold">{naira(i.price)}</span>
                 </label>
               ))}
@@ -118,9 +118,9 @@ export function Contribute({ pool }: { pool: Pool }) {
       <Field label="Your name" error={errors.name}><input className="field" maxLength={60} autoComplete="name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
       <Field label="Email for your receipt" error={errors.email}><input className="field" type="email" inputMode="email" autoComplete="email" maxLength={120} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
       <Field label="Message (optional)"><input className="field" maxLength={200} placeholder="e.g. Happy birthday Mummy!" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} /></Field>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#10213B]" checked={f.anonymous} onChange={(e) => setF({ ...f, anonymous: e.target.checked })} /> Hide my name on the page</label>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#17201B]" checked={f.anonymous} onChange={(e) => setF({ ...f, anonymous: e.target.checked })} /> Hide my name on the page</label>
       <PayWith options={opts} value={method} onChange={setPicked} disabled={busy} />
-      {err && <p role="alert" className="rounded-lg bg-flare/10 p-3 text-sm text-flare">{err}</p>}
+      {err && <p role="alert" className="rounded-xl bg-flare/10 p-3 text-sm text-flare">{err}</p>}
       <button className="btn btn-sun w-full" disabled={busy || value <= 0 || !opts || (!opts.naira && !opts.intl)}>{busy ? "Please wait…" : `Continue with ${naira(value > 0 ? value : 0)}`}</button>
       {opts && !opts.naira && !opts.intl && <p className="text-center text-xs text-flare">Online payments are being switched on. Check back soon.</p>}
       <p className="text-center text-xs text-mute">No account needed. If the kit gets funded before your payment lands, we refund you automatically.</p>
