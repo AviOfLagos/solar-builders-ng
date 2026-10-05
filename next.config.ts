@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withEve } from "eve/next";
 
 const nextConfig: NextConfig = {
   // Accept the variable names the Vercel Marketplace Stripe integration provisions.
@@ -13,4 +14,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// The ops agent in agent/ is served at /eve/v1/* (same origin) and deployed with the site.
+export default withEve(nextConfig);

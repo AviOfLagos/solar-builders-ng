@@ -12,6 +12,7 @@ import { Suspense } from "react";
 import { FocusGate } from "@/components/FocusGate";
 import { Helper } from "@/components/Helper";
 import { JourneyHydrator } from "@/lib/journey";
+import { Tracker } from "@/components/Tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL(STORE.url),
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CartDrawer />
         <LeadSync />
         <JourneyHydrator />
+        <Tracker />
         <Suspense><RefCapture /></Suspense>
         <JsonLd data={orgJsonLd()} />
       </body>

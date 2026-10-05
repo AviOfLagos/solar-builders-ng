@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 
-const FOCUSED = ["/find", "/start", "/checkout", "/kit", "/fund/new"];
+const FOCUSED = ["/find", "/start", "/checkout", "/kit", "/fund/new", "/admin"];
 
 /** Hides site chrome (promo bar, footer) on app-like step-by-step flows. */
 export function FocusGate({ children }: { children: React.ReactNode }) {

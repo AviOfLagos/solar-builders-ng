@@ -40,6 +40,10 @@ export async function notifyOwner(text: string) {
   console.log("[owner-alert]", text.split("\n")[0]);
   const alertEmail = process.env.ORDER_ALERT_EMAIL;
   if (alertEmail) await sendMail({ to: [alertEmail], subject: text.split("\n")[0].slice(0, 120), html: shell("New activity", `<pre style="font-size:13px;white-space:pre-wrap">${esc(text)}</pre>`), text });
+  // Slack: an incoming-webhook URL for the team channel (Vercel env SLACK_WEBHOOK_URL).
+  if (process.env.SLACK_WEBHOOK_URL) {
+    await fetch(process.env.SLACK_WEBHOOK_URL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: text.slice(0, 3000) }) }).catch((e) => console.error("[slack]", e));
+  }
   const { WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_ALERT_TO } = process.env;
   if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_NUMBER_ID || !WHATSAPP_ALERT_TO) return;
   await fetch(`https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`, {

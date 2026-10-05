@@ -13,7 +13,7 @@ import { MENU } from "@/lib/nav";
 export type Card = { id: string; provider?: "paystack" | "stripe"; brand: string; last4: string; nickname: string; expMonth: number; expYear: number; bank?: string };
 
 /** Flows that should feel like an app screen: no full header, no floating bar. */
-const FOCUSED = ["/find", "/start", "/checkout", "/kit", "/fund/new"];
+const FOCUSED = ["/find", "/start", "/checkout", "/kit", "/fund/new", "/admin"];
 
 export function Header() {
   const { count } = useCartLines();

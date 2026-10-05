@@ -19,7 +19,7 @@ const TIPS: Tip[] = [
 ];
 
 const WEEK = 7 * 24 * 3600 * 1000;
-const HIDE_ON = ["/account", "/team", "/cart", "/open", "/legal"];
+const HIDE_ON = ["/account", "/admin", "/team", "/cart", "/open", "/legal"];
 
 /**
  * A chat-style helper in the bottom-right corner. It waits about 10 seconds (or a good scroll),

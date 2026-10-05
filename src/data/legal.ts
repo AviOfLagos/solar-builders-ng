@@ -53,11 +53,12 @@ export const LEGAL: LegalDoc[] = [
     slug: "privacy",
     title: "Privacy",
     summary: "What we collect, why, and how to ask us to delete it. Written for the Nigeria Data Protection Act 2023.",
-    updated: "2026-10-03",
+    updated: "2026-10-06",
     sections: [
       { h: "What we collect", p: ["Your name, email and phone; delivery addresses; what's in your cart; your orders; and for Go Solar Me, what you chipped in and your message. Card details are held by Paystack or Stripe, not by us."] },
       { h: "Why", p: ["To deliver your order, call you about it, run Go Solar Me pages and prevent fraud. If you give us your number and don't finish an order, we may message you once or twice about it. Reply STOP and we won't again."] },
       { h: "Who sees it", p: ["Our team, the installer you asked for, and the services that run the site: Paystack and Stripe (payments), Vercel (hosting), Neon (database) and Resend (email). We don't sell your data."] },
+      { h: "Visit counts", p: ["We count page views and button clicks to see which pages help people. We use no cookies for this and store no name, email, phone or IP address with it: only the page, the button's label and a random id that lasts while your tab is open. These counts are deleted after 180 days."] },
       { h: "How long we keep it", p: ["Order records are kept as long as the law requires for accounting. Unfinished carts are deleted after 90 days."] },
       { h: "Your rights", p: [`You can ask for a copy of your data, to correct it or to delete it. Message us on ${contact}.`] },
     ],

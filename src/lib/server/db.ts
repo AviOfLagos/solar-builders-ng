@@ -233,6 +233,19 @@ create table if not exists password_resets (
 alter table users add column if not exists deleted_at timestamptz;
 -- v4: brand feature requests are leads with a note
 alter table leads add column if not exists note text not null default '';
+-- v5: first-party page views and clicks (no cookies, no personal data)
+create table if not exists events (
+  id bigserial primary key,
+  at timestamptz not null default now(),
+  sid text not null default '',
+  kind text not null,
+  path text not null default '',
+  name text not null default '',
+  ref text not null default ''
+);
+create index if not exists events_at_idx on events(at);
+-- v5: lead follow-up status for the admin and the WhatsApp pipeline
+alter table leads add column if not exists status text not null default 'new';
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

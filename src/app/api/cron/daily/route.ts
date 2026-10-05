@@ -29,5 +29,10 @@ export async function GET(req: Request) {
     const gone = await sql`delete from leads where order_id is null and updated_at < now() - interval '90 days'`;
     return gone.count;
   });
+  await step("events", async () => {
+    const sql = await db();
+    const gone = await sql`delete from events where at < now() - interval '180 days'`;
+    return gone.count;
+  });
   return NextResponse.json(out);
 }
