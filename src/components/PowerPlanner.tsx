@@ -64,69 +64,66 @@ export function PowerPlanner() {
   const bump = (k: Key, d: number) => { setPreset(""); setLoad((l) => ({ ...l, [k]: Math.max(0, Math.min(30, l[k] + d)) })); };
 
   return (
-    <div id="planner" className="grid gap-4 lg:grid-cols-[1.25fr_1fr]">
-      <div className="rounded-2xl bg-paper p-5 text-ink sm:p-6">
-        <p className="text-sm font-semibold">1. Start from</p>
-        <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label="Start from a typical setup">
+    <div id="planner" className="grid scroll-mt-24 gap-3 lg:grid-cols-[1.35fr_1fr]">
+      <div className="card p-5 sm:p-7">
+        <Label n={1}>Start from</Label>
+        <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Start from a typical setup">
           {SEGMENTS.map((s) => (
-            <button key={s.slug} role="radio" aria-checked={preset === s.slug} onClick={() => pick(s.slug)}
-              className={`rounded-full border px-3.5 py-1.5 text-sm font-medium ${preset === s.slug ? "border-ink bg-ink text-white" : "border-line hover:border-ink"}`}>
-              {PRESETS[s.slug].label}
-            </button>
+            <button key={s.slug} role="radio" aria-checked={preset === s.slug} onClick={() => pick(s.slug)} className="chip">{PRESETS[s.slug].label}</button>
           ))}
         </div>
-        <p className="mt-5 text-sm font-semibold">2. Adjust what you’ll run</p>
-        <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <Label n={2} className="mt-7">Adjust what you&apos;ll run</Label>
+        <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {APPLIANCES.map((a) => {
             const n = load[a.key];
             return (
-              <li key={a.key} className={`flex flex-col gap-2 rounded-xl border p-2.5 sm:flex-row sm:items-center sm:pl-3 ${n ? "border-ink bg-mint-tint" : "border-line"}`}>
+              <li key={a.key} className={`flex flex-col gap-2 rounded-2xl p-3 transition-colors sm:flex-row sm:items-center ${n ? "bg-mint-tint ring-1 ring-ink/80" : "bg-haze"}`}>
                 <span className="min-w-0 flex-1 leading-tight">
-                  <span className="block text-sm font-medium sm:truncate">{a.label}</span>
+                  <span className="block text-sm font-semibold sm:truncate">{a.label}</span>
                   <span className="text-[11px] text-mute">{a.w}W each</span>
                 </span>
-                <span className="flex items-center justify-between gap-2">
-                  <button className="grid h-8 w-8 place-items-center rounded-full bg-white ring-1 ring-line disabled:opacity-30 sm:h-7 sm:w-7" disabled={!n} aria-label={`Remove ${a.label}`} onClick={() => bump(a.key, -1)}>−</button>
+                <span className="flex items-center justify-between gap-1.5">
+                  <button className="grid h-8 w-8 place-items-center rounded-xl bg-paper text-lg disabled:opacity-30" disabled={!n} aria-label={`Remove ${a.label}`} onClick={() => bump(a.key, -1)}>−</button>
                   <span className="num w-5 text-center text-sm font-bold" aria-live="polite">{n}</span>
-                  <button className="grid h-8 w-8 place-items-center rounded-full bg-ink text-white sm:h-7 sm:w-7" aria-label={`Add ${a.label}`} onClick={() => bump(a.key, 1)}>+</button>
+                  <button className="grid h-8 w-8 place-items-center rounded-xl bg-ink text-lg text-white" aria-label={`Add ${a.label}`} onClick={() => bump(a.key, 1)}>+</button>
                 </span>
               </li>
             );
           })}
         </ul>
-        <label className="mt-5 block">
-          <span className="flex justify-between text-sm font-semibold"><span>3. Hours without light each day</span><span className="num">{hours} hours</span></span>
+        <label className="mt-7 block">
+          <span className="flex items-baseline justify-between"><Label n={3}>Hours without light a day</Label><span className="num text-2xl font-light">{hours}h</span></span>
           <input type="range" min={2} max={24} value={hours} onChange={(e) => setHours(+e.target.value)} className="mt-3 w-full accent-[#17201B]" />
         </label>
       </div>
 
-      <div className="flex flex-col rounded-2xl bg-sun p-5 text-ink sm:p-6" aria-live="polite">
-        <p className="text-sm font-semibold">You need</p>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-white/60 p-3">
-            <p className="font-display num text-4xl font-bold">{r.kw < 1 ? Math.round(r.kw * 1000) : r.kw}<span className="text-xl"> {r.kw < 1 ? "W" : "kW"}</span></p>
-            <p className="text-xs leading-snug">inverter — how much runs <b>at the same time</b></p>
+      <div className="flex flex-col rounded-[2rem] bg-night p-5 text-white sm:p-7" aria-live="polite">
+        <p className="text-sm font-semibold text-white/60">You need</p>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-night-soft p-4">
+            <p className="num text-4xl font-light text-mint">{r.kw < 1 ? Math.round(r.kw * 1000) : r.kw}<span className="text-lg"> {r.kw < 1 ? "W" : "kW"}</span></p>
+            <p className="mt-1 text-xs leading-snug text-white/60">inverter: what runs <b className="text-white">at once</b></p>
           </div>
-          <div className="rounded-xl bg-white/60 p-3">
-            <p className="font-display num text-4xl font-bold">{r.kwh < 1 ? Math.round(r.kwh * 1000) : r.kwh}<span className="text-xl"> {r.kwh < 1 ? "Wh" : "kWh"}</span></p>
-            <p className="text-xs leading-snug">battery — keeps it on for <b>{hours} hours</b></p>
+          <div className="rounded-2xl bg-night-soft p-4">
+            <p className="num text-4xl font-light text-mint">{r.kwh < 1 ? Math.round(r.kwh * 1000) : r.kwh}<span className="text-lg"> {r.kwh < 1 ? "Wh" : "kWh"}</span></p>
+            <p className="mt-1 text-xs leading-snug text-white/60">battery: keeps it on <b className="text-white">{hours} hours</b></p>
           </div>
         </div>
         {empty ? (
-          <p className="mt-6 text-sm">Add at least one appliance to see a kit.</p>
+          <p className="mt-6 text-sm text-white/70">Add at least one appliance to see a kit.</p>
         ) : top ? (
-          <div className="mt-5 flex flex-1 flex-col rounded-xl bg-paper p-4">
-            <p className="text-xs font-semibold text-mute">Best match · {top.segment.name}</p>
-            <div className="mt-1 flex items-start gap-3">
-              <span className="relative h-16 w-16 shrink-0 rounded-xl border border-line bg-white"><Image src={top.lines[0].p.image} alt="" fill sizes="64px" className="object-contain p-1" /></span>
+          <div className="mt-3 flex flex-1 flex-col rounded-3xl bg-paper p-5 text-ink">
+            <span className="tag self-start">Best match</span>
+            <div className="mt-3 flex items-start gap-3">
+              <span className="relative h-16 w-16 shrink-0 rounded-2xl bg-haze"><Image src={top.lines[0].p.image} alt="" fill sizes="64px" className="object-contain p-1.5" /></span>
               <div className="min-w-0">
-                <p className="font-display text-xl font-bold leading-tight">{top.name}</p>
+                <p className="text-lg font-semibold leading-tight">{top.name}</p>
                 <p className="text-sm text-ink-2">{top.tagline}</p>
               </div>
             </div>
-            <p className="font-display num mt-3 text-3xl font-bold">{naira(top.price)}</p>
-            <p className="text-xs text-mute">{range ? <>Installed: <span className="num">{naira(range[0])}–{naira(range[1])}</span></> : "No installation needed"}</p>
-            <div className="mt-auto flex gap-2 pt-4">
+            <p className="num mt-4 text-4xl font-light">{naira(top.price)}</p>
+            <p className="text-xs text-mute">{range ? <>Installed: <span className="num">{naira(range[0])}–{naira(range[1])}</span></> : "No installation needed"} · free Lagos delivery</p>
+            <div className="mt-auto flex gap-2 pt-5">
               <KitButton t={top} className="btn btn-ink flex-1" />
               <Link href={`/packages/${top.segment.slug}#${top.id}`} className="btn btn-ghost">Details</Link>
             </div>
@@ -139,11 +136,15 @@ export function PowerPlanner() {
             )}
           </div>
         ) : (
-          <div className="mt-5 rounded-xl bg-paper p-4 text-sm">
-            That’s a big load — bigger than our ready kits. <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Hi, I need about ${r.kw}kW and ${r.kwh}kWh. Can you quote?`)}`}>Get a custom quote on WhatsApp</a>.
+          <div className="mt-3 rounded-3xl bg-paper p-5 text-sm text-ink">
+            That&apos;s a big load, bigger than our ready kits. <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Hi, I need about ${r.kw}kW and ${r.kwh}kWh. Can you quote?`)}`}>Get a custom quote on WhatsApp</a>.
           </div>
         )}
       </div>
     </div>
   );
+}
+
+function Label({ n, children, className = "" }: { n: number; children: React.ReactNode; className?: string }) {
+  return <p className={`flex items-center gap-2.5 font-semibold ${className}`}><span className="num grid h-7 w-7 place-items-center rounded-lg bg-mint text-sm">{n}</span>{children}</p>;
 }

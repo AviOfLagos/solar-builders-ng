@@ -5,7 +5,7 @@ import { api } from "@/lib/client";
 import { naira, ngLocal } from "@/lib/format";
 import { FULFILMENT, ORDER_STATUS, STORE, type OrderStatus } from "@/config/store";
 
-type Lead = { id: string; name: string; phone: string; email: string; consent: boolean; source: string; items: { id: string; qty: number }[]; total: number; contacted_at: string | null; updated_at: string };
+type Lead = { id: string; name: string; phone: string; email: string; consent: boolean; source: string; items: { id: string; qty: number }[]; total: number; note?: string; contacted_at: string | null; updated_at: string };
 type Order = { id: string; items: { name: string; qty: number }[]; subtotal: number; total_paid: number; gift_card_used: number; commission: number; buyer: { name: string; phone: string; email: string }; delivery: { name: string; phone: string; address: string; lga: string; landmark: string }; recipient: { name: string } | null; installer: boolean; status: OrderStatus; pool_id: string | null; created_at: string };
 type Pool = { id: string; kind: string; title: string; goal: number; raised: number; status: string; deadline: string; owner: string; owner_email: string };
 type Finance = { id: string; name: string; phone: string; email: string; employment: string; income_band: string; total: number; down_pct: number; months: number; created_at: string };
@@ -36,6 +36,7 @@ export default function Team() {
           {d.leads.map((l) => (
             <li key={l.id} className={`rounded-xl border border-line p-4 text-sm ${l.contacted_at ? "bg-haze" : "bg-paper"}`}>
               <div className="flex flex-wrap justify-between gap-2"><b>{l.name || "No name"} · {l.phone ? ngLocal(l.phone) : l.email}</b><span className="num">{naira(l.total)} · {l.items.length} items · {l.source}</span></div>
+              {l.note && <p className="mt-1 text-sm text-ink-2">{l.note}</p>}
               <p className="mt-1 text-mute">Last active {when(l.updated_at)}{l.contacted_at ? ` · contacted ${when(l.contacted_at)}` : ""}{l.consent ? "" : " · no consent"}</p>
               <div className="mt-2 flex flex-wrap gap-3">
                 {l.phone && <a className="font-semibold underline" target="_blank" rel="noopener" href={wa(l.phone, `Hi${l.name ? " " + l.name.split(" ")[0] : ""}, it's ${STORE.shortName}. Your solar kit (${naira(l.total)}) is still in your cart. Pick up where you left off: ${STORE.url}/cart?resume=${l.id}\nAny questions? Just reply here.`)}>WhatsApp</a>}

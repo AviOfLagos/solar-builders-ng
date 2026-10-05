@@ -4,6 +4,7 @@ import { CATEGORIES, brands } from "@/lib/catalog";
 import { SEGMENTS } from "@/data/packages";
 import { LAGOS_LGAS, STORE } from "@/config/store";
 import { Subscribe } from "./Subscribe";
+import { MENU, WHATSAPP } from "@/lib/nav";
 
 const ICONS: Record<string, React.ReactNode> = {
   instagram: <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm5 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm5.5-1.5h.01" />,
@@ -19,13 +20,14 @@ const URLS: Record<string, (h: string) => string> = {
 
 export function Footer() {
   const socials = Object.entries(STORE.socials).filter(([, h]) => h);
-  const wa = `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent("Hi Solar Builders, I need help choosing a solar setup.")}`;
+  const wa = WHATSAPP;
+  const group = (label: string) => MENU.find((m) => m.label === label)?.groups?.flatMap((g) => g.links.filter((l) => l.icon).map((l) => [l.label, l.href] as [string, string])) ?? [];
   return (
     <footer className="mt-24 bg-night pb-24 text-white lg:pb-0">
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid gap-8 border-b border-white/10 py-12 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="font-display text-3xl font-bold leading-tight sm:text-4xl">Not sure what to buy?</p>
+            <h2 className="font-display text-4xl leading-tight sm:text-5xl">Not sure what to <span className="text-mint">buy</span>?</h2>
             <p className="mt-2 text-white/70">Send us what you want to power. A real person replies on WhatsApp with a kit and a full price.</p>
             <a href={wa} className="btn btn-sun mt-5">Chat on WhatsApp</a>
           </div>
@@ -44,7 +46,7 @@ export function Footer() {
               <ul className="mt-5 flex gap-2">
                 {socials.map(([k, h]) => (
                   <li key={k}>
-                    <a href={URLS[k](h)} aria-label={k} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-sun hover:text-ink" target="_blank" rel="noopener">
+                    <a href={URLS[k](h)} aria-label={k} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-mint hover:text-ink" target="_blank" rel="noopener">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ICONS[k]}</svg>
                     </a>
                   </li>
@@ -52,10 +54,10 @@ export function Footer() {
               </ul>
             )}
           </div>
-          <FooterCol title="Packages" links={[...SEGMENTS.map((s) => [s.name, `/packages/${s.slug}`] as [string, string])]} />
-          <FooterCol title="Shop" links={[["All products", "/shop"], ...CATEGORIES.map((c) => [c.name, `/category/${c.slug}`] as [string, string]), ["Solar Friday deals", "/deals"]]} />
-          <FooterCol title="Brands" links={brands.map((b) => [b.name, `/brands/${b.slug}`] as [string, string])} />
-          <FooterCol title="Help" links={[["Buy for someone", "/give"], ["Go Solar Me", "/go-solar-me"], ["Gift cards", "/gift-cards"], ["Pay small small", "/pay-small-small"], ["Sell solar & earn", "/sell"], ["Installation cost guide", "/guides/solar-installation-cost-lagos"], ["All guides", "/guides"], ["FAQ", "/faq"], ["My account & cards", "/account"], ["WhatsApp us", wa], ...(STORE.supportEmail ? [[STORE.supportEmail, `mailto:${STORE.supportEmail}`] as [string, string]] : [])]} />
+          <FooterCol title="Shop" links={[...group("Shop"), ...CATEGORIES.map((c) => [c.name, `/category/${c.slug}`] as [string, string])]} />
+          <FooterCol title="Pay your way" links={group("Pay your way")} />
+          <FooterCol title="Packages" links={SEGMENTS.map((s) => [s.name, `/packages/${s.slug}`] as [string, string])} />
+          <FooterCol title="Help" links={[...group("Help"), ["For installers", "/sell"], ["My account & cards", "/account"], ["WhatsApp us", wa], ...(STORE.supportEmail ? [[STORE.supportEmail, `mailto:${STORE.supportEmail}`] as [string, string]] : [])]} />
         </div>
       </div>
       <div className="border-t border-white/10">
@@ -76,8 +78,8 @@ export function Footer() {
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
   return (
     <div>
-      <h3 className="mb-3 text-sm font-semibold text-sun">{title}</h3>
-      <ul className="space-y-2 text-sm text-white/75">
+      <h3 className="mb-4 text-sm font-semibold text-mint">{title}</h3>
+      <ul className="space-y-2.5 text-sm text-white/70">
         {links.map(([l, h]) => (
           <li key={h + l}>{h.startsWith("/") ? <Link href={h} className="hover:text-white">{l}</Link> : <a href={h} className="hover:text-white">{l}</a>}</li>
         ))}

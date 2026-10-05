@@ -6,7 +6,7 @@ export const GET = route(async () => {
   const s = await requireTeam();
   if (s instanceof Response) return s;
   const sql = await db();
-  const leads = await sql`select id, name, phone, email, consent, source, items, total, contacted_at, created_at, updated_at from leads
+  const leads = await sql`select id, name, phone, email, consent, source, items, total, note, contacted_at, created_at, updated_at from leads
     where order_id is null and updated_at < now() - interval '1 hour' and updated_at > now() - interval '30 days' order by updated_at desc limit 100`;
   const orders = await sql`select id, items, subtotal, total_paid, gift_card_used, commission, buyer, delivery, recipient, installer, status, status_at, pool_id, source, created_at
     from orders where status not in ('awaiting_payment', 'expired') order by created_at desc limit 100`;

@@ -7,19 +7,10 @@ import { Icon } from "./ui/Icon";
 import { useCart } from "@/lib/cart";
 import { useCartLines } from "./CartDrawer";
 import { OpenLinkDialog } from "./OpenLink";
+import { MegaMenu, MobileMenu } from "./MegaMenu";
+import { MENU } from "@/lib/nav";
 
 export type Card = { id: string; provider?: "paystack" | "stripe"; brand: string; last4: string; nickname: string; expMonth: number; expYear: number; bank?: string };
-
-/** Everything is reachable by everyone, whatever their role. */
-export const NAV = [
-  { href: "/shop", label: "Shop" },
-  { href: "/brands", label: "Brands" },
-  { href: "/packages", label: "Packages" },
-  { href: "/go-solar-me", label: "Go Solar Me" },
-  { href: "/pay-small-small", label: "Pay small small" },
-  { href: "/gift-cards", label: "Gift cards" },
-  { href: "/sell", label: "For installers" },
-] as const;
 
 /** Flows that should feel like an app screen: no full header, no floating bar. */
 const FOCUSED = ["/find", "/start", "/checkout", "/kit", "/fund/new"];
@@ -48,16 +39,9 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 border-b border-line/70 bg-haze/85 backdrop-blur-md">
         <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-2 px-4">
-          <Link href="/" aria-label="Solar Builders NG home" className="mr-2 shrink-0"><Logo /></Link>
-          <nav className="ml-4 hidden items-center gap-1 lg:flex" aria-label="Main">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href}
-                className={`whitespace-nowrap rounded-xl px-3 py-2 text-[0.92rem] font-semibold transition-colors ${path.startsWith(n.href) ? "bg-paper text-ink" : "text-ink-2 hover:bg-paper/70 hover:text-ink"}`}>
-                {n.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-1">
+          <Link href="/" aria-label="Solar Builders NG home" className="shrink-0 lg:w-[220px]"><Logo /></Link>
+          <MegaMenu items={MENU} path={path} />
+          <div className="ml-auto flex items-center justify-end gap-1 lg:ml-0 lg:w-[220px] xl:w-auto">
             {search ? (
               <form role="search" className="flex items-center" onSubmit={(e) => { e.preventDefault(); goSearch(String(new FormData(e.currentTarget).get("q") || "")); }}>
                 <input name="q" type="search" autoFocus placeholder="Search 5kVA, lithium, EcoFlow…" className="field !w-56 !py-2 text-sm sm:!w-72" aria-label="Search products" onBlur={(e) => !e.currentTarget.value && setSearch(false)} />
@@ -87,22 +71,7 @@ export function Header() {
         </div>
       </nav>
 
-      {menu && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button className="absolute inset-0 bg-ink/30" aria-label="Close menu" onClick={() => setMenu(false)} />
-          <div className="rise absolute inset-x-3 bottom-3 rounded-3xl bg-paper p-5 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <Logo />
-              <button onClick={() => setMenu(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-haze" aria-label="Close"><Icon name="close" size={18} /></button>
-            </div>
-            <ul className="mt-4 grid grid-cols-2 gap-2">
-              {NAV.map((n) => <li key={n.href}><Link href={n.href} className="block rounded-2xl bg-haze px-4 py-3.5 font-semibold">{n.label}</Link></li>)}
-              <li><button onClick={() => { setMenu(false); setLinkOpen(true); }} className="flex w-full items-center gap-2 rounded-2xl bg-haze px-4 py-3.5 text-left font-semibold"><Icon name="link" size={18} />Open a link</button></li>
-            </ul>
-            <Link href="/find" className="btn btn-ink mt-4 w-full">Find my kit in 3 questions</Link>
-          </div>
-        </div>
-      )}
+      {menu && <MobileMenu items={MENU} onClose={() => setMenu(false)} onLink={() => { setMenu(false); setLinkOpen(true); }} />}
       <OpenLinkDialog open={linkOpen} onClose={() => setLinkOpen(false)} />
     </>
   );

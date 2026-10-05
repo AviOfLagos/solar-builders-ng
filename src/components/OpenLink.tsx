@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "./ui/Icon";
 
@@ -24,8 +24,9 @@ export async function resolveLink(raw: string): Promise<string> {
   throw new Error("No list or page uses that code. Check it and try again.");
 }
 
-export function OpenLinkForm({ label = "Paste a link or code", onDone, autoFocus }: { label?: string; onDone?: () => void; autoFocus?: boolean }) {
+export function OpenLinkForm({ label = "Paste a link or code", onDone, autoFocus, compact }: { label?: string; onDone?: () => void; autoFocus?: boolean; compact?: boolean }) {
   const router = useRouter();
+  const id = useId();
   const [v, setV] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,12 +38,12 @@ export function OpenLinkForm({ label = "Paste a link or code", onDone, autoFocus
       try { const to = await resolveLink(v); onDone?.(); router.push(to); setV(""); } catch (x) { setErr((x as Error).message); }
       setBusy(false);
     }}>
-      <label htmlFor="open-link" className="text-sm font-semibold">{label}</label>
+      <label htmlFor={id} className="text-sm font-semibold">{label}</label>
       <div className="mt-1.5 flex gap-2">
-        <input id="open-link" className="field" value={v} autoFocus={autoFocus} onChange={(e) => { setV(e.target.value); setErr(""); }} placeholder="solar.nexprove.com/b/… or a code" autoComplete="off" autoCapitalize="none" aria-invalid={!!err} />
+        <input id={id} className="field" value={v} autoFocus={autoFocus} onChange={(e) => { setV(e.target.value); setErr(""); }} placeholder={compact ? "Paste link or code" : "solar.nexprove.com/b/… or a code"} autoComplete="off" autoCapitalize="none" aria-invalid={!!err} />
         <button className="btn btn-ink shrink-0" disabled={busy}>{busy ? "…" : "Open"}</button>
       </div>
-      {err ? <p role="alert" className="mt-1.5 text-sm text-flare">{err}</p> : <p className="mt-1.5 text-xs text-mute">Installer lists, Go Solar Me pages, stores and saved carts all work.</p>}
+      {err ? <p role="alert" className="mt-1.5 text-sm text-flare">{err}</p> : !compact && <p className="mt-1.5 text-xs text-mute">Installer lists, Go Solar Me pages, stores and saved carts all work.</p>}
     </form>
   );
 }

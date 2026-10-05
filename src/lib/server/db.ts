@@ -231,6 +231,8 @@ create table if not exists password_resets (
   expires_at timestamptz not null
 );
 alter table users add column if not exists deleted_at timestamptz;
+-- v4: brand feature requests are leads with a note
+alter table leads add column if not exists note text not null default '';
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

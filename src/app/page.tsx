@@ -2,8 +2,10 @@ import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
 import { FuelVsSolar } from "@/components/FuelVsSolar";
 import { Hero, RoleCards } from "@/components/home/Hero";
+import { BrandWall } from "@/components/home/BrandWall";
+import { PowerPlanner } from "@/components/PowerPlanner";
 import { Icon } from "@/components/ui/Icon";
-import { brands, products } from "@/lib/catalog";
+import { products } from "@/lib/catalog";
 import { inPromo } from "@/lib/promo";
 import { naira } from "@/lib/format";
 import { FAQ, GUIDES, WORRIES } from "@/data/content";
@@ -42,6 +44,16 @@ export default function Home() {
   return (
     <>
       <Hero />
+
+      <section className="mx-auto max-w-7xl px-4 pt-20">
+        <SectionHead kicker="Solar calculator" title="What will you power?" sub="Pick a setup like yours, tap what you'll run, and see the kit that fits. Live prices." action={["Step-by-step instead", "/find"]} />
+        <div className="mt-8"><PowerPlanner /></div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pt-24">
+        <SectionHead kicker="Brands we supply" title="Genuine stock only" sub="Bought from each brand's official Nigerian store, with the manufacturer's warranty." action={["All brands", "/brands"]} />
+        <BrandWall />
+      </section>
 
       <section className="mx-auto max-w-7xl px-4 pt-24">
         <SectionHead kicker="Start here" title="What brings you here?" sub="Pick one and we'll take you down the right path. Everything else stays one tap away." />
@@ -114,15 +126,6 @@ export default function Home() {
               <span className="mt-4 flex items-center gap-1.5 text-sm font-bold text-mint">Browse all {products.length} products<Icon name="arrow" size={16} /></span>
             </Link>
           </li>
-        </ul>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pt-24">
-        <SectionHead kicker="Brands" title="Genuine stock only" sub="Bought from each brand's official Nigerian store, with the manufacturer's warranty." action={["All brands", "/brands"]} />
-        <ul className="mt-8 flex flex-wrap gap-3">
-          {brands.map((b) => (
-            <li key={b.slug}><Link href={`/brands/${b.slug}`} className="block rounded-2xl bg-paper px-6 py-4 text-lg font-semibold hover:shadow-[0_10px_30px_rgba(23,32,27,0.08)]">{b.name}</Link></li>
-          ))}
         </ul>
       </section>
 
