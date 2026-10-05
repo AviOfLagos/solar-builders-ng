@@ -12,7 +12,7 @@ export const STORE = {
   supportPhone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || "+2347030546907",
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "2347030546907",
   currency: "NGN",
-  /** Markup on the official brand price (0.01 = 1%), per-brand overrides (a partner at +30% = 0.3) and rounding. Edit pricing.json. */
+  /** Markup on the official brand price (0.125 = 12.5%), per-brand overrides (a partner at +30% = 0.3) and rounding. Edit pricing.json. */
   markup: pricing.markup,
   brandMarkup: pricing.brandMarkup as Record<string, number>,
   roundTo: pricing.roundTo,

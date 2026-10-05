@@ -116,13 +116,13 @@ function Find() {
   const [best, ...others] = picks;
   if (!best)
     return (
-      <Flow step={3} total={3} onBack={back} label="Done" title="That's a big setup." sub="It's more than our ready kits cover. Chat with us and we'll size a custom system with a full price.">
+      <Flow step={3} total={3} onBack={back} label="Almost there" title="That's a big setup." sub="It's more than our ready kits cover. Chat with us and we'll size a custom system with a full price.">
         <a className="btn btn-ink w-full" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent("Hi, I need a custom solar system")}`} target="_blank" rel="noopener">Chat on WhatsApp</a>
       </Flow>
     );
   const install = best.install[1] === 0 ? null : [best.price + best.install[0], best.price + best.install[1]];
   return (
-    <Flow step={3} total={3} onBack={back} label="Done" title={<><span className="tag mb-3 align-middle">Your match</span><br />{best.name}</>} sub={best.tagline}
+    <Flow step={3} total={3} onBack={back} label="Your match" title={<><span className="mb-4 inline-flex items-center gap-2 rounded-2xl bg-mint px-4 py-2 font-sans text-lg font-semibold tracking-normal"><Icon name="sparkle" size={20} />Your match</span><br />{best.name}</>} sub={best.tagline}
       footer={<Link href={kitHref(best, who)} className="btn btn-ink w-full !py-4 text-base">Choose this kit<Icon name="arrow" size={18} /></Link>}
       aside={
         <div className="sticky top-6 space-y-3">

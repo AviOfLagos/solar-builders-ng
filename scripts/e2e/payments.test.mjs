@@ -10,7 +10,10 @@ async function api(path, body, opts = {}) {
 }
 const pay = (ref, q = "") => fetch(`${MOCK}/__pay/${ref}?${q}`).then((r) => r.json());
 const state = () => fetch(`${MOCK}/__state`).then((r) => r.json());
-const P1 = { id: "4f0c60fd", price: 643370 }, P2 = { id: "f26549e3", price: 498940 };
+import { readFileSync } from "node:fs";
+const CATALOG = JSON.parse(readFileSync(new URL("../../src/data/products.json", import.meta.url))).products;
+const priced = (id) => ({ id, price: CATALOG.find((p) => p.id === id).price });
+const P1 = priced("4f0c60fd"), P2 = priced("f26549e3");
 const email = `t${Date.now()}@example.com`;
 const delivery = { name: "Ada Obi", email, phone: "08031234567", address: "12 Allen Avenue, Ikeja", lga: "Ikeja" };
 
