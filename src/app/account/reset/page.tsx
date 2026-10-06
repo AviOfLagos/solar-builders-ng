@@ -37,7 +37,7 @@ export default function ResetPage() {
       <div className="card p-6 sm:p-8">
         <h1 className="font-display text-3xl font-bold tracking-tight">Reset your password</h1>
         <p className="mt-2 text-ink-2">{step === "email" ? "We'll email you a 6-digit code." : `If ${f.email.trim()} has an account, a code is on its way. It works for 15 minutes.`}</p>
-        <form noValidate className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (!busy) (step === "email" ? send() : confirm()); }}>
+        <form noValidate className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (busy) return; if (step === "email") void send(); else void confirm(); }}>
           {step === "email" ? (
             <Field label="Email" error={err.fields?.email}><input className="field" type="email" inputMode="email" autoComplete="email" maxLength={120} value={f.email} onChange={set("email")} /></Field>
           ) : (
