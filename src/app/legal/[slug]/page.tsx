@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LEGAL, getLegal } from "@/data/legal";
@@ -10,7 +11,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata(props: PageProps<"/legal/[slug]">): Promise<Metadata> {
   const d = getLegal((await props.params).slug);
-  return d ? { title: d.title, description: d.summary, alternates: { canonical: `/legal/${d.slug}` } } : {};
+  return d ? withOg({ title: d.title, description: d.summary, alternates: { canonical: `/legal/${d.slug}` } }, "page/home") : {};
 }
 
 export default async function Legal(props: PageProps<"/legal/[slug]">) {

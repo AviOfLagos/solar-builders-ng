@@ -21,6 +21,7 @@ export async function googleSignIn(credential: string, nonce?: string) {
     if (!u) return { error: "This email is linked to another Google account.", status: 409 as const };
     created = true;
   }
+  await sql`update users set email_verified_at = coalesce(email_verified_at, now()) where id = ${u.id}`;
   const token = await createSession({ uid: u.id, email: u.email, name: u.name });
   return { user: { id: u.id as string, email: u.email as string, name: u.name as string }, token, created };
 }

@@ -7,6 +7,7 @@ import { stripe, customerFor, ownsCard } from "./stripe";
 import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, startPaystack, savePaystackCard, paystackCard, chargePaystackCard, type Paid } from "./pay";
 import { newPaystackRef } from "./paystack";
 import { sendMail, shell, esc, notifyOwner } from "./mail";
+import { orderUpdateEmail } from "./emails";
 import { emit } from "./webhooks";
 import { pushTo } from "./push";
 import { priceCart, checkCart, compactItems, validateDelivery, deliveryJson, assertValid, type CartLine, type DeliveryInput } from "./rules";
@@ -419,8 +420,10 @@ export async function orderNotifications(o: OrderRow) {
 export async function setOrderStatus(ref: string, status: string) {
   if (!FULFILMENT.includes(status as OrderStatus)) throw new HttpError(400, "Unknown status.");
   const sql = await db();
-  const [o] = await sql`update orders set status = ${status}, status_at = now() where id = ${ref} and status = any(${FULFILMENT}) returning id, status, user_id`;
+  const [o] = await sql`update orders set status = ${status}, status_at = now() where id = ${ref} and status = any(${FULFILMENT}) returning id, status, user_id, buyer`;
   if (!o) throw new HttpError(409, "Only paid, active orders can change status.");
+  const mail = orderUpdateEmail(o.buyer?.name ?? "", o.id, status);
+  if (mail && o.buyer?.email) await sendMail({ to: [o.buyer.email], ...mail }).catch((e) => console.error("[order mail]", e));
   const words: Record<string, string> = { confirmed: "is confirmed. We'll be in touch about delivery.", out_for_delivery: "is on its way.", delivered: "has been delivered.", installed: "is installed. Lights on!" };
   if (words[status]) await pushTo([o.user_id], { title: status === "installed" ? "Lights on" : "Order update", body: `${o.id} ${words[status]}`, data: { kind: "order", ref: o.id } });
   return { ref: o.id, status: o.status, label: ORDER_STATUS[o.status as OrderStatus] };

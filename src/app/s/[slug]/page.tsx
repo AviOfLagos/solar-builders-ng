@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStorePage } from "@/lib/server/social";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(props: PageProps<"/s/[slug]">): Promise<Metadata> {
   const s = await getStorePage((await props.params).slug);
   if (!s) return { title: "Store not found" };
-  return { title: `${s.name} — solar ${s.kind === "installer" ? "installer" : "store"} in Lagos`, description: s.bio || `Buy genuine solar products from ${s.name}, delivered free across Lagos.` };
+  return withOg({ title: `${s.name} — solar ${s.kind === "installer" ? "installer" : "store"} in Lagos`, description: s.bio || `Buy genuine solar products from ${s.name}, delivered free across Lagos.` }, `store/${(await props.params).slug}`);
 }
 
 export default async function StorePage(props: PageProps<"/s/[slug]">) {

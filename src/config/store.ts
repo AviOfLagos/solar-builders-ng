@@ -4,7 +4,8 @@ import pricing from "./pricing.json";
 export const STORE = {
   name: "Solar Builders NG",
   shortName: "Solar Builders",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://solar-ng.vercel.app",
+  // Always the real domain: an old env value pointing at the vercel.app address would put it in every link preview and sitemap.
+  url: (process.env.NEXT_PUBLIC_SITE_URL && !/vercel\.app/.test(process.env.NEXT_PUBLIC_SITE_URL) ? process.env.NEXT_PUBLIC_SITE_URL : "https://solar.nexprove.com").replace(/\/$/, ""),
   city: "Lagos",
   country: "NG",
   /** Empty until we have a domain with a real inbox. */

@@ -11,7 +11,7 @@ export function orgJsonLd() {
     name: STORE.name,
     url: STORE.url,
     logo: abs("/icon.svg"),
-    image: abs("/opengraph-image"),
+    image: abs("/og/page/home"),
     telephone: STORE.supportPhone,
     ...(STORE.supportEmail ? { email: STORE.supportEmail } : {}),
     priceRange: "₦₦",

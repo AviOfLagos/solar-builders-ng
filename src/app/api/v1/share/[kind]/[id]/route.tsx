@@ -9,11 +9,11 @@ import { loadPool } from "@/lib/server/pools";
 
 const INK = "#17201b", INK2 = "#3b4540", MINT = "#bdf0a6", DEEP = "#2f7d4f", HAZE = "#f3f2ec", NIGHT = "#1d2621";
 
-// Manrope, split by Fontsource into "latin" and "latin-ext" (which has the ₦ sign).
+// Manrope for text. Manrope has no ₦ sign, so Inter (latin-ext) fills in for it.
 let fonts: Promise<{ name: string; data: Buffer; weight: 500 | 800; style: "normal" }[]> | null = null;
 const loadFonts = () => (fonts ??= Promise.all(
   (["latin-500", "latin-ext-500", "latin-800", "latin-ext-800"] as const).map(async (f) => ({
-    name: f.includes("ext") ? "ManropeExt" : "Manrope", data: await readFile(join(process.cwd(), `assets/fonts/manrope-${f}-normal.woff`)), weight: (f.endsWith("800") ? 800 : 500) as 500 | 800, style: "normal" as const,
+    name: f.includes("ext") ? "Naira" : "Manrope", data: await readFile(join(process.cwd(), `assets/fonts/${f.includes("ext") ? "inter-" : "manrope-"}${f}-normal.woff`)), weight: (f.endsWith("800") ? 800 : 500) as 500 | 800, style: "normal" as const,
   })),
 ).catch((e) => { fonts = null; throw e; }));
 
@@ -82,7 +82,7 @@ async function orderCard(ref: string, host: string): Promise<C | null> {
 function Card({ eyebrow, headline, sub, pct, label, qr, story }: C & { qr: string; story: boolean }) {
   const pad = story ? "110px 80px" : "72px 72px";
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: HAZE, color: INK, padding: pad, fontFamily: "Manrope, ManropeExt", fontWeight: 500 }}>
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: HAZE, color: INK, padding: pad, fontFamily: "Manrope, Naira", fontWeight: 500 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 38, fontWeight: 800 }}>
         <div style={{ display: "flex", width: 60, height: 60, borderRadius: 20, background: NIGHT, alignItems: "center", justifyContent: "center" }}>
           <div style={{ width: 26, height: 26, borderRadius: 999, background: MINT }} />

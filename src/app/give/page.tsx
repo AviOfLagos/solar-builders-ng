@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Buy solar for someone in Lagos — family, friends, staff",
   description: "Buy solar for your parents or family in Lagos from anywhere in the world, start a group funding page, send a gift card or pay small small. We deliver and install.",
   alternates: { canonical: "/give" },
-};
+}, "page/give");
 
 const WAYS = [
   { title: "Buy it for them", text: "Pay from anywhere, abroad or in Nigeria. Enter their Lagos address and phone. We call them, deliver and install.", href: "/packages", cta: "Pick a package", note: "Choose “Someone else” at checkout" },

@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   },
   images: { formats: ["image/avif", "image/webp"] },
   // Fonts for the share pictures are read from disk at runtime.
-  outputFileTracingIncludes: { "/api/v1/share/[kind]/[id]": ["./assets/fonts/**"] },
+  outputFileTracingIncludes: { "/api/v1/share/[kind]/[id]": ["./assets/fonts/**"], "/og/[kind]/[id]": ["./assets/fonts/**", "./public/products/**"] },
   async headers() {
     return [{ source: "/(.*)", headers: [{ key: "X-Content-Type-Options", value: "nosniff" }, { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }] }];
   },

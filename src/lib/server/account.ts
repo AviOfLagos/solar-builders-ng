@@ -3,7 +3,8 @@ import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { db } from "./db";
 import { HttpError, str } from "./api";
 import { hashPassword, createSession } from "./session";
-import { sendMail, shell, esc } from "./mail";
+import { sendMail } from "./mail";
+import { resetEmail } from "./emails";
 import { stripe, stripeConfigured, listCards } from "./stripe";
 import { cancelPool } from "./pools";
 import { isName, NG_PHONE, normalizePhone, ngE164 } from "@/lib/format";
@@ -65,12 +66,7 @@ export async function startReset(emailRaw: unknown) {
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
     await sql`insert into password_resets (user_id, code_hash, attempts, expires_at) values (${u.id}, ${hashCode(u.id, code)}, 0, now() + interval '15 minutes')
       on conflict (user_id) do update set code_hash = excluded.code_hash, attempts = 0, expires_at = excluded.expires_at`;
-    await sendMail({
-      to: [email],
-      subject: `Your Solar Builders code: ${code}`,
-      html: shell("Reset your password", `<p style="font-size:15px">Hi ${esc(u.name || "there")}, use this code to set a new password. It works for 15 minutes.</p><p style="font-size:30px;letter-spacing:6px;font-weight:bold">${code}</p><p style="color:#5B6B80">Didn't ask for this? Ignore this email; your password stays the same.</p>`),
-      text: `Your Solar Builders code is ${code}. It works for 15 minutes.`,
-    });
+    await sendMail({ to: [email], ...resetEmail(u.name, code) });
   }
   return { ok: true };
 }

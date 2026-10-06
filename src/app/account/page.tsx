@@ -9,7 +9,7 @@ import { Field } from "@/components/Field";
 import { Icon } from "@/components/ui/Icon";
 import { ROLES, useJourney } from "@/lib/journey";
 
-type Me = { user: { email: string; name: string; google?: boolean } | null; store: { slug: string; name: string } | null; team?: boolean };
+type Me = { user: { email: string; name: string; google?: boolean; verified?: boolean } | null; store: { slug: string; name: string } | null; team?: boolean };
 type Order = { id: string; total_paid: number; gift_card_used: number; status: string; statusLabel: string; created_at: string; recipient: { name: string } | null; pool_id: string | null; delivery: { lga: string; address: string } };
 type Pool = { id: string; kind: string; title: string; goal: number; raised: number; status: string; deadline: string };
 type Mine = { orders: Order[]; pools: Pool[] };
@@ -58,6 +58,7 @@ function Account() {
           <span className="flex-1"><span className="block text-sm text-white/60">I&apos;m here to…</span><span className="block font-bold">{myRole?.title ?? "Tell us what brings you here"}</span></span>
           <span className="text-sm font-semibold text-mint">Change</span>
         </Link>
+        {me.user.verified === false && <VerifyBanner email={me.user.email} />}
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <Tile href="/fund/new" icon="megaphone" title="Go Solar Me" text="Let family and friends fund a kit." />
           <Tile href="/account/cards" icon="card" title="Saved cards" text="Name, remove or add cards." />
@@ -179,4 +180,18 @@ function Wrap({ title, intro, children }: { title?: string; intro?: string; chil
 
 export default function Page() {
   return <Suspense><Account /></Suspense>;
+}
+
+function VerifyBanner({ email }: { email: string }) {
+  const [state, setState] = useState<"idle" | "busy" | "sent" | "err">("idle");
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-lemon-tint p-4 text-sm">
+      <p>Confirm your email. We sent a link to <b>{email}</b>.</p>
+      {state === "sent" ? <span className="font-semibold">Sent. Check your inbox.</span> : (
+        <button disabled={state === "busy"} className="btn btn-ghost !py-2 text-sm" onClick={async () => { setState("busy"); try { await api("/auth/verify", { method: "POST", body: {} }); setState("sent"); } catch { setState("err"); } }}>
+          {state === "err" ? "Try again" : "Send it again"}
+        </button>
+      )}
+    </div>
+  );
 }

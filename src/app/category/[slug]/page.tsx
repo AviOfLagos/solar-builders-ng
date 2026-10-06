@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import { notFound } from "next/navigation";
 import { ProductGrid } from "@/components/ProductGrid";
 import { PageHead } from "@/components/PageHead";
@@ -13,11 +14,11 @@ export async function generateMetadata(props: PageProps<"/category/[slug]">): Pr
   const c = getCategory((await props.params).slug)!;
   const items = products.filter((p) => p.category === c.slug);
   const min = Math.min(...items.map((p) => p.price));
-  return {
+  return withOg({
     title: `${c.name} price in Lagos (from ${naira(min)})`,
     description: `${c.blurb} ${items.length} options from top brands, from ${naira(min)}. Free delivery in Lagos.`,
     alternates: { canonical: `/category/${c.slug}` },
-  };
+  }, `category/${c.slug}`);
 }
 
 export default async function Category(props: PageProps<"/category/[slug]">) {

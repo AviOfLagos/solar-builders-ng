@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBuild } from "@/lib/server/social";
@@ -14,7 +15,7 @@ export async function generateMetadata(props: PageProps<"/b/[id]">): Promise<Met
   const b = await getBuild((await props.params).id);
   if (!b) return { title: "Build not found" };
   const by = b.store ? b.store.name : "Solar Builders NG";
-  return { title: `${b.title || "Solar setup"} by ${by} — ${naira(b.total)}`, description: b.note || `A solar setup put together by ${by}. ${b.items.length} items, ${naira(b.total)}, delivered in Lagos.`, robots: { index: false } };
+  return withOg({ title: `${b.title || "Solar setup"} by ${by} — ${naira(b.total)}`, description: b.note || `A solar setup put together by ${by}. ${b.items.length} items, ${naira(b.total)}, delivered in Lagos.`, robots: { index: false } }, `build/${(await props.params).id}`);
 }
 
 export default async function BuildPage(props: PageProps<"/b/[id]">) {

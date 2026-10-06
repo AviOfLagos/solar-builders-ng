@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import { OpenLinkForm } from "@/components/OpenLink";
 
-export const metadata: Metadata = { title: "Open a link or code", robots: { index: false } };
+export const metadata: Metadata = withOg({ title: "Open a link or code", description: "Open a priced list from your installer or a friend's Go Solar Me page.", robots: { index: false } }, "page/open");
 
 export default function OpenPage() {
   return (

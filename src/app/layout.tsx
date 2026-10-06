@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: { default: "Solar Builders NG — Solar inverters, lithium batteries & panels in Lagos", template: "%s | Solar Builders NG" },
   description: "Buy genuine Felicity, itel, Sun King, Arnergy and EcoFlow solar inverters, lithium batteries, panels and power stations in Lagos. Free Lagos delivery and optional installation.",
   keywords: ["solar inverter Lagos", "lithium battery price Nigeria", "solar panels Lagos", "5kVA inverter price", "EcoFlow Nigeria", "Felicity solar Lagos", "solar installation Lagos"],
-  openGraph: { type: "website", siteName: STORE.name, locale: "en_NG" },
-  twitter: { card: "summary_large_image" },
+  openGraph: { type: "website", siteName: STORE.name, locale: "en_NG", images: [{ url: "/og/page/home", width: 1200, height: 630, alt: STORE.name }] },
+  twitter: { card: "summary_large_image", images: ["/og/page/home"] },
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
 };

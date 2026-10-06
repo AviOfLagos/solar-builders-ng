@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHead } from "@/components/PageHead";
@@ -14,7 +15,7 @@ export const generateStaticParams = () => GUIDES.map((g) => ({ slug: g.slug }));
 export async function generateMetadata(props: PageProps<"/guides/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const g = GUIDES.find((x) => x.slug === slug)!;
-  return { title: g.title, description: g.description, alternates: { canonical: `/guides/${g.slug}` }, openGraph: { type: "article", title: g.title } };
+  return withOg({ title: g.title, description: g.description, alternates: { canonical: `/guides/${g.slug}` } }, `guide/${g.slug}`, "article");
 }
 
 export default async function Guide(props: PageProps<"/guides/[slug]">) {

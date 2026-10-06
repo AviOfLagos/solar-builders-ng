@@ -347,6 +347,21 @@ create table if not exists outbound_log (
   sent boolean not null default false
 );
 create index if not exists outbound_at_idx on outbound_log(at);
+-- v9: one-time codes that hand a website Google sign-in to the phone app
+create table if not exists app_codes (
+  code_hash text primary key,
+  state_hash text not null,
+  user_id text not null references users(id) on delete cascade,
+  expires_at timestamptz not null,
+  used boolean not null default false
+);
+-- v10: verified emails
+alter table users add column if not exists email_verified_at timestamptz;
+create table if not exists email_tokens (
+  token_hash text primary key,
+  user_id text not null references users(id) on delete cascade,
+  expires_at timestamptz not null
+);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

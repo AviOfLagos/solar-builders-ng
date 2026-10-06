@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import { ProductGrid } from "@/components/ProductGrid";
 import { PageHead } from "@/components/PageHead";
 import { products } from "@/lib/catalog";
 import { JsonLd, breadcrumbs } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Shop solar inverters, batteries, panels & power stations in Lagos",
   description: "Compare prices on genuine solar products from Felicity, itel, Sun King, Arnergy and EcoFlow. Free delivery across Lagos.",
   alternates: { canonical: "/shop" },
-};
+}, "page/shop");
 
 export default async function Shop(props: PageProps<"/shop">) {
   const sp = await props.searchParams;

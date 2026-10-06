@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { PageHead } from "@/components/PageHead";
 import { GUIDES } from "@/data/content";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Solar buying guides for Lagos homes",
   description: "Plain-English guides to sizing inverters and batteries, choosing lithium vs tubular, and picking a power station or full solar system in Lagos.",
   alternates: { canonical: "/guides" },
-};
+}, "page/guides");
 
 export default function Guides() {
   return (

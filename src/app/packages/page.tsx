@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { PageHead } from "@/components/PageHead";
 import { PackageCard } from "@/components/PackageCard";
 import { SEGMENTS, tiersFor } from "@/data/packages";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Solar packages for every Lagos home, shop and office",
   description: "Ready-made solar kits for students, remote workers, renters, shops, family flats, duplexes and offices in Lagos — with typical installed cost shown upfront.",
   alternates: { canonical: "/packages" },
-};
+}, "page/packages");
 
 export default function Packages() {
   return (

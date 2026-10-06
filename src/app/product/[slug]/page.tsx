@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,12 +17,11 @@ export const generateStaticParams = () => products.map((p) => ({ slug: p.slug })
 export async function generateMetadata(props: PageProps<"/product/[slug]">): Promise<Metadata> {
   const p = getProduct((await props.params).slug)!;
   const b = getBrand(p.brand)!;
-  return {
+  return withOg({
     title: `${p.name} — price in Lagos`,
     description: `${p.name} for ${naira(p.price)} in Lagos. ${p.description} Genuine ${b.name}, free delivery across Lagos, optional installation.`.slice(0, 300),
     alternates: { canonical: `/product/${p.slug}` },
-    openGraph: { images: [{ url: p.image }], title: p.name },
-  };
+  }, `product/${p.slug}`);
 }
 
 export default async function ProductPage(props: PageProps<"/product/[slug]">) {

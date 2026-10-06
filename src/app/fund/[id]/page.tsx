@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import { notFound } from "next/navigation";
 import { currentUser } from "@/lib/server/api";
 import { poolPage } from "@/lib/server/pools";
@@ -15,12 +16,11 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(props: PageProps<"/fund/[id]">): Promise<Metadata> {
   const p = await poolPage((await props.params).id, null);
   if (!p) return { title: "Go Solar Me page not found" };
-  return {
+  return withOg({
     title: `${p.title} · Go Solar Me`,
     description: `${naira(p.raised)} of ${naira(p.goal)} raised. Chip in any amount to help ${p.owner} go solar in Lagos.`,
-    openGraph: { images: [{ url: `/api/v1/share/pool/${p.id}?f=square`, width: 1080, height: 1080 }] },
     robots: { index: false },
-  };
+  }, `fund/${p.id}`);
 }
 
 function daysLeft(d: Date) {

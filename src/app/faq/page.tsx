@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import { PageHead } from "@/components/PageHead";
 import { FAQ } from "@/data/content";
 import { JsonLd, faqJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Frequently asked questions — solar delivery & installation in Lagos",
   description: "Delivery areas, installation, payments, warranty and Solar Friday deals at Solar Builders NG.",
   alternates: { canonical: "/faq" },
-};
+}, "page/faq");
 
 export default function Faq() {
   return (

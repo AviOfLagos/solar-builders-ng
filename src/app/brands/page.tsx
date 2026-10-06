@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import Image from "next/image";
 import { PageHead } from "@/components/PageHead";
@@ -6,11 +7,11 @@ import { brands, products, CATEGORIES } from "@/lib/catalog";
 import { naira } from "@/lib/format";
 import { Icon } from "@/components/ui/Icon";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Solar brands we stock in Lagos",
   description: "Genuine Felicity, itel, Sun King, Arnergy and EcoFlow solar products, bought from each brand's official Nigerian store. Free Lagos delivery.",
   alternates: { canonical: "/brands" },
-};
+}, "page/brands");
 
 export default function Brands() {
   return (

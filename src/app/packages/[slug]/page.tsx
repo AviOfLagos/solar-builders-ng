@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHead } from "@/components/PageHead";
@@ -13,7 +14,7 @@ export const generateStaticParams = () => SEGMENTS.map((s) => ({ slug: s.slug })
 
 export async function generateMetadata(props: PageProps<"/packages/[slug]">): Promise<Metadata> {
   const s = getSegment((await props.params).slug)!;
-  return { title: s.seoTitle, description: s.seoDescription, alternates: { canonical: `/packages/${s.slug}` } };
+  return withOg({ title: s.seoTitle, description: s.seoDescription, alternates: { canonical: `/packages/${s.slug}` } }, `package/${s.slug}`);
 }
 
 export default async function SegmentPage(props: PageProps<"/packages/[slug]">) {

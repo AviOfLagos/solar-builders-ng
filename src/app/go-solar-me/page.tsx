@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withOg } from "@/lib/meta";
 import Link from "next/link";
 import { db, dbConfigured } from "@/lib/server/db";
 import { naira } from "@/lib/format";
@@ -6,11 +7,11 @@ import { POOL } from "@/config/store";
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withOg({
   title: "Go Solar Me — fund solar for someone in Lagos, together",
   description: "Start a Go Solar Me page for a solar kit. Family, friends and housemates chip in any amount or split it equally. Money only becomes solar; if the goal isn't reached, everyone is refunded.",
   alternates: { canonical: "/go-solar-me" },
-};
+}, "page/go-solar-me");
 
 async function openPools() {
   if (!dbConfigured()) return [];

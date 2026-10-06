@@ -1,6 +1,7 @@
 import { db, id } from "@/lib/server/db";
 import { body, fail, ok, route, str, limitIp } from "@/lib/server/api";
 import { createSession, hashPassword } from "@/lib/server/session";
+import { sendVerification } from "@/lib/server/emails";
 import { isEmail, isName, normalizePhone, NG_PHONE, ngE164 } from "@/lib/format";
 
 export const POST = route(async (req: Request) => {
@@ -21,6 +22,7 @@ export const POST = route(async (req: Request) => {
   if (exists) return fail("An account with this email already exists. Sign in instead.", 409, { fields: { email: "Already registered." }, code: "account_exists" });
   const uid = id();
   await sql`insert into users ${sql({ id: uid, email, name, phone: phone ? ngE164(phone) : "", password_hash: await hashPassword(password) })}`;
+  await sendVerification(uid);
   const token = await createSession({ uid, email, name });
   return ok({ user: { id: uid, email, name }, token });
 });
