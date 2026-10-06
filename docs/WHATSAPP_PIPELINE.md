@@ -48,6 +48,6 @@ All webhooks are signed (HMAC header `x-sb-signature`) with a shared secret set 
 
 ## 4. What we build on our side
 
-- Webhook emitter + signing secret (see issue).
+- Webhook emitter: built (`src/lib/server/webhooks.ts`). Set `WEBHOOK_URL` (the n8n webhook) and `WEBHOOK_SECRET` in Vercel. Sent today: `brand.requested`, `lead.created`, `order.paid`. The rest of the table is still to wire.
 - Template messages approved in Meta (first message to a customer must be a template).
 - A `status` field per lead: new → contacted → engaged → ready_to_buy → paid → delivered → installed / lost.

@@ -7,6 +7,7 @@ import { stripe, customerFor, ownsCard } from "./stripe";
 import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, startPaystack, savePaystackCard, paystackCard, chargePaystackCard, type Paid } from "./pay";
 import { newPaystackRef } from "./paystack";
 import { sendMail, shell, esc, notifyOwner } from "./mail";
+import { emit } from "./webhooks";
 import { pushTo } from "./push";
 import { priceCart, checkCart, compactItems, validateDelivery, deliveryJson, assertValid, type CartLine, type DeliveryInput } from "./rules";
 import { ledger, insertOrder, type OrderRow } from "./ledger";
@@ -403,6 +404,7 @@ export async function orderNotifications(o: OrderRow) {
     ...o.items.map((l) => `- ${l.qty} x ${l.name}`),
     d.notes ? `Notes: ${d.notes}` : "",
   ].filter(Boolean).join("\n");
+  await emit("order.paid", { id: o.id, total: o.subtotal, buyer: { name: o.buyer.name, phone: o.buyer.phone }, recipient: o.recipient ? { name: o.recipient.name, phone: o.recipient.phone } : null, lga: d.lga, installer: o.installer, pool_id: o.pool_id, items: o.items.map((l) => ({ name: l.name, qty: l.qty })) });
   await notifyOwner(text);
   await pushTo([o.user_id], { title: "Order received", body: `${o.id} is pending. We'll call ${forOther ? d.name : "you"} to arrange delivery.`, data: { kind: "order", ref: o.id } });
   if (o.store_id && o.commission) {

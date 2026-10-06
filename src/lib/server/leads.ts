@@ -5,6 +5,7 @@ import { str, bool, oneOf, HttpError } from "./api";
 import { priceCart, storedItems } from "./rules";
 import type { Session } from "./session";
 import { notifyOwner } from "./mail";
+import { emit } from "./webhooks";
 
 const SOURCES = ["cart", "checkout", "pool", "calculator", "finance", "gift", "package", "app", "brand"] as const;
 
@@ -56,6 +57,7 @@ export async function saveLead(b: Record<string, unknown>, user: Session | null)
   }
   const nid = id();
   await sql`insert into leads ${sql({ id: nid, user_id: user?.uid ?? null, ...v, items: sql.json(v.items) })}`;
+  if (v.phone && v.consent) await emit("lead.created", { id: nid, name: v.name, phone: v.phone, email: v.email, source: v.source, total: v.total, items: v.items });
   return { id: nid };
 }
 
@@ -99,6 +101,7 @@ export async function saveBrandRequest(b: Record<string, unknown>) {
   const sql = await db();
   const nid = id();
   await sql`insert into leads ${sql({ id: nid, name, phone, email: isEmail(email) ? email : "", consent: true, source: "brand", items: sql.json([]), total: 0, note })}`;
+  await emit("brand.requested", { id: nid, brand, name, phone, email, products, site });
   await notifyOwner(`Brand wants to be featured: ${brand}\n${name} · ${phone}${email ? " · " + email : ""}\n${note}`);
   return { id: nid };
 }
