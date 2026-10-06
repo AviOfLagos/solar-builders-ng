@@ -49,5 +49,18 @@ export async function saveLead(d: { name?: string; phone?: string; email?: strin
   return r.id;
 }
 
+/** Fired when someone signs in, so anything holding local state can catch up without a reload. */
+export const SIGNED_IN = "sb:signedin";
+export const announceSignIn = () => window.dispatchEvent(new Event(SIGNED_IN));
+
+/** The cart saved against this account, or null when nobody is signed in. */
+export async function accountCart() {
+  try {
+    return await api<{ id: string | null; items: { id: string; qty: number }[] }>("/me/cart");
+  } catch {
+    return null;
+  }
+}
+
 /** Only an absolute path on this site. Blocks //evil.com and /\evil.com. */
 export const safeNext = (n: string | null | undefined, fallback = "/account") => (n && /^\/(?![/\\])/.test(n) ? n : fallback);

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api, safeNext, type ApiError } from "@/lib/client";
+import { announceSignIn, api, safeNext, type ApiError } from "@/lib/client";
 import { naira, isEmail, isName, NG_PHONE, normalizePhone } from "@/lib/format";
 import { GoogleButton } from "@/components/GoogleButton";
 import { Field } from "@/components/Field";
@@ -43,7 +43,7 @@ function Account() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- first load of the signed-in state
   useEffect(() => { load(); }, [load]);
 
-  const signedIn = () => { if (next) router.push(safeNext(next)); else load(); };
+  const signedIn = () => { announceSignIn(); if (next) router.push(safeNext(next)); else load(); };
 
   if (loadErr) return <Wrap title="Couldn't load your account"><p className="mt-3 text-flare">{loadErr}</p><button className="btn btn-ink mt-4" onClick={load}>Try again</button></Wrap>;
   if (!me) return <Wrap><p className="text-mute">Loading…</p></Wrap>;

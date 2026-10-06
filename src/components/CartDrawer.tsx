@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { api, getLeadId, saveLead } from "@/lib/client";
+import { accountCart, api, getLeadId, saveLead, setLeadId, SIGNED_IN } from "@/lib/client";
 import { useCart } from "@/lib/cart";
 import { getProductById, brandName } from "@/lib/catalog";
 import { naira, NG_PHONE, normalizePhone } from "@/lib/format";
@@ -58,19 +58,47 @@ function QuoteCapture() {
   );
 }
 
-/** Keeps a saved lead's cart up to date as the shopper changes it. */
+/**
+ * Keeps the cart on the server in step with the one in front of the shopper: a saved lead's cart,
+ * or a signed-in person's, so the kit they picked here is waiting for them in the phone app.
+ */
 export function LeadSync() {
   const { items } = useCartLines();
+  const addMany = useCart((s) => s.addMany);
   const key = items.map((l) => `${l.id}:${l.qty}`).join(",");
   const first = useRef(true);
+  const [signedIn, setSignedIn] = useState(false);
+  const pulled = useRef(false);
+
+  // Bring back whatever this account left in its cart, wherever it was left: on load, and again
+  // the moment someone signs in. Merged, not replaced, and the bigger quantity wins, so neither
+  // a second visit nor a second device ever doubles a line.
+  useEffect(() => {
+    const pull = () =>
+      void accountCart().then((c) => {
+        if (!c) return;
+        setSignedIn(true);
+        if (c.id) setLeadId(c.id);
+        const here = useCart.getState().lines;
+        const missing = c.items.filter((s) => !here.some((l) => l.id === s.id));
+        const bigger = c.items.filter((s) => here.some((l) => l.id === s.id && l.qty < s.qty));
+        if (missing.length) addMany(missing);
+        for (const l of bigger) useCart.getState().setQty(l.id, l.qty);
+        useCart.getState().setOpen(false);
+      });
+    if (!pulled.current) { pulled.current = true; pull(); }
+    window.addEventListener(SIGNED_IN, pull);
+    return () => window.removeEventListener(SIGNED_IN, pull);
+  }, [addMany]);
+
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    if (!getLeadId() || !key) return;
+    if ((!getLeadId() && !signedIn) || !key) return;
     const t = setTimeout(() => {
       saveLead({ source: "cart", items: key.split(",").map((x) => { const [id, qty] = x.split(":"); return { id, qty: Number(qty) }; }) }).catch(() => {});
     }, 3000);
     return () => clearTimeout(t);
-  }, [key]);
+  }, [key, signedIn]);
   return null;
 }
 

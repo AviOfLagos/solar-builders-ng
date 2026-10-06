@@ -181,6 +181,7 @@ create table if not exists leads (
   updated_at timestamptz not null default now()
 );
 create index if not exists leads_updated_idx on leads(updated_at desc);
+create index if not exists leads_user_idx on leads(user_id, updated_at desc) where user_id is not null and order_id is null;
 create table if not exists ledger (
   id bigserial primary key,
   at timestamptz not null default now(),

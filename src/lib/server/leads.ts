@@ -20,7 +20,8 @@ export async function saveLead(b: Record<string, unknown>, user: Session | null)
   const validEmail = isEmail(email) ? email : "";
   const lid = str(b.id, 20);
   const existing = /^[a-z0-9]{16}$/.test(lid);
-  if (!phone && !validEmail && !existing) throw new HttpError(400, "Enter a phone number or email we can reach you on.", { fields: { phone: "e.g. 0803 123 4567" } });
+  // A signed-in person is already reachable, so their cart is worth saving before they type anything.
+  if (!phone && !validEmail && !existing && !user) throw new HttpError(400, "Enter a phone number or email we can reach you on.", { fields: { phone: "e.g. 0803 123 4567" } });
   const cart = priceCart(b.items);
   const v = {
     name: isName(name) ? name : "", phone, email: validEmail, consent: bool(b.consent),
@@ -37,9 +38,35 @@ export async function saveLead(b: Record<string, unknown>, user: Session | null)
     if (u) return { id: lid };
     if (!phone && !validEmail) return { id: null };
   }
+  // One open row per signed-in person, so signing in on a second device continues the same cart
+  // instead of leaving a trail of half-finished ones.
+  if (user) {
+    const [mine] = await sql`select id from leads where user_id = ${user.uid} and order_id is null order by updated_at desc limit 1`;
+    if (mine) {
+      await sql`update leads set
+          name = coalesce(nullif(${v.name}, ''), name), phone = coalesce(nullif(${v.phone}, ''), phone), email = coalesce(nullif(${v.email}, ''), email),
+          consent = consent or ${v.consent}, items = case when ${v.items.length} > 0 then ${sql.json(v.items)} else items end,
+          total = case when ${v.items.length} > 0 then ${v.total} else total end, updated_at = now()
+        where id = ${mine.id}`;
+      return { id: mine.id as string };
+    }
+  }
   const nid = id();
   await sql`insert into leads ${sql({ id: nid, user_id: user?.uid ?? null, ...v, items: sql.json(v.items) })}`;
   return { id: nid };
+}
+
+/** The signed-in person's unfinished cart, for picking up on another device. */
+export async function userCart(uid: string) {
+  const sql = await db();
+  const [l] = await sql`select id, items, updated_at from leads
+    where user_id = ${uid} and order_id is null order by updated_at desc limit 1`;
+  if (!l) return { id: null, items: [], updatedAt: null };
+  return {
+    id: l.id as string,
+    items: priceCart(l.items).lines.map((x) => ({ id: x.p.id, qty: x.qty })),
+    updatedAt: l.updated_at as Date,
+  };
 }
 
 /** The saved cart behind a resume link. No personal details. */
