@@ -96,6 +96,19 @@ export async function loadPool(pid: string) {
   return (p as unknown as PoolRow) ?? null;
 }
 
+/** Top supporters by total given. Named supporters are grouped by name; anonymous ones stay out of the ranking. */
+function leaderboard(paid: Record<string, unknown>[]) {
+  const by = new Map<string, { name: string; total: number; count: number }>();
+  for (const c of paid) {
+    const name = String(c.name ?? "").trim();
+    if (c.anonymous || !name) continue;
+    const k = name.toLowerCase();
+    const e = by.get(k) ?? { name, total: 0, count: 0 };
+    e.total += Number(c.amount); e.count += 1; by.set(k, e);
+  }
+  return [...by.values()].sort((a, b) => b.total - a.total).slice(0, 10);
+}
+
 /** The public page. Street address and phone numbers are never included. */
 export async function poolPage(pid: string, viewer: Session | null) {
   const p = await loadPool(pid);
@@ -113,6 +126,7 @@ export async function poolPage(pid: string, viewer: Session | null) {
     choiceEnds: p.ended_at ? new Date(new Date(p.ended_at).getTime() + POOL.choiceDays * 864e5) : null,
     items: pieces, shares: shares.map((s) => ({ id: s.id, name: s.name, amount: s.amount, paid: s.status === "paid" })),
     supporters: paid.map((c) => ({ name: c.anonymous || !c.name ? "Anonymous" : c.name, message: c.message, amount: c.amount, at: c.created_at, piece: c.piece ? getProductById(c.piece)?.name ?? null : null })),
+    leaders: leaderboard(paid),
     order: order ? { status: order.status } : null,
     isOwner,
     needsAddress: isOwner && !p.delivery.address,
