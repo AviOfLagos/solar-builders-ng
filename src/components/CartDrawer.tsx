@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { accountCart, api, getLeadId, saveLead, setLeadId, SIGNED_IN } from "@/lib/client";
+import { accountCart, api, getLeadId, saveLead, setLeadId, SIGNED_IN, SIGNED_OUT } from "@/lib/client";
 import { useCart } from "@/lib/cart";
 import { getProductById, brandName } from "@/lib/catalog";
 import { naira, NG_PHONE, normalizePhone } from "@/lib/format";
@@ -86,9 +86,11 @@ export function LeadSync() {
         for (const l of bigger) useCart.getState().setQty(l.id, l.qty);
         useCart.getState().setOpen(false);
       });
+    const forget = () => setSignedIn(false);
     if (!pulled.current) { pulled.current = true; pull(); }
     window.addEventListener(SIGNED_IN, pull);
-    return () => window.removeEventListener(SIGNED_IN, pull);
+    window.addEventListener(SIGNED_OUT, forget);
+    return () => { window.removeEventListener(SIGNED_IN, pull); window.removeEventListener(SIGNED_OUT, forget); };
   }, [addMany]);
 
   useEffect(() => {

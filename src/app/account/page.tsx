@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { announceSignIn, api, safeNext, type ApiError } from "@/lib/client";
+import { announceSignIn, announceSignOut, api, safeNext, type ApiError } from "@/lib/client";
 import { naira, isEmail, isName, NG_PHONE, normalizePhone } from "@/lib/format";
 import { GoogleButton } from "@/components/GoogleButton";
 import { Field } from "@/components/Field";
@@ -90,7 +90,7 @@ function Account() {
             ))}</ul>
           )}
         </section>
-        <button className="btn btn-ghost mt-10" onClick={async () => { await api("/auth/logout", { method: "POST" }).catch(() => {}); setMe({ user: null, store: null }); setMine(null); }}>Sign out</button>
+        <button className="btn btn-ghost mt-10" onClick={async () => { await api("/auth/logout", { method: "POST" }).catch(() => {}); announceSignOut(); setMe({ user: null, store: null }); setMine(null); }}>Sign out</button>
       </div>
     );
 

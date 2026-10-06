@@ -34,9 +34,12 @@ export async function saveLead(b: Record<string, unknown>, user: Session | null)
         consent = consent or ${v.consent}, items = case when ${v.items.length} > 0 then ${sql.json(v.items)} else items end,
         total = case when ${v.items.length} > 0 then ${v.total} else total end,
         user_id = coalesce(user_id, ${user?.uid ?? null}), updated_at = now()
-      where id = ${lid} and order_id is null returning id`;
+      where id = ${lid} and order_id is null
+        and (user_id is null or user_id = ${user?.uid ?? null}) returning id`;
     if (u) return { id: lid };
-    if (!phone && !validEmail) return { id: null };
+    // The id belongs to someone else's account: a stale id in a shared browser, or a passed-on
+    // resume link. Never write their cart; fall through and start a row of our own.
+    if (!phone && !validEmail && !user) return { id: null };
   }
   // One open row per signed-in person, so signing in on a second device continues the same cart
   // instead of leaving a trail of half-finished ones.
