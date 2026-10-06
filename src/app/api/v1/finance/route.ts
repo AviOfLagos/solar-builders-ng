@@ -2,6 +2,7 @@ import { db, id } from "@/lib/server/db";
 import { body, fail, ok, route, str, int, oneOf, currentUser, limitIp } from "@/lib/server/api";
 import { priceCart, storedItems } from "@/lib/server/rules";
 import { notifyOwner } from "@/lib/server/mail";
+import { emit } from "@/lib/server/webhooks";
 import { NG_PHONE, normalizePhone, ngE164, naira, isEmail, isName } from "@/lib/format";
 import { FINANCE, CART } from "@/config/store";
 
@@ -29,5 +30,6 @@ export const POST = route(async (req: Request) => {
   const rid = id();
   await sql`insert into finance_requests ${sql({ id: rid, user_id: s?.uid ?? null, name, phone: ngE164(phone), email, employment, income_band: incomeBand, items: sql.json(storedItems(cart.lines)), total: cart.total, down_pct: downPct, months })}`;
   await notifyOwner(`PAY SMALL SMALL request ${rid} — ${naira(cart.total)}, ${downPct}% down, ${months} months\n${name} · ${ngE164(phone)} · ${email}\n${employment} · income ${incomeBand}\n${cart.lines.map((l) => `- ${l.qty} x ${l.p.name}`).join("\n")}`);
+  await emit("finance.requested", { id: rid, name, phone: ngE164(phone), email, employment, income_band: incomeBand, total: cart.total, down_pct: downPct, months });
   return ok({ id: rid });
 });

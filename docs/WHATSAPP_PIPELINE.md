@@ -48,6 +48,32 @@ All webhooks are signed (HMAC header `x-sb-signature`) with a shared secret set 
 
 ## 4. What we build on our side
 
-- Webhook emitter: built (`src/lib/server/webhooks.ts`). Set `WEBHOOK_URL` (the n8n webhook) and `WEBHOOK_SECRET` in Vercel. Sent today: `brand.requested`, `lead.created`, `order.paid`. The rest of the table is still to wire.
-- Template messages approved in Meta (first message to a customer must be a template).
-- A `status` field per lead: new → contacted → engaged → ready_to_buy → paid → delivered → installed / lost.
+Built:
+- Signed webhook emitter (`src/lib/server/webhooks.ts`). Set `WEBHOOK_URL` (the n8n webhook) and `WEBHOOK_SECRET` in Vercel. Events sent: `lead.created`, `brand.requested`, `order.paid` (carries `installer` and `pool_id`, so it also covers "install requested" and "pool funded"), `finance.requested`, `pool.created`.
+- Not sent yet: `order.pending_transfer` (needs a hook in the Paystack pending state) and `pool.ended` (pools end lazily when read; a daily cron could emit it).
+- Lead status: new, contacted, engaged, ready_to_buy, paid, lost. Plus `needs_human` for "talk to a person"; the morning summary lists those first.
+- Write-back, signed with `WEBHOOK_SECRET` (header `x-sb-signature` = hex HMAC-SHA256 of the raw body):
+  - `PATCH /api/v1/team/leads/{id}` body `{ "status": "engaged", "note": "...", "needs_human": true, "stop": true }` (all optional).
+  - `POST /api/v1/automation/stop` body `{ "phone": "0801..." }` ends every open lead for that number and withdraws consent.
+
+You still do (Meta side): WhatsApp Cloud API number, and templates approved (first message to a customer must be a template).
+
+## 5. n8n build sheet (flows A, D, E and STOP)
+
+Every flow starts with a **Webhook** node (POST, one URL for all events) and a **Switch** on `event`. Verify the signature in a Code node: HMAC-SHA256 of the raw body with `WEBHOOK_SECRET` must equal `x-sb-signature`.
+
+Shared nodes:
+- **Send template**: HTTP Request, POST `https://graph.facebook.com/v25.0/{PHONE_NUMBER_ID}/messages`, bearer = WhatsApp token (store it as an n8n credential, never in the flow). Body `{"messaging_product":"whatsapp","to":"{phone}","type":"template","template":{"name":"...","language":{"code":"en"},"components":[...]}}`.
+- **Write back**: HTTP Request, PATCH `https://solar.nexprove.com/api/v1/team/leads/{id}`, body `{"status":"contacted"}`, header `x-sb-signature` computed in a Code node (`crypto.createHmac('sha256', secret).update(body).digest('hex')`).
+
+Flow A (`lead.created`): Wait 30 min → check the lead is still open (the `order.paid` event for the same phone cancels it; keep a small n8n Data Table keyed by phone) → Send template `kit_hold_offer` → write back `contacted`. Inbound button "Yes, hold it" → send the resume link → `ready_to_buy`. "Question" → `engaged` + `needs_human: true`. "Not now" → Wait 3 days, one reminder, stop.
+
+Flow D (`order.pending_transfer`, once emitted): send account details template; Wait 6h and 24h with a paid-check; at 72h send the cancel message.
+
+Flow E (`pool.created`): send template `pool_share_kit` with the link. Milestones come from `order.paid` with `pool_id`.
+
+Inbound (WhatsApp webhook into n8n, separate from the one the ops agent uses):
+- Text "STOP" (case-insensitive) → POST `/api/v1/automation/stop` with the sender's number → reply "You're unsubscribed."
+- Button "Talk to a person" or text "agent/human" → PATCH the lead with `needs_human: true`.
+
+Template names to submit to Meta: `kit_hold_offer`, `transfer_details`, `pool_share_kit`, `order_confirmed`. Utility category, plain text with {{1}}.. variables.

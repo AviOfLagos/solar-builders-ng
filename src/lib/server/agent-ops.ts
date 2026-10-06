@@ -101,7 +101,10 @@ export async function updateLead(leadId: string, b: Record<string, unknown>) {
   const status = clean(b.status, 20);
   if (status && !["new", "contacted", "engaged", "ready_to_buy", "paid", "lost"].includes(status)) throw new HttpError(400, "Unknown status.");
   const note = clean(b.note, 500);
-  const [r] = await sql`update leads set status = coalesce(${status || null}, status), note = case when ${note} = '' then note else ${note} end,
+  const stop = b.stop === true;
+  const human = b.needs_human === true;
+  const [r] = await sql`update leads set consent = case when ${stop} then false else consent end, needs_human = case when ${human} then true when ${stop} then false else needs_human end,
+      status = case when ${stop} then 'lost' else coalesce(${status || null}, status) end, note = case when ${stop} then 'STOP: opted out on WhatsApp' when ${note} = '' then note else ${note} end,
       contacted_at = coalesce(contacted_at, case when ${status} not in ('', 'new') then now() end), updated_at = now() where id = ${leadId} returning id, status`;
   if (!r) throw new HttpError(404, "Lead not found.");
   return r;
@@ -119,6 +122,8 @@ export async function brief() {
     const t = f.kind === "no_po" ? "purchase_order (create), then send" : f.kind === "no_installer" ? "assign_installer" : "message the supplier (send_email is for customers and prospects; use whatsapp_link)";
     add(f.kind === "no_po" ? 1 : 2, f.text, "Paid orders wait on us", t);
   }
+  const human = await sql`select id, name, total from leads where needs_human and order_id is null order by updated_at desc limit 5`;
+  for (const l of human) add(1, `${l.name || l.id} asked to talk to a person (${naira(l.total)})`, "They asked for a human", "reply by whatsapp_link, then update_lead");
   const hot = await sql`select id, name, phone, email, total, status, updated_at from leads where order_id is null and consent and status in ('ready_to_buy', 'engaged') and updated_at < now() - interval '6 hours' order by total desc limit 5`;
   for (const l of hot) add(1, `${l.name || l.id} (${l.status.replace("_", " ")}, ${naira(l.total)}) has gone quiet`, "Closest to paying", "draft a reply (send_email kind=customer, or whatsapp_link)");
   const fresh = await sql`select count(*)::int as n from leads where order_id is null and status = 'new' and created_at < now() - interval '2 hours' and created_at > now() - interval '3 days'`;
@@ -139,4 +144,12 @@ export async function brief() {
 export async function outboundLog(limit: number) {
   const sql = await db();
   return sql`select at, kind, recipient, subject, actor, ref, sent from outbound_log order by at desc limit ${limit}`;
+}
+
+/** STOP from a phone number: every open lead with that number is opted out and ends. */
+export async function stopByPhone(phone: string) {
+  const sql = await db();
+  const rows = await sql`update leads set consent = false, needs_human = false, status = 'lost', note = 'STOP: opted out on WhatsApp', updated_at = now()
+    where phone = ${phone} and order_id is null returning id`;
+  return { stopped: rows.length };
 }

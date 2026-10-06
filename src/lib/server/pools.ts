@@ -9,6 +9,7 @@ import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, 
 import { newPaystackRef } from "./paystack";
 import { notifyOwner } from "./mail";
 import { pushTo } from "./push";
+import { emit } from "./webhooks";
 import { priceCart, checkCart, compactItems, assertValid } from "./rules";
 import { ledger, insertOrder, type OrderRow } from "./ledger";
 import { storeBySlug, orderNotifications, issueGiftCard } from "./orders";
@@ -82,6 +83,7 @@ export async function createPool(user: Session, b: Record<string, unknown>) {
     for (const [i, s] of shares.entries()) await tx`insert into shares ${tx({ id: id(), pool_id: pid, name: s.name, amount: s.amount, position: i })}`;
   });
   await notifyOwner(`NEW GO SOLAR ME ${pid} (${kind}) — ${title} — goal ${naira(cart.total)} — ${d.lga}${d.address ? "" : " (address later)"}`);
+  await emit("pool.created", { id: pid, kind, title, goal: cart.total, owner: { name: owner?.name || user.name, phone: owner?.phone || "" }, deadline_days: days, url: `/fund/${pid}` });
   return { id: pid, path: `/fund/${pid}`, goal: cart.total };
 }
 
