@@ -318,6 +318,35 @@ create table if not exists commission_payouts (
   ref text not null default '',
   updated_at timestamptz not null default now()
 );
+-- v8: outreach pipeline and a log of every message the assistant or team sends
+create table if not exists prospects (
+  id text primary key,
+  name text not null,
+  kind text not null default 'distributor',
+  email text not null default '',
+  phone text not null default '',
+  instagram text not null default '',
+  linkedin text not null default '',
+  website text not null default '',
+  status text not null default 'new',
+  notes text not null default '',
+  last_contacted_at timestamptz,
+  follow_up_on date,
+  stop boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create table if not exists outbound_log (
+  id text primary key,
+  at timestamptz not null default now(),
+  kind text not null,
+  recipient text not null,
+  subject text not null default '',
+  body text not null default '',
+  actor text not null default '',
+  ref text not null default '',
+  sent boolean not null default false
+);
+create index if not exists outbound_at_idx on outbound_log(at);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);
