@@ -7,13 +7,13 @@ import { naira, firstName } from "@/lib/format";
 import { db } from "@/lib/server/db";
 import { loadPool } from "@/lib/server/pools";
 
-const INK = "#10213B", SUN = "#FFC21A", MIST = "#C9D3E0";
+const INK = "#17201b", INK2 = "#3b4540", MINT = "#bdf0a6", DEEP = "#2f7d4f", HAZE = "#f3f2ec", NIGHT = "#1d2621";
 
-// Bricolage Grotesque, split by Fontsource into "latin" and "latin-ext" (which has the ₦ sign).
+// Manrope, split by Fontsource into "latin" and "latin-ext" (which has the ₦ sign).
 let fonts: Promise<{ name: string; data: Buffer; weight: 500 | 800; style: "normal" }[]> | null = null;
 const loadFonts = () => (fonts ??= Promise.all(
   (["latin-500", "latin-ext-500", "latin-800", "latin-ext-800"] as const).map(async (f) => ({
-    name: f.includes("ext") ? "BricolageExt" : "Bricolage", data: await readFile(join(process.cwd(), `assets/fonts/bricolage-grotesque-${f}-normal.woff`)), weight: (f.endsWith("800") ? 800 : 500) as 500 | 800, style: "normal" as const,
+    name: f.includes("ext") ? "ManropeExt" : "Manrope", data: await readFile(join(process.cwd(), `assets/fonts/manrope-${f}-normal.woff`)), weight: (f.endsWith("800") ? 800 : 500) as 500 | 800, style: "normal" as const,
   })),
 ).catch((e) => { fonts = null; throw e; }));
 
@@ -29,7 +29,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/v1/share/[kind]/
   try {
     const c = kind === "pool" ? await poolCard(id, host) : kind === "order" ? await orderCard(id, host) : null;
     if (!c) return new Response("Not found", { status: 404 });
-    const qr = await QRCode.toDataURL(c.url, { margin: 1, width: 260, color: { dark: INK, light: "#FFFFFF" } });
+    const qr = await QRCode.toDataURL(c.url, { margin: 1, width: 260, color: { dark: NIGHT, light: "#FFFFFF" } });
     return new ImageResponse(<Card {...c} qr={qr} story={story} />, { ...size, fonts: await loadFonts(), headers: { "cache-control": "public, max-age=300, s-maxage=300" } });
   } catch (e) {
     console.error("[share image]", e);
@@ -80,29 +80,35 @@ async function orderCard(ref: string, host: string): Promise<C | null> {
 }
 
 function Card({ eyebrow, headline, sub, pct, label, qr, story }: C & { qr: string; story: boolean }) {
+  const pad = story ? "110px 80px" : "72px 72px";
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: INK, color: "white", padding: story ? "120px 88px" : "80px 80px", fontFamily: "Bricolage, BricolageExt", fontWeight: 500 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 20, fontSize: 40, fontWeight: 800 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 999, background: SUN }} />
-        <div style={{ display: "flex" }}>Solar Builders<span style={{ color: SUN }}>.ng</span></div>
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: HAZE, color: INK, padding: pad, fontFamily: "Manrope, ManropeExt", fontWeight: 500 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 38, fontWeight: 800 }}>
+        <div style={{ display: "flex", width: 60, height: 60, borderRadius: 20, background: NIGHT, alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 26, height: 26, borderRadius: 999, background: MINT }} />
+        </div>
+        <div style={{ display: "flex" }}>Solar Builders NG</div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: story ? 48 : 32 }}>
-        <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: 4, color: SUN }}>{eyebrow}</div>
-        <div style={{ fontSize: story ? 104 : 84, fontWeight: 800, lineHeight: 1.04, letterSpacing: -2 }}>{headline}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: story ? 44 : 30 }}>
+        <div style={{ display: "flex", alignSelf: "flex-start", background: MINT, color: INK, borderRadius: 999, padding: "14px 28px", fontSize: 30, fontWeight: 800, letterSpacing: 2 }}>{eyebrow}</div>
+        <div style={{ fontSize: story ? 100 : 80, fontWeight: 800, lineHeight: 1.05, letterSpacing: -2 }}>{headline}</div>
         {pct !== undefined && (
-          <div style={{ display: "flex", width: "100%", height: 36, borderRadius: 999, background: "rgba(255,255,255,0.15)" }}>
-            <div style={{ display: "flex", width: `${Math.max(pct, 3)}%`, height: "100%", borderRadius: 999, background: SUN }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+            <div style={{ display: "flex", flex: 1, height: 36, borderRadius: 999, background: "#FFFFFF" }}>
+              <div style={{ display: "flex", width: `${Math.max(pct, 4)}%`, height: "100%", borderRadius: 999, background: DEEP }} />
+            </div>
+            <div style={{ display: "flex", fontSize: 44, fontWeight: 800 }}>{pct}%</div>
           </div>
         )}
-        <div style={{ fontSize: story ? 46 : 38, lineHeight: 1.3, color: MIST }}>{sub}</div>
+        <div style={{ fontSize: story ? 44 : 36, lineHeight: 1.35, color: INK2 }}>{sub}</div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 34, color: MIST, maxWidth: 640 }}>
-          <span style={{ color: "white", fontWeight: 800 }}>Scan or visit</span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, background: NIGHT, color: "white", borderRadius: 44, padding: story ? 40 : 32 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 32, color: "rgba(255,255,255,0.7)", maxWidth: 640 }}>
+          <span style={{ color: MINT, fontWeight: 800, fontSize: 38 }}>Scan or visit</span>
           <span>{label}</span>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element -- rendered by Satori, not the browser */}
-        <img src={qr} width={story ? 240 : 200} height={story ? 240 : 200} style={{ borderRadius: 16 }} alt="" />
+        <img src={qr} width={story ? 220 : 180} height={story ? 220 : 180} style={{ borderRadius: 20 }} alt="" />
       </div>
     </div>
   );
