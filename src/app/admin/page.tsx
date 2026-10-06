@@ -14,6 +14,7 @@ type Stats = {
   pools: { open: number; raising: number };
   series: { date: string; revenue: number; orders: number; visitors: number }[];
   funnel: { step: string; n: number }[];
+  weekly: { week: string; visitors: number; orders: number; revenue: number; leads: number; conversion: number }[];
   topPages: { path: string; n: number }[];
   topClicks: { name: string; n: number }[];
   sources: { ref: string; n: number }[];
@@ -126,6 +127,23 @@ export default function Dashboard() {
           </div>
         </Panel>
       </div>
+
+      <Panel title="Week by week" sub="Monday to Sunday. The latest week is still running.">
+        <div className="-mx-5 overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead><tr className="border-b border-line text-left text-xs text-mute"><th className="px-5 py-2 font-semibold">Week of</th><th className="py-2 text-right font-semibold">Sales</th><th className="py-2 text-right font-semibold">Orders</th><th className="py-2 text-right font-semibold">Visitors</th><th className="py-2 text-right font-semibold">Paid</th><th className="px-5 py-2 text-right font-semibold">Leads</th></tr></thead>
+            <tbody>
+              {[...s.weekly].reverse().map((w) => (
+                <tr key={w.week} className="border-b border-line/60 last:border-0">
+                  <td className="px-5 py-2.5 font-medium">{new Date(w.week + "T12:00:00").toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</td>
+                  <td className="num py-2.5 text-right font-semibold">{naira(w.revenue)}</td><td className="num py-2.5 text-right">{w.orders}</td>
+                  <td className="num py-2.5 text-right">{w.visitors.toLocaleString()}</td><td className="num py-2.5 text-right">{pct(w.conversion)}</td><td className="num px-5 py-2.5 text-right">{w.leads}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Panel title="Sales by brand"><Bars rows={s.brands.map((b) => ({ label: b.brand, value: b.amount }))} format={naira} empty="No sales in this period." /></Panel>

@@ -51,7 +51,7 @@ export async function adminStats(days: number) {
 
   const topPages = await sql`select path, count(*)::int as n from events where at >= ${from} and kind = 'view' group by 1 order by 2 desc limit 8`;
   const topClicks = await sql`select name, count(*)::int as n from events where at >= ${from} and kind = 'click' group by 1 order by 2 desc limit 8`;
-  const sources = await sql`select coalesce(nullif(ref, ''), 'Direct') as ref, count(distinct sid)::int as n from events where at >= ${from} and kind = 'view' group by 1 order by 2 desc limit 6`;
+  const sources = await sql`select coalesce(nullif(split_part(utm, '|', 1), ''), nullif(ref, ''), 'Direct') as ref, count(distinct sid)::int as n from events where at >= ${from} and kind = 'view' group by 1 order by 2 desc limit 6`;
 
   // Sales by brand
   const byBrand = new Map<string, number>();
@@ -85,6 +85,7 @@ export async function adminStats(days: number) {
     pools,
     series: [...series.values()],
     funnel,
+    weekly: await weeklyNumbers(8),
     topPages,
     topClicks,
     sources,
@@ -124,4 +125,33 @@ export async function adminPools() {
   return sql`select p.id, p.kind, p.title, p.goal, p.raised, p.status, p.deadline, p.created_at, u.name as owner, u.email as owner_email,
       (select count(*)::int from contributions c where c.pool_id = p.id and c.status = 'paid') as supporters
     from pools p join users u on u.id = p.user_id order by p.created_at desc limit 200`;
+}
+
+/** The last `weeks` weeks (Monday to Sunday, Lagos is UTC+1 so UTC weeks are close enough), newest last. */
+export async function weeklyNumbers(weeks = 8) {
+  const sql = await db();
+  const rows = await sql`
+    with w as (select generate_series(date_trunc('week', now()) - ((${weeks} - 1) * interval '1 week'), date_trunc('week', now()), interval '1 week') as start)
+    select to_char(w.start, 'YYYY-MM-DD') as week,
+      (select count(distinct sid)::int from events e where e.at >= w.start and e.at < w.start + interval '1 week' and e.sid <> '') as visitors,
+      (select count(*)::int from orders o where o.status = any(${FULFILMENT}) and o.created_at >= w.start and o.created_at < w.start + interval '1 week') as orders,
+      (select coalesce(sum(o.total_paid + o.gift_card_used), 0)::bigint from orders o where o.status = any(${FULFILMENT}) and o.created_at >= w.start and o.created_at < w.start + interval '1 week') as revenue,
+      (select count(*)::int from leads l where l.created_at >= w.start and l.created_at < w.start + interval '1 week') as leads
+    from w order by w.start`;
+  return rows.map((r) => ({ week: r.week as string, visitors: r.visitors as number, orders: r.orders as number, revenue: Number(r.revenue), leads: r.leads as number, conversion: r.visitors ? Math.min(1, (r.orders as number) / (r.visitors as number)) : 0 }));
+}
+
+/** The Monday message: last full week against the one before it. */
+export async function weeklyDigest() {
+  const w = await weeklyNumbers(3);
+  const [cur, prev] = [w[w.length - 2], w[w.length - 3]];
+  if (!cur) return "";
+  const d = (a: number, b: number) => (b ? `${a >= b ? "+" : ""}${Math.round(((a - b) / b) * 100)}%` : a ? "new" : "-");
+  const n = (v: number) => `₦${v.toLocaleString("en-NG")}`;
+  return [
+    `WEEK OF ${cur.week}`,
+    `Sales ${n(cur.revenue)} (${d(cur.revenue, prev?.revenue ?? 0)}) · ${cur.orders} paid orders (${d(cur.orders, prev?.orders ?? 0)})`,
+    `Visitors ${cur.visitors} (${d(cur.visitors, prev?.visitors ?? 0)}) · ${(cur.conversion * 100).toFixed(1)}% paid · ${cur.leads} new leads`,
+    `Open the dashboard: ${process.env.SITE_URL || "https://solar.nexprove.com"}/admin`,
+  ].join("\n");
 }

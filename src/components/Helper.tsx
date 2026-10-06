@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@/components/Tracker";
 import { usePathname } from "next/navigation";
 import { Icon } from "./ui/Icon";
 import { OpenLinkForm } from "./OpenLink";
@@ -46,7 +47,7 @@ export function Helper() {
     if (hidden || shown.current) return;
     // Closed recently: only the small button comes back, never the bubble.
     const quiet = Date.now() - helperClosedAt < WEEK;
-    const show = () => { if (!shown.current) { shown.current = true; setPhase(quiet ? "mini" : "open"); } };
+    const show = () => { if (!shown.current) { shown.current = true; track(quiet ? "helper-mini" : "helper-shown"); setPhase(quiet ? "mini" : "open"); } };
     const t = setTimeout(show, 10_000);
     const onScroll = () => {
       const max = document.documentElement.scrollHeight - innerHeight;

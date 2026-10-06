@@ -1,4 +1,5 @@
 "use client";
+import { track } from "@/components/Tracker";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Field } from "@/components/Field";
@@ -50,7 +51,7 @@ export function BrandRequest() {
                 e.preventDefault();
                 if (state === "busy") return;
                 setState("busy"); setMsg("");
-                try { await api("/brand-requests", { body: f }); setState("done"); }
+                try { await api("/brand-requests", { body: f }); track("brand-request"); setState("done"); }
                 catch (x) { setMsg((x as Error).message); setErrors((x as ApiError).fields || {}); setState("idle"); }
               }}>
                 <div className="grid gap-4 sm:grid-cols-2">

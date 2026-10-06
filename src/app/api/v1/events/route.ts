@@ -9,6 +9,6 @@ export const POST = route(async (req: Request) => {
   const path = str(b.path, 200).split("?")[0];
   if (!path.startsWith("/") || path.startsWith("/admin") || path.startsWith("/team")) return ok({});
   const sql = await db();
-  await sql`insert into events ${sql({ sid: str(b.sid, 24), kind, path, name: str(b.name, 60), ref: str(b.ref, 120) })}`;
+  await sql`insert into events ${sql({ sid: str(b.sid, 24), kind, path, name: str(b.name, 60), ref: str(b.ref, 120), utm: str(b.utm, 120) })}`;
   return ok({});
 });

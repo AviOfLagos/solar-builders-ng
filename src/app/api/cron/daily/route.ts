@@ -4,6 +4,8 @@ import { ensureWebhook, stripeConfigured } from "@/lib/server/stripe";
 import { anyProvider } from "@/lib/server/pay";
 import { sweepStaleOrders } from "@/lib/server/orders";
 import { sweepPools } from "@/lib/server/pools";
+import { weeklyDigest } from "@/lib/server/admin";
+import { notifyOwner } from "@/lib/server/mail";
 
 /** Daily housekeeping, called by Vercel Cron with the CRON_SECRET. */
 export async function GET(req: Request) {
@@ -34,5 +36,7 @@ export async function GET(req: Request) {
     const gone = await sql`delete from events where at < now() - interval '180 days'`;
     return gone.count;
   });
+  // Mondays: last week's numbers to the owner (email, and Slack/WhatsApp if set up).
+  if (new Date().getUTCDay() === 1) await step("digest", async () => { const t = await weeklyDigest(); if (t) await notifyOwner(t); return !!t; });
   return NextResponse.json(out);
 }

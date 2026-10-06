@@ -247,6 +247,8 @@ create table if not exists events (
 create index if not exists events_at_idx on events(at);
 -- v5: lead follow-up status for the admin and the WhatsApp pipeline
 alter table leads add column if not exists status text not null default 'new';
+-- v6: where a visit came from: utm source|medium|campaign
+alter table events add column if not exists utm text not null default '';
 -- v6: editable pricing. scope is default | floor | brand | category | product
 create table if not exists price_rules (
   scope text not null,

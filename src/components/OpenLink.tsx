@@ -1,4 +1,5 @@
 "use client";
+import { track } from "@/components/Tracker";
 import { useEffect, useRef, useState, useId } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "./ui/Icon";
@@ -35,7 +36,7 @@ export function OpenLinkForm({ label = "Paste a link or code", onDone, autoFocus
       e.preventDefault();
       if (busy) return;
       setBusy(true); setErr("");
-      try { const to = await resolveLink(v); onDone?.(); router.push(to); setV(""); } catch (x) { setErr((x as Error).message); }
+      try { const to = await resolveLink(v); track("link-opened"); onDone?.(); router.push(to); setV(""); } catch (x) { setErr((x as Error).message); }
       setBusy(false);
     }}>
       <label htmlFor={id} className="text-sm font-semibold">{label}</label>
