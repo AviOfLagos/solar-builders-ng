@@ -247,6 +247,16 @@ create table if not exists events (
 create index if not exists events_at_idx on events(at);
 -- v5: lead follow-up status for the admin and the WhatsApp pipeline
 alter table leads add column if not exists status text not null default 'new';
+-- v6: editable pricing. scope is default | floor | brand | category | product
+create table if not exists price_rules (
+  scope text not null,
+  key text not null default '',
+  markup double precision,
+  fixed int,
+  updated_at timestamptz not null default now(),
+  updated_by text not null default '',
+  primary key (scope, key)
+);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);
