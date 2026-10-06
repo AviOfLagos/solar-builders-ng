@@ -259,6 +259,65 @@ create table if not exists price_rules (
   updated_by text not null default '',
   primary key (scope, key)
 );
+-- v7: fulfilment. suppliers, purchase orders, installers, jobs, commission payouts
+create table if not exists suppliers (
+  id text primary key,
+  name text not null,
+  email text not null default '',
+  phone text not null default '',
+  brands text[] not null default '{}',
+  notes text not null default '',
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create table if not exists purchase_orders (
+  id text primary key,
+  order_id text not null references orders(id) on delete cascade,
+  supplier_id text references suppliers(id) on delete set null,
+  status text not null default 'draft',
+  items jsonb not null default '[]',
+  cost int not null default 0,
+  delivery_cost int not null default 0,
+  ship_to text not null default 'us',
+  note text not null default '',
+  sent_at timestamptz,
+  confirmed_at timestamptz,
+  expected_at date,
+  delivered_at timestamptz,
+  created_by text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists po_order_idx on purchase_orders(order_id);
+create table if not exists installers (
+  id text primary key,
+  name text not null,
+  phone text not null default '',
+  email text not null default '',
+  areas text not null default '',
+  rate int not null default 0,
+  notes text not null default '',
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create table if not exists order_jobs (
+  id text primary key,
+  order_id text not null unique references orders(id) on delete cascade,
+  installer_id text references installers(id) on delete set null,
+  status text not null default 'assigned',
+  job_date date,
+  fee int not null default 0,
+  photo_url text not null default '',
+  note text not null default '',
+  assigned_at timestamptz not null default now(),
+  completed_at timestamptz
+);
+create table if not exists commission_payouts (
+  order_id text primary key references orders(id) on delete cascade,
+  status text not null default 'approved',
+  paid_at timestamptz,
+  ref text not null default '',
+  updated_at timestamptz not null default now()
+);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

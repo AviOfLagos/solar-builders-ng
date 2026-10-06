@@ -5,6 +5,7 @@ import { api } from "@/lib/client";
 import { naira, ngLocal } from "@/lib/format";
 import { Icon } from "@/components/ui/Icon";
 import { Pill, ago } from "../ui";
+import { Fulfilment } from "./Fulfilment";
 
 type Order = {
   id: string; status: string; label: string; status_at: string; created_at: string; subtotal: number; total_paid: number; gift_card_used: number; commission: number;
@@ -134,6 +135,8 @@ function Drawer({ o, onClose, onChanged }: { o: Order; onClose: () => void; onCh
               <div className="flex justify-between"><dt className="text-mute">Buyer</dt><dd>{o.buyer.name} · {ngLocal(o.buyer.phone)}</dd></div>
             </dl>
           </div>
+
+          {at >= 0 && <Fulfilment orderId={o.id} />}
 
           {msg && <p role="alert" className="rounded-xl bg-flare/10 p-3 text-sm text-flare">{msg}</p>}
           {at >= 0 && (refund ? (

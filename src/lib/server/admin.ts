@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { FULFILMENT, ORDER_STATUS, type OrderStatus } from "@/config/store";
 import { getProductById, brandName } from "@/lib/catalog";
+import { fulfilmentFlags, marginSummary } from "./fulfilment";
 
 const day = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -86,6 +87,8 @@ export async function adminStats(days: number) {
     series: [...series.values()],
     funnel,
     weekly: await weeklyNumbers(8),
+    flags: await fulfilmentFlags(),
+    margin: await marginSummary(days),
     topPages,
     topClicks,
     sources,

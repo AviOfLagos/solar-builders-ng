@@ -20,9 +20,12 @@ const NAV: { title: string; links: { href: string; label: string; icon: string; 
     { href: "/admin/pools", label: "Go Solar Me", icon: "megaphone" },
     { href: "/admin/pricing", label: "Pricing", icon: "card" },
   ] },
+  { title: "Fulfilment", links: [
+    { href: "/admin/suppliers", label: "Suppliers", icon: "people" },
+    { href: "/admin/installers", label: "Installers", icon: "tools" },
+    { href: "/admin/payouts", label: "Payouts", icon: "card" },
+  ] },
   { title: "Coming next", links: [
-    { href: "https://github.com/AviOfLagos/solar-builders-ng/issues/7", label: "Suppliers", icon: "people", soon: "#7" },
-    { href: "https://github.com/AviOfLagos/solar-builders-ng/issues/7", label: "Installers", icon: "tools", soon: "#7" },
     { href: "https://github.com/AviOfLagos/solar-builders-ng/issues/6", label: "WhatsApp", icon: "whatsapp", soon: "#6" },
   ] },
 ];

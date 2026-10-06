@@ -20,6 +20,8 @@ type Stats = {
   sources: { ref: string; n: number }[];
   brands: { brand: string; amount: number }[];
   status: { status: string; label: string; n: number }[];
+  flags: { kind: string; orderId: string; text: string; at: string }[];
+  margin: { revenue: number; profit: number; pct: number; orders: number };
   late: { id: string; status: string; label: string; status_at: string; recipient: { name: string } | null; buyer: { name: string }; delivery: { lga: string } }[];
   recent: { id: string; status: string; label: string; total_paid: number; gift_card_used: number; buyer: { name: string }; delivery: { lga: string }; created_at: string; count: number; first: string }[];
 };
@@ -101,7 +103,21 @@ export default function Dashboard() {
             </div>
           ) : <p className="py-8 text-center text-sm text-mute">No orders yet.</p>}
         </Panel>
-        <Panel title="Needs you" sub="Pending over 24h, or not delivered in 48h">
+        <Panel title="Needs you" sub="Orders stuck, suppliers quiet, installers missing">
+          {s.flags.length > 0 && (
+            <ul className="mb-3 space-y-2">
+              {s.flags.slice(0, 5).map((f) => (
+                <li key={f.kind + f.text}>
+                  <Link href={`/admin/orders?q=${f.orderId}`} className="flex items-center gap-3 rounded-2xl bg-flare/10 p-3 hover:bg-flare/20">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-flare/20"><Icon name="clock" size={18} /></span>
+                    <span className="min-w-0 flex-1 text-sm"><span className="block font-semibold">{f.text}</span><span className="text-ink-2">{ago(f.at)}</span></span>
+                    <Icon name="chevron" size={16} />
+                  </Link>
+                </li>
+              ))}
+              {s.flags.length > 5 && <li className="py-1 text-center text-sm text-mute">and {s.flags.length - 5} more fulfilment flags</li>}
+            </ul>
+          )}
           {s.late.length ? (
             <ul className="space-y-2">
               {s.late.slice(0, 5).map((o) => (
@@ -118,6 +134,7 @@ export default function Dashboard() {
           ) : (
             <div className="flex items-center gap-3 rounded-2xl bg-mint-tint p-4 text-sm"><Icon name="check" className="text-mint-deep" />Nothing late. All orders are moving.</div>
           )}
+          {s.margin.orders > 0 && <p className="mt-4 rounded-2xl bg-haze p-3 text-sm"><span className="font-semibold">We kept {naira(s.margin.profit)}</span> <span className="text-mute">({(s.margin.pct * 100).toFixed(1)}% of goods sold) on {s.margin.orders} orders, after cost, delivery, installers and commission.</span></p>}
           <div className="mt-4 grid grid-cols-5 gap-1.5">
             {s.status.map((x) => (
               <Link key={x.status} href={`/admin/orders?status=${x.status}`} className="rounded-xl bg-haze p-2 text-center hover:bg-mint-tint">
