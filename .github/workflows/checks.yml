@@ -1,0 +1,37 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push makes the run in flight pointless, so don't pay for it.
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # next build writes the route types that tsc relies on (PageProps, RouteContext),
+      # so typecheck has to follow it rather than lead. The build type-checks the app
+      # itself as well; the explicit pass after it covers everything the build leaves out.
+      # No secrets needed: the prebuild step prices the catalog from files in the repo.
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
