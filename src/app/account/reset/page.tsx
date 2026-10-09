@@ -24,7 +24,7 @@ export default function ResetPage() {
   async function confirm() {
     const e: Record<string, string> = {};
     if (f.code.replace(/\D/g, "").length !== 6) e.code = "Enter the 6-digit code.";
-    if (f.password.length < 8 || f.password.length > 128) e.password = "Use 8 to 128 characters.";
+    if (f.password.length < 8 || f.password.length > 128 || !/[A-Za-z]/.test(f.password) || !/\d/.test(f.password)) e.password = "Use 8+ characters with a letter and a number.";
     if (Object.keys(e).length) { setErr({ msg: "", fields: e }); return; }
     setBusy(true);
     try { await api("/auth/reset/confirm", { body: { email: f.email.trim(), code: f.code, password: f.password } }); router.push("/account"); return; }
@@ -43,7 +43,7 @@ export default function ResetPage() {
           ) : (
             <>
               <Field label="Code from the email" error={err.fields?.code}><input className="field num tracking-[0.3em]" inputMode="numeric" autoComplete="one-time-code" maxLength={7} value={f.code} onChange={set("code")} /></Field>
-              <Field label="New password" hint="At least 8 characters." error={err.fields?.password}><input className="field" type="password" autoComplete="new-password" maxLength={128} value={f.password} onChange={set("password")} /></Field>
+              <Field label="New password" hint="At least 8 characters, with a letter and a number." error={err.fields?.password}><input className="field" type="password" autoComplete="new-password" maxLength={128} value={f.password} onChange={set("password")} /></Field>
             </>
           )}
           {err.msg && <p role="alert" className="text-sm text-flare">{err.msg}</p>}

@@ -101,7 +101,7 @@ function Account() {
     if (mode === "register" && !isName(f.name)) e.name = "Enter your name.";
     if (!isEmail(f.email.trim())) e.email = "Enter a valid email.";
     if (mode === "register" && f.phone && !NG_PHONE.test(normalizePhone(f.phone))) e.phone = "Enter a Nigerian number or leave it empty.";
-    if (mode === "register" ? f.password.length < 8 || f.password.length > 128 : !f.password) e.password = mode === "register" ? "Use 8 to 128 characters." : "Enter your password.";
+    if (mode === "register" ? f.password.length < 8 || f.password.length > 128 || !/[A-Za-z]/.test(f.password) || !/\d/.test(f.password) : !f.password) e.password = mode === "register" ? "Use 8+ characters with a letter and a number." : "Enter your password.";
     setErr({ msg: Object.keys(e).length ? "Check the highlighted fields." : "", fields: e });
     return !Object.keys(e).length;
   }
@@ -131,7 +131,7 @@ function Account() {
         {mode === "register" && <Field label="Full name" error={err.fields?.name}><input className="field" autoComplete="name" maxLength={80} value={f.name} onChange={set("name")} /></Field>}
         <Field label="Email" error={err.fields?.email}><input className="field" type="email" inputMode="email" autoComplete="email" maxLength={120} value={f.email} onChange={set("email")} /></Field>
         {mode === "register" && <Field label="Phone (optional)" error={err.fields?.phone}><input className="field" type="tel" inputMode="tel" autoComplete="tel" value={f.phone} onChange={set("phone")} /></Field>}
-        <Field label="Password" error={err.fields?.password} hint={mode === "register" ? "At least 8 characters." : undefined}><input className="field" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} maxLength={128} value={f.password} onChange={set("password")} /></Field>
+        <Field label="Password" error={err.fields?.password} hint={mode === "register" ? "At least 8 characters, with a letter and a number." : undefined}><input className="field" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} maxLength={128} value={f.password} onChange={set("password")} /></Field>
         {err.msg && <p role="alert" className="text-sm text-flare">{err.msg}</p>}
         <button className="btn btn-ink w-full" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
         {mode === "register" && <p className="text-center text-xs text-mute">By creating an account you confirm you are 18 or older and agree to our <Link className="underline" href="/legal/terms">Terms</Link> and <Link className="underline" href="/legal/privacy">Privacy Policy</Link>.</p>}

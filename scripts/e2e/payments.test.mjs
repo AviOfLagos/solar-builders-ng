@@ -22,7 +22,7 @@ const o = await api("/payments");
 ok(o.naira === true && o.intl === false, "naira on, intl off", o);
 
 console.log("register");
-const reg = await api("/auth/register", { name: "Ada Obi", email, phone: "08031234567", password: "password123" });
+const reg = await api("/auth/register", { name: "Ada Obi", email, phone: "08031234567", password: "Tq7-vK2mZx9-sun" });
 ok(reg.status === 200 && cookie, "registered", reg);
 
 console.log("checkout: new card, save it");

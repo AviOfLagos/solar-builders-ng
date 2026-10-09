@@ -1,3 +1,4 @@
+import { passwordProblem } from "./password";
 import "server-only";
 import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { db } from "./db";
@@ -75,7 +76,7 @@ export async function confirmReset(b: Record<string, unknown>) {
   const email = str(b.email, 120).toLowerCase();
   const code = str(b.code, 12).replace(/\D/g, "");
   const password = typeof b.password === "string" ? b.password : "";
-  if (password.length < 8 || password.length > 128) throw new HttpError(400, "Use 8 to 128 characters.", { fields: { password: "Use 8 to 128 characters." } });
+  { const pw = await passwordProblem(password, email); if (pw) throw new HttpError(400, pw, { fields: { password: pw } }); }
   const sql = await db();
   const [u] = await sql`select u.id, u.email, u.name, r.code_hash, r.attempts, r.expires_at > now() as live from users u join password_resets r on r.user_id = u.id where u.email = ${email} and u.deleted_at is null`;
   const wrong = () => new HttpError(400, "That code isn't right or has expired. Ask for a new one.", { fields: { code: "Check the code." } });

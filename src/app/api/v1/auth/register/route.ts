@@ -1,3 +1,4 @@
+import { passwordProblem } from "@/lib/server/password";
 import { db, id } from "@/lib/server/db";
 import { body, fail, ok, route, str, limitIp } from "@/lib/server/api";
 import { createSession, hashPassword } from "@/lib/server/session";
@@ -14,7 +15,7 @@ export const POST = route(async (req: Request) => {
   const fields: Record<string, string> = {};
   if (!isName(name)) fields.name = "Enter your name.";
   if (!isEmail(email)) fields.email = "Enter a valid email.";
-  if (password.length < 8 || password.length > 128) fields.password = "Use 8 to 128 characters.";
+  { const pw = await passwordProblem(password, email); if (pw) fields.password = pw; }
   if (phone && !NG_PHONE.test(phone)) fields.phone = "Enter a Nigerian mobile number or leave it empty.";
   if (Object.keys(fields).length) return fail("Check the highlighted fields.", 400, { fields });
   const sql = await db();
