@@ -134,6 +134,7 @@ function Account() {
         <Field label="Password" error={err.fields?.password} hint={mode === "register" ? "At least 8 characters." : undefined}><input className="field" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} maxLength={128} value={f.password} onChange={set("password")} /></Field>
         {err.msg && <p role="alert" className="text-sm text-flare">{err.msg}</p>}
         <button className="btn btn-ink w-full" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
+        {mode === "register" && <p className="text-center text-xs text-mute">By creating an account you confirm you are 18 or older and agree to our <Link className="underline" href="/legal/terms">Terms</Link> and <Link className="underline" href="/legal/privacy">Privacy Policy</Link>.</p>}
       </form>
       <p className="mt-4 text-center text-sm">
         {mode === "login" ? "New here? " : "Already have an account? "}

@@ -13,6 +13,7 @@ export const LEGAL: LegalDoc[] = [
     updated: "2026-10-03",
     sections: [
       { h: "Who we are", p: [`${STORE.name} sells solar products from the brands listed on this site and delivers them within Lagos State, Nigeria. You can reach us on ${contact}.`] },
+      { h: "Who can use it", p: ["You must be 18 or older to create an account or place an order. If you are under 18, ask a parent or guardian to do it for you. If we learn an account belongs to someone under 18, we delete it."] },
       { h: "Prices", p: ["Prices are in naira and include our margin on the brand's official price. The price you see at checkout is the price you pay; we never charge more than the total shown before you tap Pay.", "Solar Friday shows a discount against a higher reference price. What you pay on a Friday is the same as our normal price."] },
       { h: "Payment", p: ["Naira payments (card, bank transfer, USSD) are processed by Paystack. Cards from outside Nigeria are processed by Stripe. We never see or store your full card number: saved cards are kept as a token from Paystack or Stripe, and you can remove them at any time in your account.", `Orders above ${naira(CART.maxTotal)} are arranged on WhatsApp.`] },
       { h: "Your order", p: ["After payment your order is pending until we call to confirm stock and delivery. If we can't fulfil an order, we refund it in full to the card or gift card it came from."] },
