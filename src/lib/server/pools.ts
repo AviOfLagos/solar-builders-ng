@@ -127,7 +127,7 @@ export async function poolPage(pid: string, viewer: Session | null) {
     goal: p.goal, raised: p.raised, status: p.status, createdAt: p.created_at, deadline: p.deadline, extended: p.extended,
     choiceEnds: p.ended_at ? new Date(new Date(p.ended_at).getTime() + POOL.choiceDays * 864e5) : null,
     items: pieces, shares: shares.map((s) => ({ id: s.id, name: s.name, amount: s.amount, paid: s.status === "paid" })),
-    supporters: paid.map((c) => ({ name: c.anonymous || !c.name ? "Anonymous" : c.name, message: c.message, amount: c.amount, at: c.created_at, piece: c.piece ? getProductById(c.piece)?.name ?? null : null })),
+    supporters: paid.map((c) => ({ name: c.anonymous || !c.name ? "Someone kind" : c.name, message: c.message, amount: c.amount, at: c.created_at, piece: c.piece ? getProductById(c.piece)?.name ?? null : null })),
     leaders: leaderboard(paid),
     order: order ? { status: order.status } : null,
     isOwner,

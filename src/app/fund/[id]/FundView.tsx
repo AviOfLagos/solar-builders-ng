@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /** Two tabs on a phone (About, Supporters), side by side on a wide screen. Refreshes the numbers while the page is open. */
@@ -11,9 +11,18 @@ export function FundView({ about, supporters, count, live }: { about: React.Reac
     const t = setInterval(() => { if (document.visibilityState === "visible") router.refresh(); }, 20000);
     return () => clearInterval(t);
   }, [live, router]);
+  // Swipe left/right on a phone to switch tabs (ignored for mostly-vertical drags).
+  const start = useRef<{ x: number; y: number } | null>(null);
+  const onEnd = (e: React.TouchEvent) => {
+    const s0 = start.current; start.current = null;
+    if (!s0) return;
+    const dx = e.changedTouches[0].clientX - s0.x, dy = e.changedTouches[0].clientY - s0.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    setTab(dx < 0 ? "supporters" : "about");
+  };
   const cls = (on: boolean) => `flex-1 rounded-xl py-2.5 text-sm font-semibold ${on ? "bg-night text-white" : "text-ink-2"}`;
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" onTouchStart={(e) => { start.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }} onTouchEnd={onEnd}>
       <div className="mb-6 flex gap-1 rounded-2xl bg-haze p-1 lg:hidden" role="tablist">
         <button role="tab" aria-selected={tab === "about"} className={cls(tab === "about")} onClick={() => setTab("about")}>About</button>
         <button role="tab" aria-selected={tab === "supporters"} className={cls(tab === "supporters")} onClick={() => setTab("supporters")}>Supporters{count ? ` (${count})` : ""}</button>
