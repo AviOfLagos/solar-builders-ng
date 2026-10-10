@@ -150,6 +150,7 @@ alter table pools add column if not exists kind text not null default 'public';
 alter table pools add column if not exists deadline timestamptz;
 alter table pools add column if not exists extended boolean not null default false;
 alter table pools add column if not exists ended_at timestamptz;
+alter table pools add column if not exists ended_notified boolean not null default false;
 update pools set deadline = created_at + interval '30 days' where deadline is null;
 alter table contributions add column if not exists refunded int not null default 0;
 alter table contributions add column if not exists piece text;

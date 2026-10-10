@@ -50,7 +50,8 @@ All webhooks are signed (HMAC header `x-sb-signature`) with a shared secret set 
 
 Built:
 - Signed webhook emitter (`src/lib/server/webhooks.ts`). Set `WEBHOOK_URL` (the n8n webhook) and `WEBHOOK_SECRET` in Vercel. Events sent: `lead.created`, `brand.requested`, `order.paid` (carries `installer` and `pool_id`, so it also covers "install requested" and "pool funded"), `finance.requested`, `pool.created`.
-- Not sent yet: `order.pending_transfer` (needs a hook in the Paystack pending state) and `pool.ended` (pools end lazily when read; a daily cron could emit it).
+- `pool.ended` is sent once per pool by the daily cron.
+- Not sent: `order.pending_transfer`. The transfer choice happens on Paystack's page in the browser, so the server never sees it. Use `order.paid` absence plus a timer instead.
 - Lead status: new, contacted, engaged, ready_to_buy, paid, lost. Plus `needs_human` for "talk to a person"; the morning summary lists those first.
 - Write-back, signed with `WEBHOOK_SECRET` (header `x-sb-signature` = hex HMAC-SHA256 of the raw body):
   - `PATCH /api/v1/team/leads/{id}` body `{ "status": "engaged", "note": "...", "needs_human": true, "stop": true }` (all optional).

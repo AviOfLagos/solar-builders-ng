@@ -367,6 +367,13 @@ export async function sweepPools() {
   for (const p of soon) await pushTo([p.user_id], { title: "3 days left", body: `Share ${p.title} once more to reach the goal.`, data: { kind: "pool", id: p.id } });
   const ended = await sql`update pools set status = 'ended', ended_at = now() where status = 'open' and deadline < now() returning id, user_id, title`;
   for (const p of ended) await pushTo([p.user_id], { title: "Deadline reached", body: `Choose what happens to ${p.title}: extend, a smaller kit, or refund.`, data: { kind: "pool", id: p.id } });
+  // Tell the automation (once) about every pool that has ended, including ones flipped lazily on read.
+  const fresh = await sql`select id, title, goal, raised, delivery from pools where status = 'ended' and not ended_notified limit 50`;
+  for (const p of fresh) {
+    const d = (p.delivery || {}) as { name?: string; phone?: string };
+    await emit("pool.ended", { id: p.id, title: p.title, goal: p.goal, raised: p.raised, recipient: { name: d.name || "", phone: d.phone || "" }, url: `/fund/${p.id}` });
+    await sql`update pools set ended_notified = true where id = ${p.id}`;
+  }
   const due = await sql`select id from pools where status = 'ended' and ended_at < now() - make_interval(days => ${POOL.choiceDays}) limit 50`;
   for (const p of due) await cancelPool(p.id, "no choice made after the deadline").catch((e) => console.error("[sweepPools]", p.id, e));
   // Chip-ins started but never paid.
