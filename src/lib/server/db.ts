@@ -261,6 +261,18 @@ create table if not exists price_rules (
   updated_by text not null default '',
   primary key (scope, key)
 );
+-- v7b: who changed which price rule, and when
+create table if not exists price_rule_history (
+  id bigserial primary key,
+  scope text not null,
+  key text not null default '',
+  old_markup double precision,
+  old_fixed int,
+  new_markup double precision,
+  new_fixed int,
+  changed_by text not null default '',
+  changed_at timestamptz not null default now()
+);
 -- v7: fulfilment. suppliers, purchase orders, installers, jobs, commission payouts
 create table if not exists suppliers (
   id text primary key,

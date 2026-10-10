@@ -7,7 +7,7 @@ import { Panel } from "../ui";
 
 type Rules = { default?: number; floor?: number; brand: Record<string, number>; category: Record<string, number>; productMarkup: Record<string, number>; productFixed: Record<string, number> };
 type Row = { id: string; name: string; brand: string; category: string; cost: number; price: number; live: number; markup: number; floored: boolean; fixed: boolean };
-type Data = { base: { markup: number; floor: number; roundTo: number }; rules: Rules; brands: { slug: string; name: string }[]; categories: { slug: string; name: string }[]; products: Row[]; pending: number; canPublish: boolean };
+type Data = { base: { markup: number; floor: number; roundTo: number }; rules: Rules; brands: { slug: string; name: string }[]; categories: { slug: string; name: string }[]; products: Row[]; history: { scope: string; key: string; from: string; to: string; by: string; at: string }[]; pending: number; canPublish: boolean };
 
 const pct = (n: number) => `${+(n * 100).toFixed(2)}`;
 
@@ -80,6 +80,12 @@ export default function Pricing() {
           <ul className="divide-y divide-line">{d.categories.map((c) => <li key={c.slug} className="flex items-center justify-between py-2 text-sm"><span className="font-medium">{c.name}</span><Pct label={`${c.name} markup`} value={r.category[c.slug]} placeholder={pct(r.default ?? d.base.markup)} onSave={(v) => save("category", c.slug, v)} /></li>)}</ul>
         </Panel>
       </div>
+
+      <Panel title="Recent changes" sub="Who changed what, newest first">
+        {d.history.length === 0 ? <p className="text-sm text-mute">No changes yet.</p> : (
+          <ul className="divide-y divide-line text-sm">{d.history.map((h, i) => <li key={i} className="flex flex-wrap justify-between gap-2 py-2"><span><b className="capitalize">{h.scope}</b>{h.key ? ` · ${h.key}` : ""}: {h.from} → {h.to}</span><span className="text-mute">{h.by} · {new Date(h.at).toLocaleString("en-NG")}</span></li>)}</ul>
+        )}
+      </Panel>
 
       <Panel title="Products" sub="Cost is private to the team." action={<label className="flex items-center gap-2 rounded-xl bg-haze px-3"><Icon name="search" size={16} className="text-mute" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a product" aria-label="Find a product" className="w-44 bg-transparent py-2 text-sm outline-none" /></label>}>
         <div className="-mx-5 overflow-x-auto">

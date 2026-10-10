@@ -30,6 +30,8 @@ async function loadSaved(): Promise<Rules> {
 /** Saved rules, and what every product would sell for with them. Costs stay on the server. */
 export async function pricingOverview() {
   const rules = await loadSaved();
+  const sql = await db();
+  const history = await sql`select scope, key, old_markup, old_fixed, new_markup, new_fixed, changed_by, changed_at from price_rule_history order by id desc limit 15`;
   const livePrice = new Map(live.map((p) => [p.id, p.price]));
   const rows = costs.products.map((p) => {
     const x = priceFor(p, pricing, rules);
@@ -39,6 +41,7 @@ export async function pricingOverview() {
   return {
     base: { markup: pricing.markup, floor: pricing.floor, roundTo: pricing.roundTo },
     rules,
+    history: history.map((h) => ({ scope: h.scope as string, key: h.key as string, from: h.old_fixed != null ? `₦${h.old_fixed}` : h.old_markup != null ? `${+(h.old_markup * 100).toFixed(2)}%` : "default", to: h.new_fixed != null ? `₦${h.new_fixed}` : h.new_markup != null ? `${+(h.new_markup * 100).toFixed(2)}%` : "removed", by: h.changed_by as string, at: h.changed_at as Date })),
     brands: brands.map((b) => ({ slug: b.slug, name: b.name })),
     categories: CATEGORIES.map((c) => ({ slug: c.slug, name: c.name })),
     products: rows,
@@ -63,6 +66,9 @@ export async function setRule(input: { scope: unknown; key: unknown; markup: unk
   if ((scope === "default" || scope === "floor") && markup == null) throw new HttpError(400, "Enter a percentage.");
   if (scope === "floor" && markup! > 0.5) throw new HttpError(400, "The margin floor is a minimum, keep it under 50%.");
   const sql = await db();
+  const [prev] = await sql`select markup, fixed from price_rules where scope = ${scope} and key = ${key}`;
+  const nm = fixed != null ? null : markup;
+  if ((prev?.markup ?? null) !== nm || (prev?.fixed ?? null) !== fixed) await sql`insert into price_rule_history (scope, key, old_markup, old_fixed, new_markup, new_fixed, changed_by) values (${scope}, ${key}, ${prev?.markup ?? null}, ${prev?.fixed ?? null}, ${nm}, ${fixed}, ${by})`;
   if (markup == null && fixed == null) await sql`delete from price_rules where scope = ${scope} and key = ${key}`;
   else await sql`insert into price_rules (scope, key, markup, fixed, updated_by) values (${scope}, ${key}, ${fixed != null ? null : markup}, ${fixed}, ${by})
     on conflict (scope, key) do update set markup = excluded.markup, fixed = excluded.fixed, updated_at = now(), updated_by = excluded.updated_by`;
