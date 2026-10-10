@@ -2,6 +2,7 @@ import { products, brands, CATEGORIES } from "@/lib/catalog";
 import { SEGMENTS, ALL_TIERS } from "@/data/packages";
 import { PROMO, STORE, LAGOS_LGAS } from "@/config/store";
 import { abs } from "@/lib/seo";
+import { sizingRules } from "@/lib/server/quote";
 
 export const dynamic = "force-static";
 export const revalidate = 3600;
@@ -11,6 +12,7 @@ export function GET() {
   return Response.json({
     store: { name: STORE.name, whatsapp: STORE.whatsapp, phone: STORE.supportPhone, deliveryFee: STORE.deliveryFee, currency: "NGN", lgas: LAGOS_LGAS },
     promo: PROMO,
+    sizing: sizingRules(),
     categories: CATEGORIES,
     brands,
     products: products.map((p) => ({ ...p, image: abs(p.image) })),

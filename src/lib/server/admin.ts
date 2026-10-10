@@ -118,7 +118,7 @@ export const LEAD_STATUS = ["new", "contacted", "engaged", "ready_to_buy", "paid
 
 export async function adminLeads(status: string) {
   const sql = await db();
-  const rows = await sql`select id, name, phone, email, consent, source, items, total, note, status, contacted_at, created_at, updated_at, order_id
+  const rows = await sql`select id, name, phone, email, consent, source, items, total, note, status, contacted_at, created_at, updated_at, order_id, site, sizing
     from leads where (${status} = '' or status = ${status}) order by updated_at desc limit 300`;
   return rows;
 }

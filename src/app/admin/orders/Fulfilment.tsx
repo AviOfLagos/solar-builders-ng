@@ -7,7 +7,8 @@ import { ago } from "../ui";
 type Po = { id: string; status: string; supplier: string | null; cost: number; delivery_cost: number; ship_to: string; sent_at: string | null; expected_at: string | null; items: { name: string; qty: number; cost: number }[] };
 type Job = { status: string; installer: string | null; installer_phone: string; fee: number; job_date: string | null; photo_url: string };
 type Margin = { revenue: number; goods: number; delivery: number; install: number; commission: number; profit: number; pct: number; estimated: boolean };
-type Data = { pos: Po[]; job: Job | null; margin: Margin; installerRequested: boolean; suppliers: { id: string; name: string; brands: string[] }[]; installers: { id: string; name: string; rate: number }[]; wa?: string };
+type Data = { pos: Po[]; job: Job | null; margin: Margin; installerRequested: boolean; suppliers: { id: string; name: string; brands: string[] }[]; installers: { id: string; name: string; rate: number }[]; wa?: string;
+  engineers: { id: string; name: string; rate: number; match: "primary" | "secondary" | "other"; offeredAt: string | null; hasPhone: boolean }[] };
 
 /** Everything we do after payment: buy the goods, book the installer, see what we kept. */
 export function Fulfilment({ orderId }: { orderId: string }) {
@@ -22,7 +23,7 @@ export function Fulfilment({ orderId }: { orderId: string }) {
   useEffect(load, [load]);
   const act = async (body: Record<string, unknown>) => {
     setBusy(true); setErr("");
-    try { const r = await api<Partial<Data>>("/admin/fulfilment", { body: { orderId, ...body } }); setD((x) => (x ? { ...x, ...r } : x)); if (r.wa && body.action === "po.send") window.open(r.wa, "_blank", "noopener"); }
+    try { const r = await api<Partial<Data>>("/admin/fulfilment", { body: { orderId, ...body } }); setD((x) => (x ? { ...x, ...r } : x)); if (r.wa && (body.action === "po.send" || body.action === "job.offer")) window.open(r.wa, "_blank", "noopener"); }
     catch (e) { setErr((e as Error).message); }
     setBusy(false);
   };
@@ -76,13 +77,24 @@ export function Fulfilment({ orderId }: { orderId: string }) {
               {d.job.installer_phone && <a className="btn btn-ghost !py-1.5 text-xs" target="_blank" rel="noopener" href={`https://wa.me/${d.job.installer_phone.replace(/\D/g, "").replace(/^0/, "234")}`}>WhatsApp</a>}
             </div>
           </>
-        ) : d.installers.length ? (
+        ) : d.installers.length ? (<>
+          {d.engineers.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              <p className="text-xs text-mute">Offer it on WhatsApp. First to reply YES gets it, then assign them below.</p>
+              {d.engineers.slice(0, 6).map((e) => (
+                <div key={e.id} className="flex items-center justify-between gap-2 rounded-xl bg-haze px-3 py-2">
+                  <span className="min-w-0 text-xs"><span className="font-semibold">{e.name}</span> · {e.match === "primary" ? "works this area" : e.match === "secondary" ? "covers this area" : "other area"}{e.rate ? ` · ${naira(e.rate)}` : ""}{e.offeredAt ? ` · offered ${ago(e.offeredAt)}` : ""}</span>
+                  <button disabled={busy || !e.hasPhone} className={`btn ${e.offeredAt ? "btn-ghost" : "btn-ink"} !py-1 text-xs`} onClick={() => act({ action: "job.offer", installerId: e.id })}>{e.offeredAt ? "Again" : "Offer"}</button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <select className="field !w-auto flex-1 !py-2 text-sm" value={inst} onChange={(e) => setInst(e.target.value)} aria-label="Installer"><option value="">Assign…</option>{d.installers.map((i) => <option key={i.id} value={i.id}>{i.name}{i.rate ? ` · ${naira(i.rate)}` : ""}</option>)}</select>
             <input type="date" className="field !w-auto !py-2 text-sm" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Job date" />
             <button disabled={busy || !inst} className="btn btn-ink !py-2 text-sm" onClick={() => act({ action: "job.assign", installerId: inst, jobDate: date })}>Assign</button>
           </div>
-        ) : <p className="text-xs text-mute">Add an installer under Installers first.</p>}
+        </>) : <p className="text-xs text-mute">Add an installer under Installers first.</p>}
       </div>
 
       <dl className="space-y-1 rounded-2xl bg-haze p-3">

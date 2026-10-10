@@ -1,3 +1,4 @@
+import { SIZING } from "@/lib/sizing";
 import { getProduct, type Product } from "@/lib/catalog";
 
 /**
@@ -144,7 +145,7 @@ export const tiersFor = (s: Segment) => ALL_TIERS.filter((t) => t.segment.slug =
 
 /** Cheapest kits that cover the load; kits for the chosen buyer type come first. */
 export function recommend(kw: number, kwh: number, n = 3, segment?: string) {
-  return ALL_TIERS.filter((t) => t.kw >= kw && t.kwh >= kwh * 0.85)
+  return ALL_TIERS.filter((t) => t.kw >= kw && t.kwh >= kwh * SIZING.batteryMatch)
     .sort((a, b) => Number(b.segment.slug === segment) - Number(a.segment.slug === segment) || a.price - b.price)
     .filter((t, i, arr) => arr.findIndex((x) => x.items.map((y) => y.slug).join() === t.items.map((y) => y.slug).join()) === i)
     .slice(0, n);

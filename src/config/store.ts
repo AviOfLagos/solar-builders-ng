@@ -92,6 +92,25 @@ export const LAGOS_LGAS = [
   "Lagos Island", "Lagos Mainland", "Mushin", "Ojo", "Oshodi-Isolo", "Shomolu", "Surulere",
 ] as const;
 
+/** Where engineers work. Each LGA belongs to one region; engineers pick a primary and a secondary. */
+export const REGIONS = [
+  { key: "island", label: "Island & Lekki", lgas: ["Lagos Island", "Eti-Osa", "Ibeju-Lekki", "Epe"] },
+  { key: "central", label: "Yaba, Surulere & Gbagada", lgas: ["Lagos Mainland", "Surulere", "Mushin", "Apapa", "Ajeromi-Ifelodun", "Shomolu"] },
+  { key: "ikeja", label: "Ikeja, Ketu & Oshodi", lgas: ["Ikeja", "Agege", "Ifako-Ijaiye", "Oshodi-Isolo", "Kosofe"] },
+  { key: "west", label: "Alimosho, Festac & Ojo", lgas: ["Alimosho", "Amuwo-Odofin", "Ojo", "Badagry"] },
+  { key: "ikorodu", label: "Ikorodu", lgas: ["Ikorodu"] },
+] as const;
+export const regionOf = (lga: string) => REGIONS.find((r) => (r.lgas as readonly string[]).includes(lga))?.key ?? "";
+
+/** What engineers always ask before pricing an install. The quote form collects these up front. */
+export const SITE_QUESTIONS = {
+  building: [["bungalow", "Bungalow"], ["flat", "Flat in a block"], ["upstairs", "Storey building / duplex"], ["shop", "Shop"], ["office", "Office"]],
+  use: [["home", "Home"], ["business", "Business"]],
+  roof: [["concrete", "Concrete / flat"], ["aluminium", "Aluminium / longspan"], ["zinc", "Zinc"], ["unknown", "Not sure"]],
+  changeover: [["yes", "Yes, I have a generator changeover"], ["no", "No"], ["unsure", "Not sure"]],
+  earthing: [["yes", "Yes"], ["no", "No"], ["unsure", "Not sure"]],
+} as const;
+
 /**
  * Timed promo. The discount is presentational: the struck-through "was" price is
  * derived from the normal selling price so that after the discount the customer

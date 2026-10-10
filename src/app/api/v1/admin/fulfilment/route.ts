@@ -1,6 +1,6 @@
 import { body, fail, ok, route, requireTeam, str } from "@/lib/server/api";
 import { db } from "@/lib/server/db";
-import { assignJob, createPO, fulfilmentFlags, listInstallers, listSuppliers, orderFulfilment, poMessage, sendPO, updateJob, updatePO } from "@/lib/server/fulfilment";
+import { offerJob, assignJob, createPO, fulfilmentFlags, listInstallers, listSuppliers, orderFulfilment, poMessage, sendPO, updateJob, updatePO } from "@/lib/server/fulfilment";
 
 /** GET ?order=ID -> that order's purchase orders, installer job and margin (plus who we can pick). GET with no order -> late flags. */
 export const GET = route(async (req: Request) => {
@@ -29,6 +29,7 @@ export const POST = route(async (req: Request) => {
     case "po.update": await updatePO(poId, b); break;
     case "job.assign": await assignJob(orderId, str(b.installerId, 40), b); break;
     case "job.update": await updateJob(orderId, b); break;
+    case "job.offer": { const m = await offerJob(orderId, str(b.installerId, 40), by); return ok({ wa: m.wa, ...(await orderFulfilment(orderId)) }); }
     default: return fail("Unknown action.");
   }
   let o = orderId;

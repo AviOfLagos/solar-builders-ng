@@ -376,6 +376,19 @@ create table if not exists email_tokens (
   user_id text not null references users(id) on delete cascade,
   expires_at timestamptz not null
 );
+-- v11: quote site details, engineer regions, job offers sent on WhatsApp
+alter table leads add column if not exists site jsonb not null default '{}';
+alter table leads add column if not exists sizing jsonb not null default '{}';
+alter table installers add column if not exists primary_region text not null default '';
+alter table installers add column if not exists secondary_region text not null default '';
+create table if not exists job_offers (
+  id bigserial primary key,
+  order_id text not null references orders(id) on delete cascade,
+  installer_id text not null references installers(id) on delete cascade,
+  sent_by text not null default '',
+  sent_at timestamptz not null default now()
+);
+create index if not exists job_offers_order_idx on job_offers(order_id);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

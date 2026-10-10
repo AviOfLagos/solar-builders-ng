@@ -4,6 +4,7 @@ import { HttpError } from "./api";
 import { esc, sendMail, shell } from "./mail";
 import { getProductById } from "@/lib/catalog";
 import costs from "../../../data/catalog-costs.json";
+import { REGIONS, regionOf } from "@/config/store";
 
 const COST = new Map(costs.products.map((p) => [p.id, p.costNgn]));
 const naira = (n: number) => "₦" + Math.round(n).toLocaleString("en-NG");
@@ -52,14 +53,16 @@ export async function saveInstaller(b: Record<string, unknown>) {
   const sql = await db();
   const name = clean(b.name, 80);
   if (name.length < 2) throw new HttpError(400, "Add the installer's name.");
-  const f = { name, phone: clean(b.phone, 30), email: clean(b.email, 120), areas: clean(b.areas, 200), rate: money(b.rate), notes: clean(b.notes, 500), active: b.active !== false };
+  const region = (v: unknown) => (REGIONS.some((r) => r.key === v) ? String(v) : "");
+  const f = { name, phone: clean(b.phone, 30), email: clean(b.email, 120), areas: clean(b.areas, 200), rate: money(b.rate), notes: clean(b.notes, 500), active: b.active !== false, primary_region: region(b.primaryRegion), secondary_region: region(b.secondaryRegion) };
+  if (!f.phone) throw new HttpError(400, "Add the installer's WhatsApp number: that's how jobs reach them.");
   if (b.id) {
-    const [r] = await sql`update installers set name = ${f.name}, phone = ${f.phone}, email = ${f.email}, areas = ${f.areas}, rate = ${f.rate}, notes = ${f.notes}, active = ${f.active} where id = ${String(b.id)} returning id`;
+    const [r] = await sql`update installers set ${sql(f)} where id = ${String(b.id)} returning id`;
     if (!r) throw new HttpError(404, "Installer not found.");
     return r.id as string;
   }
   const iid = id();
-  await sql`insert into installers (id, name, phone, email, areas, rate, notes, active) values (${iid}, ${f.name}, ${f.phone}, ${f.email}, ${f.areas}, ${f.rate}, ${f.notes}, ${f.active})`;
+  await sql`insert into installers ${sql({ id: iid, ...f })}`;
   return iid;
 }
 
@@ -183,6 +186,53 @@ export async function updateJob(orderId: string, b: Record<string, unknown>) {
   if (!r) throw new HttpError(404, "No installer is assigned to this order yet.");
 }
 
+// ---- offering a job to engineers on WhatsApp ----
+
+/** 0803… / +234… / 234… -> 234803… for wa.me links. */
+export const waNumber = (phone: string) => { const d = phone.replace(/\D/g, ""); return d.startsWith("0") ? "234" + d.slice(1) : d; };
+
+/** The job as an engineer sees it first: what, where (area only), the fee. No customer name, phone or address until they take it. */
+async function jobBrief(orderId: string, fee: number) {
+  const sql = await db();
+  const o = await getOrder(orderId);
+  const [lead] = await sql`select site from leads where order_id = ${orderId} limit 1`;
+  const site = (lead?.site ?? {}) as Record<string, string | number>;
+  const items = (o.items as Item[]).map((i) => `• ${i.qty}× ${getProductById(i.id)?.name ?? i.id}`).join("\n");
+  const place = [site.building, site.roof && `${site.roof} roof`, site.panelRunM && `about ${site.panelRunM}m roof to inverter`, site.changeover === "yes" && "has a generator changeover", site.notes].filter(Boolean).join(", ");
+  return [
+    `New install job ${orderId} from Solar Builders NG`,
+    `Area: ${o.delivery?.lga ?? "Lagos"}`,
+    place ? `Site: ${place}` : "",
+    `Equipment (we deliver it):\n${items}`,
+    fee ? `Fee: ${naira(fee)}` : "",
+    `Reply YES ${orderId} to take it. First to reply gets it; we then send the customer's details.`,
+  ].filter(Boolean).join("\n\n");
+}
+
+/** Active engineers for this order's area: primary region first, then secondary, then everyone else. */
+async function engineersFor(orderId: string) {
+  const sql = await db();
+  const o = await getOrder(orderId);
+  const region = regionOf(String(o.delivery?.lga ?? ""));
+  const rows = await sql`select i.id, i.name, i.phone, i.rate, i.primary_region, i.secondary_region,
+      (select max(sent_at) from job_offers f where f.order_id = ${orderId} and f.installer_id = i.id) as offered_at
+    from installers i where i.active order by i.name`;
+  const rank = (r: Record<string, unknown>) => (region && r.primary_region === region ? 0 : region && r.secondary_region === region ? 1 : 2);
+  return rows.map((r) => ({ id: r.id as string, name: r.name as string, rate: Number(r.rate), match: (["primary", "secondary", "other"] as const)[rank(r)], offeredAt: r.offered_at as string | null, hasPhone: !!r.phone }))
+    .sort((a, b) => ["primary", "secondary", "other"].indexOf(a.match) - ["primary", "secondary", "other"].indexOf(b.match));
+}
+
+/** Logs the offer and returns the WhatsApp link with the job brief filled in. */
+export async function offerJob(orderId: string, installerId: string, by: string) {
+  const sql = await db();
+  const [i] = await sql`select id, phone, rate from installers where id = ${installerId} and active`;
+  if (!i) throw new HttpError(404, "Pick an active installer.");
+  if (!i.phone) throw new HttpError(400, "This installer has no WhatsApp number.");
+  const text = await jobBrief(orderId, Number(i.rate));
+  await sql`insert into job_offers (order_id, installer_id, sent_by) values (${orderId}, ${installerId}, ${by})`;
+  return { wa: `https://wa.me/${waNumber(String(i.phone))}?text=${encodeURIComponent(text)}` };
+}
+
 // ---- one order's fulfilment, with its margin ----
 
 export async function orderFulfilment(orderId: string) {
@@ -191,7 +241,7 @@ export async function orderFulfilment(orderId: string) {
   const [full] = await sql`select subtotal, total_paid, gift_card_used, commission from orders where id = ${orderId}`;
   const pos = await sql`select p.*, s.name as supplier from purchase_orders p left join suppliers s on s.id = p.supplier_id where p.order_id = ${orderId} order by p.created_at`;
   const [job] = await sql`select j.*, i.name as installer, i.phone as installer_phone from order_jobs j left join installers i on i.id = j.installer_id where j.order_id = ${orderId}`;
-  return { pos, job: job ?? null, margin: margin(o.items as Item[], full, pos, job), installerRequested: !!o.installer };
+  return { pos, job: job ?? null, margin: margin(o.items as Item[], full, pos, job), installerRequested: !!o.installer, engineers: job ? [] : await engineersFor(orderId) };
 }
 
 /**

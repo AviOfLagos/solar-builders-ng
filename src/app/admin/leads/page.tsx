@@ -4,7 +4,7 @@ import { api } from "@/lib/client";
 import { naira, ngLocal } from "@/lib/format";
 import { Pill, ago } from "../ui";
 
-type Lead = { id: string; name: string; phone: string; email: string; consent: boolean; source: string; items: unknown[]; total: number; note: string; status: string; order_id: string | null; updated_at: string };
+type Lead = { id: string; name: string; phone: string; email: string; consent: boolean; source: string; items: unknown[]; total: number; note: string; status: string; order_id: string | null; updated_at: string; site?: Record<string, string | number>; sizing?: { kw?: number; kwh?: number } };
 const STATUSES = [["new", "New"], ["contacted", "Contacted"], ["engaged", "Talking"], ["ready_to_buy", "Ready to buy"], ["paid", "Paid"], ["lost", "Lost"]] as const;
 const label = (s: string) => STATUSES.find(([k]) => k === s)?.[1] ?? s;
 
@@ -34,7 +34,7 @@ export default function Leads() {
             {!leads ? <tr><td colSpan={6} className="p-8 text-center text-mute">Loading…</td></tr> : !leads.length ? <tr><td colSpan={6} className="p-8 text-center text-mute">No leads here.</td></tr> : leads.map((l) => (
               <tr key={l.id} className="border-b border-line/60 last:border-0">
                 <td className="px-5 py-3"><p className="font-semibold">{l.name || "No name"}</p><p className="text-xs text-mute">{l.phone ? ngLocal(l.phone) : l.email}</p>{l.note && <p className="mt-1 max-w-xs text-xs text-ink-2">{l.note}</p>}</td>
-                <td className="py-3 capitalize">{l.source}</td>
+                <td className="py-3"><span className="capitalize">{l.source}</span>{l.site && Object.keys(l.site).length > 0 && <p className="max-w-[220px] text-xs text-mute">{[l.site.building, l.site.lga, l.site.roof && `${l.site.roof} roof`, l.site.panelRunM && `${l.site.panelRunM}m run`, l.site.changeover === "yes" && "has changeover", l.site.notes].filter(Boolean).join(" · ")}{l.sizing?.kw ? ` · needs ${l.sizing.kw} kW / ${l.sizing.kwh} kWh` : ""}</p>}</td>
                 <td className="num py-3">{l.total ? naira(l.total) : "—"}<p className="text-xs text-mute">{l.items.length} items</p></td>
                 <td className="py-3 text-mute">{ago(l.updated_at)}</td>
                 <td className="py-3">

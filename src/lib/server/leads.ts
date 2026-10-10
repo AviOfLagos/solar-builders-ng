@@ -6,8 +6,22 @@ import { priceCart, storedItems } from "./rules";
 import type { Session } from "./session";
 import { notifyOwner } from "./mail";
 import { emit } from "./webhooks";
+import { LAGOS_LGAS, SITE_QUESTIONS } from "@/config/store";
 
-const SOURCES = ["cart", "checkout", "pool", "calculator", "finance", "gift", "package", "app", "brand"] as const;
+/** The site details engineers need, kept only when they match the options we offer. */
+export function cleanSite(v: unknown) {
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const pick = (k: keyof typeof SITE_QUESTIONS) => { const x = String(o[k] ?? ""); return SITE_QUESTIONS[k].some(([val]) => val === x) ? x : ""; };
+  const run = Math.round(Number(o.panelRunM));
+  const lga = String(o.lga ?? "");
+  const site = {
+    building: pick("building"), use: pick("use"), roof: pick("roof"), changeover: pick("changeover"), earthing: pick("earthing"),
+    panelRunM: run > 0 && run <= 300 ? run : 0, lga: (LAGOS_LGAS as readonly string[]).includes(lga) ? lga : "", notes: str(o.notes, 500),
+  };
+  return Object.fromEntries(Object.entries(site).filter(([, x]) => x !== "" && x !== 0));
+}
+
+const SOURCES = ["cart", "checkout", "pool", "calculator", "finance", "gift", "package", "app", "brand", "quote"] as const;
 
 /**
  * Saves who someone is and what's in their cart as soon as we have a way to reach them,
@@ -28,13 +42,21 @@ export async function saveLead(b: Record<string, unknown>, user: Session | null)
     name: isName(name) ? name : "", phone, email: validEmail, consent: bool(b.consent),
     source: oneOf(b.source, SOURCES, "cart"), items: storedItems(cart.lines), total: cart.total,
   };
+  const site = cleanSite(b.site);
+  const sz = (b.sizing && typeof b.sizing === "object" ? b.sizing : {}) as Record<string, unknown>;
+  const num = (x: unknown) => (Number.isFinite(Number(x)) ? Number(x) : 0);
+  const sizing = b.sizing ? { running: num(sz.running), kw: num(sz.kw), kwh: num(sz.kwh), hours: num(sz.hours), rulesVersion: num(sz.rulesVersion), from: str(sz.from, 60) } : {};
+  const hasSite = Object.keys(site).length > 0;
   const sql = await db();
   if (existing) {
     const [u] = await sql`update leads set
         name = coalesce(nullif(${v.name}, ''), name), phone = coalesce(nullif(${v.phone}, ''), phone), email = coalesce(nullif(${v.email}, ''), email),
         consent = consent or ${v.consent}, items = case when ${v.items.length} > 0 then ${sql.json(v.items)} else items end,
         total = case when ${v.items.length} > 0 then ${v.total} else total end,
-        user_id = coalesce(user_id, ${user?.uid ?? null}), updated_at = now()
+        user_id = coalesce(user_id, ${user?.uid ?? null}),
+        site = case when ${hasSite} then ${sql.json(site)} else site end,
+        sizing = case when ${hasSite} then ${sql.json(sizing)} else sizing end,
+        source = case when ${v.source} = 'quote' then 'quote' else source end, updated_at = now()
       where id = ${lid} and order_id is null
         and (user_id is null or user_id = ${user?.uid ?? null}) returning id`;
     if (u) return { id: lid };
@@ -50,14 +72,17 @@ export async function saveLead(b: Record<string, unknown>, user: Session | null)
       await sql`update leads set
           name = coalesce(nullif(${v.name}, ''), name), phone = coalesce(nullif(${v.phone}, ''), phone), email = coalesce(nullif(${v.email}, ''), email),
           consent = consent or ${v.consent}, items = case when ${v.items.length} > 0 then ${sql.json(v.items)} else items end,
-          total = case when ${v.items.length} > 0 then ${v.total} else total end, updated_at = now()
+          total = case when ${v.items.length} > 0 then ${v.total} else total end,
+          site = case when ${hasSite} then ${sql.json(site)} else site end,
+          sizing = case when ${hasSite} then ${sql.json(sizing)} else sizing end,
+          source = case when ${v.source} = 'quote' then 'quote' else source end, updated_at = now()
         where id = ${mine.id}`;
       return { id: mine.id as string };
     }
   }
   const nid = id();
-  await sql`insert into leads ${sql({ id: nid, user_id: user?.uid ?? null, ...v, items: sql.json(v.items) })}`;
-  if (v.phone && v.consent) await emit("lead.created", { id: nid, name: v.name, phone: v.phone, email: v.email, source: v.source, total: v.total, items: v.items });
+  await sql`insert into leads ${sql({ id: nid, user_id: user?.uid ?? null, ...v, items: sql.json(v.items), site: sql.json(site), sizing: sql.json(sizing) })}`;
+  if (v.phone && v.consent) await emit("lead.created", { id: nid, name: v.name, phone: v.phone, email: v.email, source: v.source, total: v.total, items: v.items, site, sizing });
   return { id: nid };
 }
 

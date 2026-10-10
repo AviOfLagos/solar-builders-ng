@@ -10,6 +10,7 @@ import { APPLIANCES, PRESETS, emptyLoad, encodeItems, fuelPerMonth, sizeLoad, ty
 import { naira } from "@/lib/format";
 import { useJourney } from "@/lib/journey";
 import { STORE } from "@/config/store";
+import { QuoteForm } from "@/components/QuoteForm";
 
 const SEG_ICON: Record<string, string> = {
   students: "sparkle", "remote-workers": "bolt", renters: "home", shops: "card", families: "people", duplex: "home", offices: "grid",
@@ -166,6 +167,7 @@ function Find() {
           ))}
         </>
       )}
+      <QuoteForm load={load} hours={finder.hours} segment={finder.segment ?? undefined} items={best.lines.map((l) => ({ id: l.p.id, qty: l.qty }))} />
       <button onClick={() => setStep(1)} className="w-full pt-2 text-center text-sm text-mute underline">Start over</button>
     </Flow>
   );
