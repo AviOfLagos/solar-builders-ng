@@ -351,7 +351,7 @@ function CheckoutForm({ saveCard, setSaveCard, gift, setGift, toPay, stripeReady
         {toPay === 0 ? <p className="rounded-2xl bg-mint-tint p-4 text-sm">Your gift card covers this order. No card needed.</p> : !opts ? (
           <p className="text-sm text-mute">Loading payment options…</p>
         ) : !opts.naira && !opts.intl ? (
-          <p className="rounded-2xl bg-lemon-tint p-4 text-sm">Online payments are being switched on. To order now, <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
+          <p className="rounded-2xl bg-lemon-tint p-4 text-sm">We're not officially live yet, so online payments are off for now. To order,  <a className="font-semibold underline" href={`https://wa.me/${STORE.whatsapp}`}>message us on WhatsApp</a>.</p>
         ) : (
           <div className="card space-y-3 p-5">
             <PayWith options={opts} value={method} onChange={setMethod} disabled={busy} />

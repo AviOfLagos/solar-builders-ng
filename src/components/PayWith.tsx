@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/client";
 
 export type Provider = "paystack" | "stripe";
-export type PayOptions = { naira: boolean; intl: boolean; minCharge: number; stripePublishableKey?: string | null };
+export type PayOptions = { open?: boolean; naira: boolean; intl: boolean; minCharge: number; stripePublishableKey?: string | null };
 
 let cached: Promise<PayOptions> | null = null;
 

@@ -2,6 +2,7 @@ import { body, fail, ok, requireUser, route, str, limitIp } from "@/lib/server/a
 import { customerFor, stripe, stripeConfigured } from "@/lib/server/stripe";
 import { pickProvider, startPaystack, fetchPayment } from "@/lib/server/pay";
 import { finalizePayment } from "@/lib/server/payments";
+import { requirePaymentsOpen } from "@/lib/server/switch";
 import { isPaystackRef } from "@/lib/server/paystack";
 
 /**
@@ -12,6 +13,7 @@ import { isPaystackRef } from "@/lib/server/paystack";
 export const POST = route(async (req: Request) => {
   const s = await requireUser();
   if (s instanceof Response) return s;
+  await requirePaymentsOpen();
   await limitIp(req, "cardsetup", 10, 3600);
   const b = await body<{ nickname: string; provider: string }>(req);
   const provider = pickProvider(b.provider);

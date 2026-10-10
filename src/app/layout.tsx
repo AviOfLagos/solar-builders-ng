@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PromoBar } from "@/components/PromoBar";
+import { LaunchNotice } from "@/components/LaunchNotice";
 import { CartDrawer, LeadSync } from "@/components/CartDrawer";
 import { STORE } from "@/config/store";
 import { JsonLd, orgJsonLd } from "@/lib/seo";
@@ -32,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en-NG" className="antialiased">
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-sun focus:p-3">Skip to content</a>
-        <FocusGate><PromoBar /></FocusGate>
+        <FocusGate><PromoBar /><LaunchNotice /></FocusGate>
         <Header />
         <main id="main" className="flex-1">{children}</main>
         <FocusGate><Footer /><Helper /></FocusGate>

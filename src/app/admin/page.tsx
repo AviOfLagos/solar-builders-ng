@@ -28,6 +28,24 @@ type Stats = {
 
 const label = (d: string, days: number) => new Date(d + "T12:00:00").toLocaleDateString("en-NG", days > 31 ? { month: "short", day: "numeric" } : { day: "numeric", month: "short" });
 
+function PaymentSwitch() {
+  const [st, setSt] = useState<{ open: boolean; forcedOff: boolean; paidOrders: number; paidTotal: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { api<typeof st>("/admin/payments").then(setSt).catch(() => {}); }, []);
+  if (!st) return null;
+  const flip = async () => {
+    if (!st.open && !confirm("Start taking real payments on the live site?")) return;
+    setBusy(true);
+    try { setSt(await api<NonNullable<typeof st>>("/admin/payments", { body: { open: !st.open } })); } finally { setBusy(false); }
+  };
+  return (
+    <Panel title="Online payments" sub={st.forcedOff ? "Forced off by PAYMENTS_ENABLED=false in Vercel." : st.open ? "ON: customers can pay now." : "OFF: the site shows a \"not live yet\" note and no one can pay."}
+      action={<button type="button" disabled={busy || st.forcedOff} onClick={flip} className={`rounded-full px-4 py-2 text-sm font-semibold ${st.open ? "bg-flare text-white" : "bg-ink text-white"} disabled:opacity-40`}>{st.open ? "Turn off" : "Turn on"}</button>}>
+      <p className="text-sm text-mute">{st.paidOrders} paid order{st.paidOrders === 1 ? "" : "s"} on record · {naira(st.paidTotal)}</p>
+    </Panel>
+  );
+}
+
 export default function Dashboard() {
   const [days, setDays] = useState(30);
   const [s, setS] = useState<Stats | null>(null);
@@ -50,6 +68,7 @@ export default function Dashboard() {
         </div>
         <Segmented value={days} onChange={setDays} options={[[7, "7 days"], [30, "30 days"], [90, "90 days"]]} />
       </div>
+      <PaymentSwitch />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi dark label="Sales" icon="card" value={k.revenue.value} prev={k.revenue.prev} show={naira(k.revenue.value)} />

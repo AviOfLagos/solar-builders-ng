@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { STORE } from "@/config/store";
 import { db, id } from "./db";
 import { HttpError } from "./api";
+import { paymentsOpen } from "./switch";
 import { stripe, stripeConfigured, listCards, refund as refundStripe } from "./stripe";
 import {
   paystackConfigured, isPaystackRef, verifyPaystack, refundPaystack, paystackMeta, initializePaystack, newPaystackRef,
@@ -16,11 +17,14 @@ export type Provider = "paystack" | "stripe";
 export const MIN_CHARGE_NGN = 1000;
 
 /** What the web and the app can offer right now. */
-export const payOptions = () => ({
-  naira: paystackConfigured(), intl: stripeConfigured(), minCharge: MIN_CHARGE_NGN,
+export const payOptions = async () => {
+  const open = await paymentsOpen();
+  return {
+  open, naira: open && paystackConfigured(), intl: open && stripeConfigured(), minCharge: MIN_CHARGE_NGN,
   /** Public key the app's Stripe PaymentSheet needs. Not a secret. */
-  stripePublishableKey: stripeConfigured() ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || null : null,
-});
+  stripePublishableKey: open && stripeConfigured() ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || null : null,
+  };
+};
 
 /** The provider asked for if it is switched on; otherwise naira first. */
 export function pickProvider(asked: unknown): Provider {

@@ -6,7 +6,7 @@ import { savedCards, payOptions } from "@/lib/server/pay";
 
 export const GET = route(async () => {
   const s = await currentUser();
-  if (!s) return ok({ user: null, cards: [], store: null, lastDelivery: null, team: false, pay: payOptions() });
+  if (!s) return ok({ user: null, cards: [], store: null, lastDelivery: null, team: false, pay: await payOptions() });
   const sql = await db();
   const [u] = await sql`select id, email, name, phone, google_sub, email_verified_at is not null as verified, password_hash is not null as has_password from users where id = ${s.uid}`;
   const [store] = await sql`select slug, name, kind, commission_bps from stores where user_id = ${s.uid}`;
@@ -14,7 +14,7 @@ export const GET = route(async () => {
   const d = last?.delivery;
   return ok({
     user: { id: u.id, email: u.email, name: u.name, phone: u.phone, google: !!u.google_sub, hasPassword: u.has_password, verified: u.verified },
-    cards: await savedCards(s.uid), store: store ?? null, team: await isTeam(s), pay: payOptions(),
+    cards: await savedCards(s.uid), store: store ?? null, team: await isTeam(s), pay: await payOptions(),
     lastDelivery: d ? { address: d.address, lga: d.lga, landmark: d.landmark, altPhone: d.altPhone } : null,
   });
 });
