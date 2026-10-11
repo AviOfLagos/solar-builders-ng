@@ -389,6 +389,19 @@ create table if not exists job_offers (
   sent_at timestamptz not null default now()
 );
 create index if not exists job_offers_order_idx on job_offers(order_id);
+-- v12: installer research answers from /engineers
+create table if not exists engineer_survey (
+  id text primary key,
+  name text not null,
+  phone text not null,
+  region text not null default '',
+  years text not null default '',
+  jobs_per_month text not null default '',
+  answers jsonb not null default '{}',
+  join_list boolean not null default false,
+  installer_id text references installers(id) on delete set null,
+  created_at timestamptz not null default now()
+);
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);
