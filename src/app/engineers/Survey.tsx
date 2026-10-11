@@ -196,8 +196,10 @@ export function Survey() {
         <label htmlFor={`q-${q.key}`} className="block font-semibold leading-snug"><span className="num text-mute">{numberOf(q.key)}.</span> {q.q}</label>
         {q.hint && <p className="text-sm text-mute">{q.hint}</p>}
         <textarea id={`q-${q.key}`} rows={3} className="field" value={answers[q.key] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.key]: e.target.value })} placeholder="Type here, or record" />
-        <button type="button" disabled={!!rec} onClick={() => startRec(q.key)} className="inline-flex items-center gap-2 rounded-full bg-haze px-3.5 py-2 text-sm font-semibold disabled:opacity-50">
-          <Icon name="mic" size={18} />{live ? "Recording…" : answers[q.key]?.trim() ? "Record more" : "Record this answer"}
+        <button type="button" disabled={!!rec} onClick={() => startRec(q.key)}
+          className="inline-flex items-center gap-2.5 rounded-2xl border border-ink/15 bg-paper py-2 pl-2 pr-4 text-sm font-semibold shadow-[0_2px_0_rgba(23,32,27,0.12)] transition hover:-translate-y-px hover:border-ink/40 hover:shadow-[0_4px_10px_rgba(23,32,27,0.12)] active:translate-y-0 active:shadow-none disabled:opacity-50 disabled:hover:translate-y-0">
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-flare text-white"><Icon name="mic" size={17} stroke={2.2} /></span>
+          {live ? "Recording…" : answers[q.key]?.trim() ? "Tap to record more" : "Tap to record your answer"}
         </button>
       </div>
     );
@@ -252,7 +254,14 @@ export function Survey() {
           ) : (
             <div className="flex flex-col gap-3 rounded-3xl bg-night p-5 text-white sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1"><p className="font-semibold">Rather talk?</p><p className="text-sm text-white/70">Record one voice note for every question, up to 10 minutes. We fill in the answers and you check them.</p></div>
-              <button type="button" disabled={!!rec} onClick={() => startRec("all")} className="inline-flex items-center justify-center gap-2 rounded-full bg-mint px-4 py-3 text-sm font-bold text-ink disabled:opacity-50 sm:py-2.5"><Icon name="mic" size={18} />Record everything</button>
+              <button type="button" disabled={!!rec} onClick={() => startRec("all")}
+                className="group inline-flex shrink-0 items-center justify-center gap-3 rounded-2xl bg-mint py-3 pl-3 pr-5 text-base font-bold text-ink shadow-[0_4px_0_#7cc463] transition hover:-translate-y-0.5 hover:shadow-[0_6px_0_#7cc463] active:translate-y-1 active:shadow-none disabled:opacity-50">
+                <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-flare text-white">
+                  <span aria-hidden className="absolute inset-0 animate-ping rounded-xl bg-flare/40 group-disabled:hidden motion-reduce:hidden" />
+                  <Icon name="mic" size={20} stroke={2.2} className="relative" />
+                </span>
+                Tap to record
+              </button>
             </div>
           )
         )}
