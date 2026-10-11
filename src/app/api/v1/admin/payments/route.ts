@@ -1,5 +1,6 @@
 import { body, ok, route, requireTeam } from "@/lib/server/api";
 import { paymentsOpen, setPaymentsOpen } from "@/lib/server/switch";
+import { ensureWebhook } from "@/lib/server/stripe";
 import { db } from "@/lib/server/db";
 
 const state = async () => {
@@ -20,5 +21,7 @@ export const POST = route(async (req: Request) => {
   if (s instanceof Response) return s;
   const b = await body<{ open: boolean }>(req);
   await setPaymentsOpen(b.open === true);
+  // Make sure Stripe confirms payments at our current address before anyone pays.
+  if (b.open === true) await ensureWebhook().catch((e) => console.error("[webhook setup]", e));
   return ok(await state());
 });

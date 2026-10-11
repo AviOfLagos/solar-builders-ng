@@ -75,25 +75,28 @@ export async function webhookSecret() {
 /**
  * Registers our webhook with Stripe the first time it is needed, and keeps its signing secret
  * in the database. No keys are copied by hand. Safe to call often: it does nothing once done.
+ * If the site's address changes (e.g. from the vercel.app address to solar.nexprove.com), it
+ * registers the new address and drops the old endpoint, so payments keep being confirmed.
  */
 export async function ensureWebhook() {
   if (!stripeConfigured() || process.env.STRIPE_WEBHOOK_SECRET) return;
   if (!/^https:\/\/(?!localhost)/.test(STORE.url)) return;
   const sql = await db();
-  const [have] = await sql`select 1 from settings where key = 'stripe_webhook_secret'`;
-  if (have) return;
+  const url = `${STORE.url.replace(/\/$/, "")}/api/stripe/webhook`;
+  const [have] = await sql`select (select value from settings where key = 'stripe_webhook_secret') as secret, (select value from settings where key = 'stripe_webhook_url') as url`;
+  if (have?.secret && have.url === url) return;
   // One instance at a time; a stale lock (crashed attempt) is retaken after 5 minutes.
   const [lock] = await sql`
     insert into settings (key, value) values ('stripe_webhook_lock', 'x')
     on conflict (key) do update set value = 'x', updated_at = now() where settings.updated_at < now() - interval '5 minutes'
     returning key`;
   if (!lock) return;
-  const url = `${STORE.url.replace(/\/$/, "")}/api/stripe/webhook`;
   const existing = await stripe().webhookEndpoints.list({ limit: 100 });
-  // An endpoint for our URL without a stored secret can't be verified; replace it.
-  for (const e of existing.data) if (e.url === url) await stripe().webhookEndpoints.del(e.id);
+  // Our endpoint (old address, or ours without a stored secret) can't be verified any more; replace it.
+  const ours = (e: Stripe.WebhookEndpoint) => e.url === url || e.description === "Solar Builders NG (registered by the app)";
+  for (const e of existing.data) if (ours(e)) await stripe().webhookEndpoints.del(e.id);
   const ep = await stripe().webhookEndpoints.create({ url, enabled_events: WEBHOOK_EVENTS, description: "Solar Builders NG (registered by the app)" });
-  await sql`insert into settings (key, value) values ('stripe_webhook_secret', ${ep.secret!}) on conflict (key) do update set value = excluded.value, updated_at = now()`;
+  await sql`insert into settings (key, value) values ('stripe_webhook_secret', ${ep.secret!}), ('stripe_webhook_url', ${url}) on conflict (key) do update set value = excluded.value, updated_at = now()`;
   console.log("[stripe] webhook registered", url);
 }
 

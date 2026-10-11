@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
   images: { formats: ["image/avif", "image/webp"] },
   // Fonts for the share pictures are read from disk at runtime.
   outputFileTracingIncludes: { "/api/v1/share/[kind]/[id]": ["./assets/fonts/**"], "/og/[kind]/[id]": ["./assets/fonts/**", "./public/products/**"] },
+  // One address: the production vercel.app alias sends people to solar.nexprove.com (Google sign-in, cookies and
+  // links only work there). Webhooks and the API are left alone so a provider still pointing at the old address keeps working.
+  async redirects() {
+    return [{ source: "/:path((?!api/|eve/|_next/|\\.well-known/).*)", has: [{ type: "host", value: "solar-ng.vercel.app" }], destination: "https://solar.nexprove.com/:path", permanent: true }];
+  },
   async headers() {
     return [{ source: "/(.*)", headers: [
       { key: "X-Content-Type-Options", value: "nosniff" },
