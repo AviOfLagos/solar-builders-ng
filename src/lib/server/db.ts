@@ -402,6 +402,15 @@ create table if not exists engineer_survey (
   installer_id text references installers(id) on delete set null,
   created_at timestamptz not null default now()
 );
+-- v13: installer interview: email, team, uploads, AI screening, decision
+alter table engineer_survey add column if not exists email text not null default '';
+alter table engineer_survey add column if not exists team_size text not null default '';
+alter table engineer_survey add column if not exists photos jsonb not null default '[]';
+alter table engineer_survey add column if not exists voice jsonb not null default '[]';
+alter table engineer_survey add column if not exists ai jsonb not null default '{}';
+alter table engineer_survey add column if not exists decision text not null default 'pending';
+alter table engineer_survey add column if not exists decided_by text not null default '';
+alter table engineer_survey add column if not exists notified_at timestamptz;
 `;
 
 const SCHEMA_VERSION = createHash("sha1").update(SCHEMA).digest("hex").slice(0, 12);

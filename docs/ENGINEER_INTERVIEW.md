@@ -1,36 +1,60 @@
-# Installer interview questions
+# Installer interview
 
-Live form: https://solar.nexprove.com/engineers (share it in installer groups). Answers: Admin → Installer research.
-Source of truth: `src/data/engineer-survey.ts`. Edit there; this file mirrors it.
+Live: https://solar.nexprove.com/engineers (share in installer groups). Results: Admin → Installer interviews.
+Source of truth: `src/data/engineer-survey.ts`; this file mirrors it.
 
-## About you
-- Name and WhatsApp number
-- Where you mostly work (Island & Lekki, Yaba/Surulere/Gbagada, Ikeja/Ketu/Oshodi, Alimosho/Festac/Ojo, Ikorodu)
-- Years installing solar: Under 1 year, 1–3 years, 3–5 years, 5–10 years, 10+ years
-- Installs a month: 0–2, 3–5, 6–10, 11–20, 20+
+Installers type or record voice notes (Gemini writes them down). Up to 3 photos of past installs. The AI marks each interview against the guide below and sets Shortlisted / Not now / Needs a look; nothing is sent until the team presses Send.
 
-Show them the sample quote on the page (a real family-flat kit from our calculator) before the questions.
+## Profile
+- Name, WhatsApp, email (optional), area, years installing (Under 1 year, 1–3 years, 3–5 years, 5–10 years, 10+ years), installs a month (0–2, 3–5, 6–10, 11–20, 20+), team (Just me, 2–3 people, 4–6 people, 7+ people)
 
-## Our quotes
-1. Look at the sample quote above. What's wrong or missing, or what would you change before installing it?
-2. What do you always need to know about the house before you can price a job?  
-   _e.g. upstairs or bungalow, roof type, distance, existing wiring_
-3. What items do customers forget that you end up adding? What do they usually cost?  
+## Questions
+1. Which brands do you recommend for clients with a good budget?
+2. And which brands for low-budget clients?
+3. Which brands do you refuse to install, and why?
+4. What do you charge to install in a bungalow, and in a storey building?  
+   _For a typical 3–5 kVA home system_
+5. What do customers usually forget that you have to add? What does it cost?  
    _cables, breakers, surge protector, earthing, mounting, changeover…_
-4. How do you price installation: by system size, building type or distance? What are your usual price bands?
-5. How much extra capacity do you add over what the customer asks for (inverter, battery, panels)?
-6. Which brands do you trust, and which do you refuse to install? Why?
-7. What usually goes wrong after an install (callbacks, faults)? What would prevent it?
-8. If we send you a job on WhatsApp, what must it include for you to accept without calling the customer? How fast can you reply?
+6. **Test:** A client wants to run a 1.5HP AC and a fridge on a 3 kVA inverter with a 2.5 kWh battery. What do you tell them?
+7. **Test:** What cable size, breaker and earthing do you use between a 5 kVA inverter and its battery?
+8. What would make you take jobs from us, and how fast can you finish a typical setup?
+9. When a client shows you a quote someone else made, what do you check or change first?
+10. Would you use an app to make quotes for your own clients? What's the one thing it must do?
 
-## The app
-9. Would you use an app to make quotes for your own clients? (Yes / Maybe / No)
-10. What must that app do for you to use it every week?
-11. What would you need to add to a quote that isn't a standard product?  
-   _labour lines, extra cable, trunking, scaffolding, transport…_
-12. When a client shows you a quote from someone else, would you want to load it into the app and edit it? What do you change most often?
-13. How should a quote reach your client?  
-   _WhatsApp link, PDF, with your own name and logo…_
-14. What would make you take jobs through us instead of finding your own?  
-   _steady jobs, fast pay, equipment delivered to site…_
-15. How do you want to be paid for a job, and how fast?
+## Follow-up (shortlisted installers only)
+- What would you need to add to a quote that isn't a standard product?
+- Would you want to load a quote from someone else into the app and edit it? What do you change most?
+- How should a quote reach your client: WhatsApp link, PDF, with your own name and logo?
+- What usually goes wrong after an install, and what would prevent it?
+- If we send you a job on WhatsApp, what must it include for you to accept without calling the customer?
+
+## Marking guide (check against your best installers)
+### test_sizing
+Good:
+- Notes a 1.5HP AC draws roughly 1.1–1.4 kW running and needs 3–5× that to start unless it is an inverter AC
+- Counts the fridge's start-up surge too
+- Says a 3 kVA inverter can start a 1.5HP inverter AC but may trip on a non-inverter one
+- Works out that a 2.5 kWh battery (about 2 kWh usable) runs the AC only 1.5–2 hours
+- Recommends an inverter AC, a bigger battery (5 kWh or more) and/or a 5 kVA inverter, or running the AC on daytime solar only
+Weak:
+- Says it will run fine all night
+- Ignores start-up surge
+- Ignores battery capacity
+
+### test_wiring
+Good:
+- Starts from the system voltage: about 100–130 A at 48 V, over 200 A at 24 V
+- Picks copper battery cable sized to that current and the run length (e.g. 25–35 mm² for a short 48 V run)
+- Uses a DC-rated breaker or fuse just above the maximum current (about 125–150 A at 48 V)
+- Keeps battery runs short with proper lugs and crimping
+- Bonds inverter chassis and panel frames to an earth rod, and adds surge protection
+Weak:
+- Uses an AC breaker on the DC side
+- Thin cable such as 6–10 mm²
+- No earthing
+- No mention of voltage or current
+
+## Messages
+- Shortlisted: Hi {first}, thank you for your interview with Solar Builders NG. You've been shortlisted for our installer network. We'll message you on WhatsApp to set up a short call and a few follow-up questions.
+- Not now: Hi {first}, thank you for taking the time to answer our installer interview. We're at capacity in your area right now, so we can't take you on yet. We've kept your details and will reach out when more jobs open up.

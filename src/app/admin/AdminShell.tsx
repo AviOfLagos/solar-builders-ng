@@ -23,7 +23,7 @@ const NAV: { title: string; links: { href: string; label: string; icon: string; 
   { title: "Fulfilment", links: [
     { href: "/admin/suppliers", label: "Suppliers", icon: "people" },
     { href: "/admin/installers", label: "Installers", icon: "tools" },
-    { href: "/admin/research", label: "Installer research", icon: "chat" },
+    { href: "/admin/research", label: "Installer interviews", icon: "chat" },
     { href: "/admin/payouts", label: "Payouts", icon: "card" },
   ] },
   { title: "Coming next", links: [
