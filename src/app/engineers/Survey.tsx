@@ -51,7 +51,9 @@ function VoiceButton({ k, label, onDone, onBusy }: { k: string; label: string; o
         const f = new FormData();
         f.append("audio", blob, `answer.${blob.type.split("/")[1] || "webm"}`);
         f.append("key", k);
-        onDone(await upload("/engineer-survey/voice", f));
+        const r = await upload<{ text?: string; answers?: Record<string, string>; voice: string }>("/engineer-survey/voice", f);
+        if (!r.text && !Object.keys(r.answers ?? {}).length) setErr("We didn't hear anyone speaking. Hold the phone closer and try again.");
+        else onDone(r);
       } catch (e) { setErr((e as Error).message); }
       setState("idle"); onBusy?.(false);
     };

@@ -47,32 +47,43 @@ export async function saveSurvey(b: Record<string, unknown>) {
 
 // ---- voice answers ----
 
-/** One voice note -> the answer text, in the installer's own words. */
+const HEARD = z.object({
+  speech: z.boolean().describe("true only if a human voice is clearly speaking words in the recording"),
+  transcript: z.string().describe("Exactly the words spoken, verbatim. Empty if there is no speech."),
+});
+const STRICT = "Only use words that are actually spoken in the recording. Never invent, guess or fill in content. Music, tones, noise or silence means speech is false and everything else is empty.";
+
+/** One voice note -> the answer text, in the installer's own words. Empty when no speech is heard. */
 export async function transcribe(audio: Uint8Array, type: string, questionKey: string) {
   const q = QUESTIONS.find((x) => x.key === questionKey);
-  const { text } = await generateText({
+  const { output } = await generateText({
     model: model(),
+    temperature: 0,
+    output: Output.object({ schema: HEARD.extend({ answer: z.string().describe("The spoken answer as clean first-person text: same facts, numbers, prices, sizes and brand names; Pidgin or Yoruba in plain English. Empty if no speech.") }) }),
     messages: [{ role: "user", content: [
-      { type: "text", text: `A solar installer in Lagos recorded this voice note${q ? ` answering: "${q.q}"` : ""}. Write their answer as clean text in the first person. Keep every number, price, size, unit and brand name exactly as said. If they speak Pidgin or Yoruba, write it in plain English. Return only the answer, no preamble. If the recording is silent or unclear, return an empty string.` },
+      { type: "text", text: `A solar installer in Lagos may have recorded this voice note${q ? ` answering: "${q.q}"` : ""}. Transcribe it, then tidy it into their answer. ${STRICT}` },
       { type: "file", data: audio, mediaType: type },
     ] }],
   });
-  return text.trim().replace(/^"|"$/g, "");
+  if (!output?.speech || !output.transcript.trim()) return "";
+  return output.answer.trim() || output.transcript.trim();
 }
 
-/** One long voice note -> answers to every question it covers. */
+/** One long voice note -> answers to every question it covers. Empty when no speech is heard. */
 export async function transcribeAll(audio: Uint8Array, type: string) {
   const shape = Object.fromEntries(QUESTIONS.map((q) => [q.key, z.string().describe(q.q)]));
   const { output } = await generateText({
     model: model(),
-    output: Output.object({ schema: z.object({ answers: z.object(shape).partial() }) }),
+    temperature: 0,
+    output: Output.object({ schema: HEARD.extend({ answers: z.object(shape).partial().describe("What they said, under the matching question, first person. Omit questions they didn't answer.") }) }),
     messages: [{ role: "user", content: [
-      { type: "text", text: `A solar installer in Lagos recorded one voice note answering our interview. Put what they said under the matching question, in the first person, keeping every number, price, size and brand name exactly. Leave out questions they didn't answer. Pidgin or Yoruba goes into plain English.\n\nQuestions:\n${QUESTIONS.map((q) => `${q.key}: ${q.q}`).join("\n")}` },
+      { type: "text", text: `A solar installer in Lagos may have recorded one voice note answering our interview. Transcribe it, then put what they said under the matching question, keeping every number, price, size and brand name. Pidgin or Yoruba goes into plain English. ${STRICT}\n\nQuestions:\n${QUESTIONS.map((q) => `${q.key}: ${q.q}`).join("\n")}` },
       { type: "file", data: audio, mediaType: type },
     ] }],
   });
   const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(output?.answers ?? {})) if (typeof v === "string" && v.trim()) out[k] = v.trim();
+  if (!output?.speech || !output.transcript.trim()) return out;
+  for (const [k, v] of Object.entries(output.answers ?? {})) if (typeof v === "string" && v.trim()) out[k] = v.trim();
   return out;
 }
 
