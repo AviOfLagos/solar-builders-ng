@@ -15,7 +15,7 @@ type R = {
   created_at: string; installer_active: boolean | null;
 };
 type Count = { name: string; n: number };
-type Insights = { candidates: number; premiumBrands: Count[]; budgetBrands: Count[]; refusedBrands: Count[]; quoteChecks: Count[]; installBungalow: string[]; installStorey: string[]; forgottenItems: { item: string; cost: string }[]; setupDays: string[]; appMustDo: string[] };
+type Insights = { candidates: number; premiumBrands: Count[]; budgetBrands: Count[]; refusedBrands: Count[]; quoteChecks: Count[]; quoteChanges: Count[]; quoteMissing: Count[]; installBungalow: string[]; installStorey: string[]; forgottenItems: { item: string; cost: string }[]; setupDays: string[]; appMustDo: string[] };
 type Sent = { id: string; name: string; decision: string; emailed: boolean; wa: string };
 
 const file = (p: string) => `/api/v1/admin/file?p=${encodeURIComponent(p)}`;
@@ -157,7 +157,9 @@ function InsightsView({ i }: { i: Insights | null }) {
       </div>
       <Lines title="Items quotes forget, with cost" rows={i.forgottenItems.map((f) => `${f.item}${f.cost ? ` · ${f.cost}` : ""}`)} />
       <div className="grid gap-3 md:grid-cols-2">
-        <Counts title="What they check first in a quote" rows={i.quoteChecks} />
+        <Counts title="Sample quote: what they check first" rows={i.quoteChecks} />
+        <Counts title="Sample quote: what they'd change" rows={i.quoteChanges} />
+        <Counts title="Sample quote: what's missing" rows={i.quoteMissing} />
         <Lines title="Time to finish a typical setup" rows={i.setupDays} />
       </div>
       <Lines title="What the app must do" rows={i.appMustDo} />

@@ -3,24 +3,39 @@
 Live: https://solar.nexprove.com/engineers (share in installer groups). Results: Admin → Installer interviews.
 Source of truth: `src/data/engineer-survey.ts`; this file mirrors it.
 
-Installers type or record voice notes (Gemini writes them down). Up to 3 photos of past installs. The AI marks each interview against the guide below and sets Shortlisted / Not now / Needs a look; nothing is sent until the team presses Send.
+Six steps with progress at the top. Installers type or record voice notes (Gemini writes them down; pause, resume, done or discard from the recorder bar). Up to 3 photos of past installs. The AI marks each interview and sets Shortlisted / Not now / Needs a look; nothing is sent until the team presses Send.
 
-## Profile
+## Profile (step 1)
 - Name, WhatsApp, email (optional), area, years installing (Under 1 year, 1–3 years, 3–5 years, 5–10 years, 10+ years), installs a month (0–2, 3–5, 6–10, 11–20, 20+), team (Just me, 2–3 people, 4–6 people, 7+ people)
 
-## Questions
-1. Which brands do you recommend for clients with a good budget?
+## Brands you trust
+1. Which brands do you recommend for clients with a good budget?  
+   _Inverters, batteries and panels_
 2. And which brands for low-budget clients?
 3. Which brands do you refuse to install, and why?
+
+## How you price a job
 4. What do you charge to install in a bungalow, and in a storey building?  
    _For a typical 3–5 kVA home system_
 5. What do customers usually forget that you have to add? What does it cost?  
    _cables, breakers, surge protector, earthing, mounting, changeover…_
+
+## Two quick checks
 6. **Test:** A client wants to run a 1.5HP AC and a fridge on a 3 kVA inverter with a 2.5 kWh battery. What do you tell them?
 7. **Test:** What cable size, breaker and earthing do you use between a 5 kVA inverter and its battery?
-8. What would make you take jobs from us, and how fast can you finish a typical setup?
-9. When a client shows you a quote someone else made, what do you check or change first?
-10. Would you use an app to make quotes for your own clients? What's the one thing it must do?
+
+## Review our sample quote
+8. Looking at the sample quote, what's the first thing you check or question?
+9. What would you change, add or remove before you install it? Why?
+10. What's missing that you need to price the job and install it properly?  
+   _Details about the house, cable runs, accessories, anything you'd normally have to ask the client_
+
+## Working with us
+11. What would make you take jobs from us, and how fast can you finish a typical setup?
+12. Would you use an app to make quotes for your own clients? What's the one thing it must do?
+
+## Sample quote v1 (frozen)
+Page: https://solar.nexprove.com/engineers/sample-quote. Never edit a published version; add v2 with new question keys to test a new format.
 
 ## Follow-up (shortlisted installers only)
 - What would you need to add to a quote that isn't a standard product?

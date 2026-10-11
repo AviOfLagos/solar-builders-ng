@@ -3,23 +3,64 @@
  * Kept short on purpose. Answers are stored by key, so never reuse a key for a different question.
  * docs/ENGINEER_INTERVIEW.md mirrors this file.
  */
-export type Question = { key: string; q: string; hint?: string; test?: boolean };
+export type StepKey = "you" | "brands" | "pricing" | "checks" | "sample" | "work";
+export type Question = { key: string; q: string; hint?: string; test?: boolean; step: StepKey };
 
-export const QUESTIONS: Question[] = [
-  { key: "brands_premium", q: "Which brands do you recommend for clients with a good budget?" },
-  { key: "brands_budget", q: "And which brands for low-budget clients?" },
-  { key: "brands_refuse", q: "Which brands do you refuse to install, and why?" },
-  { key: "install_pricing", q: "What do you charge to install in a bungalow, and in a storey building?", hint: "For a typical 3–5 kVA home system" },
-  { key: "forgotten_items", q: "What do customers usually forget that you have to add? What does it cost?", hint: "cables, breakers, surge protector, earthing, mounting, changeover…" },
-  { key: "test_sizing", q: "A client wants to run a 1.5HP AC and a fridge on a 3 kVA inverter with a 2.5 kWh battery. What do you tell them?", test: true },
-  { key: "test_wiring", q: "What cable size, breaker and earthing do you use between a 5 kVA inverter and its battery?", test: true },
-  { key: "why_us", q: "What would make you take jobs from us, and how fast can you finish a typical setup?" },
-  { key: "quote_check", q: "When a client shows you a quote someone else made, what do you check or change first?" },
-  { key: "app_quotes", q: "Would you use an app to make quotes for your own clients? What's the one thing it must do?" },
+/** The interview, one screen per step. */
+export const STEPS: { key: StepKey; title: string; sub: string }[] = [
+  { key: "you", title: "About you", sub: "So we know who we're talking to and where you work." },
+  { key: "brands", title: "Brands you trust", sub: "Type, or tap the mic and say it." },
+  { key: "pricing", title: "How you price a job", sub: "Rough figures are fine." },
+  { key: "checks", title: "Two quick checks", sub: "We ask every installer these. Answer the way you'd explain it to a client." },
+  { key: "sample", title: "Review our sample quote", sub: "Open it, look through it like a client just sent it to you, then tell us what you think." },
+  { key: "work", title: "Working with us", sub: "Last step. Add photos of your work if you can." },
 ];
 
+export const QUESTIONS: Question[] = [
+  { step: "brands", key: "brands_premium", q: "Which brands do you recommend for clients with a good budget?", hint: "Inverters, batteries and panels" },
+  { step: "brands", key: "brands_budget", q: "And which brands for low-budget clients?" },
+  { step: "brands", key: "brands_refuse", q: "Which brands do you refuse to install, and why?" },
+  { step: "pricing", key: "install_pricing", q: "What do you charge to install in a bungalow, and in a storey building?", hint: "For a typical 3–5 kVA home system" },
+  { step: "pricing", key: "forgotten_items", q: "What do customers usually forget that you have to add? What does it cost?", hint: "cables, breakers, surge protector, earthing, mounting, changeover…" },
+  { step: "checks", key: "test_sizing", q: "A client wants to run a 1.5HP AC and a fridge on a 3 kVA inverter with a 2.5 kWh battery. What do you tell them?", test: true },
+  { step: "checks", key: "test_wiring", q: "What cable size, breaker and earthing do you use between a 5 kVA inverter and its battery?", test: true },
+  { step: "sample", key: "sample_v1_first_check", q: "Looking at the sample quote, what's the first thing you check or question?" },
+  { step: "sample", key: "sample_v1_changes", q: "What would you change, add or remove before you install it? Why?" },
+  { step: "sample", key: "sample_v1_missing", q: "What's missing that you need to price the job and install it properly?", hint: "Details about the house, cable runs, accessories, anything you'd normally have to ask the client" },
+  { step: "work", key: "why_us", q: "What would make you take jobs from us, and how fast can you finish a typical setup?" },
+  { step: "work", key: "app_quotes", q: "Would you use an app to make quotes for your own clients? What's the one thing it must do?" },
+];
+
+/**
+ * The sample quote installers review. Frozen on purpose: never edit a published version, so answers stay
+ * comparable over time. To test a new quote format, add v2 with new question keys (sample_v2_…).
+ * v1 is what our calculator gave for a family flat on 11 Oct 2026.
+ */
+export const SAMPLE_QUOTES = {
+  v1: {
+    version: "v1",
+    date: "11 October 2026",
+    client: {
+      building: "3-bedroom bungalow", area: "Ikeja", use: "Home", roof: "Aluminium (longspan)", run: "About 15 m from roof to inverter spot",
+      changeover: "Has a generator changeover", earthing: "Not sure",
+      runs: ["8 LED bulbs", "3 fans", "TV + decoder", "Fridge", "Chest freezer", "1HP water pump", "Laptop"],
+      hours: "About 10 hours a night without grid power",
+    },
+    need: { kw: 3.8, kwh: 8.8 },
+    kit: {
+      name: "Flat Comfort",
+      product: "itel Complete 4kW Hybrid Solar System",
+      contents: ["1× itel 4 kW hybrid inverter", "2× 5 kWh lithium batteries (10 kWh)", "8× 620 W solar panels (about 5 kW)"],
+      price: 4_070_860,
+    },
+    install: [250_000, 450_000] as [number, number],
+    notes: ["Free delivery in Lagos", "Installation is quoted separately by our engineer", "Sized with about 25% headroom over the load"],
+  },
+} as const;
+export const SAMPLE = SAMPLE_QUOTES.v1;
+
 /** Saved for installers we shortlist, so the first form stays short. */
-export const FOLLOW_UP: Question[] = [
+export const FOLLOW_UP: Omit<Question, "step">[] = [
   { key: "custom_items", q: "What would you need to add to a quote that isn't a standard product?" },
   { key: "edit_others", q: "Would you want to load a quote from someone else into the app and edit it? What do you change most?" },
   { key: "send_quote", q: "How should a quote reach your client: WhatsApp link, PDF, with your own name and logo?" },

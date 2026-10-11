@@ -6,7 +6,7 @@ import { db, id } from "./db";
 import { HttpError, str } from "./api";
 import { NG_PHONE, normalizePhone, ngE164, isName, isEmail } from "@/lib/format";
 import { REGIONS } from "@/config/store";
-import { QUESTIONS, YEARS, JOBS_PER_MONTH, TEAM_SIZES, MARKING_GUIDE, DECISION_MESSAGES } from "@/data/engineer-survey";
+import { QUESTIONS, YEARS, JOBS_PER_MONTH, TEAM_SIZES, MARKING_GUIDE, DECISION_MESSAGES, SAMPLE } from "@/data/engineer-survey";
 import { notifyOwner, sendMail, shell, esc } from "./mail";
 import { storedBytes } from "./uploads";
 
@@ -27,7 +27,7 @@ export async function saveSurvey(b: Record<string, unknown>) {
   const a = (b.answers && typeof b.answers === "object" ? b.answers : {}) as Record<string, unknown>;
   const answers: Record<string, string> = {};
   for (const q of QUESTIONS) { const v = str(a[q.key], 2000); if (v) answers[q.key] = v; }
-  if (Object.keys(answers).length < 5) throw new HttpError(400, "Answer at least five questions. You can type or record.");
+  if (Object.keys(answers).length < 6) throw new HttpError(400, "Answer at least six questions. You can type or record.");
   const list = (v: unknown, re: RegExp, max: number) => (Array.isArray(v) ? v.map(String).filter((p) => re.test(p)).slice(0, max) : []);
   const row = {
     id: id(), name, phone: ngE164(raw), email,
@@ -103,7 +103,9 @@ const Screen = z.object({
     installStorey: z.string().describe("Their storey-building install price as said, or ''"),
     forgottenItems: z.array(z.object({ item: z.string(), cost: z.string() })),
     setupDays: z.string().describe("How long a typical setup takes them, as said, or ''"),
-    quoteChecks: z.array(z.string()).describe("What they check or change first in someone else's quote"),
+    quoteChecks: z.array(z.string()).describe("What they check or question first in our sample quote, as short phrases"),
+    quoteChanges: z.array(z.string()).describe("What they would change, add or remove in our sample quote, as short phrases"),
+    quoteMissing: z.array(z.string()).describe("What they say our sample quote is missing, as short phrases"),
     appMustDo: z.string(),
   }),
 });
@@ -124,6 +126,7 @@ export async function screenCandidate(sid: string) {
     `Profile: ${r.years || "years not given"} installing, ${r.jobs_per_month || "?"} jobs a month, team: ${r.team_size || "not given"}.`,
     `Marking guide for the two test questions:\n${JSON.stringify(MARKING_GUIDE, null, 1)}`,
     `Shortlist when both tests score 6+ and nothing unsafe is said. Decline when either test shows unsafe practice (AC breaker on DC, no earthing, cable far too thin) or the answers show no real installation experience. Otherwise review.`,
+    `The sample quote they reviewed (${SAMPLE.version}):\n${JSON.stringify(SAMPLE)}`,
     `Answers:\n${QUESTIONS.map((q) => `${q.q}\n> ${answers[q.key] || "(no answer)"}`).join("\n\n")}`,
     photos.length ? `${photos.length} photos of their past installs are attached.` : "No photos were sent.",
   ].join("\n\n");
@@ -212,7 +215,7 @@ export async function insights() {
   return {
     candidates: rows.length,
     premiumBrands: count("premiumBrands"), budgetBrands: count("budgetBrands"), refusedBrands: count("refusedBrands"),
-    quoteChecks: count("quoteChecks"),
+    quoteChecks: count("quoteChecks"), quoteChanges: count("quoteChanges"), quoteMissing: count("quoteMissing"),
     installBungalow: ex.map((e) => e.installBungalow).filter(Boolean),
     installStorey: ex.map((e) => e.installStorey).filter(Boolean),
     forgottenItems: ex.flatMap((e) => e.forgottenItems).filter((f) => f.item),
