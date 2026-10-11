@@ -6,6 +6,8 @@ export const STORE = {
   shortName: "Solar Builders",
   // Always the real domain: an old env value pointing at the vercel.app address would put it in every link preview and sitemap.
   url: (process.env.NEXT_PUBLIC_SITE_URL && !/vercel\.app/.test(process.env.NEXT_PUBLIC_SITE_URL) ? process.env.NEXT_PUBLIC_SITE_URL : "https://solar.nexprove.com").replace(/\/$/, ""),
+  /** The registered company behind the brand (shown in the footer and terms; must match CAC, Paystack and Meta). */
+  legalName: "Nexprove Limited",
   city: "Lagos",
   country: "NG",
   /** Empty until we have a domain with a real inbox. */

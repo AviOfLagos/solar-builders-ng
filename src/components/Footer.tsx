@@ -62,7 +62,7 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <p className="mx-auto max-w-7xl px-4 py-5 text-xs leading-relaxed text-white/45">
-          Free delivery to all 20 Lagos LGAs: {LAGOS_LGAS.join(", ")}. © {new Date().getFullYear()} {STORE.name}. Brand names belong to their owners.
+          Free delivery to all 20 Lagos LGAs: {LAGOS_LGAS.join(", ")}. © {new Date().getFullYear()} {STORE.name}, a brand of {STORE.legalName}. Brand names belong to their owners.
           <span className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
             <Link className="underline hover:text-white" href="/legal/terms">Terms of sale</Link>
             <Link className="underline hover:text-white" href="/legal/refunds">Refunds</Link>
