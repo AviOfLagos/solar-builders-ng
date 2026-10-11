@@ -250,9 +250,9 @@ export function Survey() {
               <ol className="list-decimal space-y-1.5 pl-5 text-sm text-white/80">{QUESTIONS.map((q) => <li key={q.key}>{q.q}{q.step === "sample" ? " (about our sample quote)" : ""}</li>)}</ol>
             </div>
           ) : (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-night p-5 text-white">
+            <div className="flex flex-col gap-3 rounded-3xl bg-night p-5 text-white sm:flex-row sm:items-center">
               <div className="min-w-0 flex-1"><p className="font-semibold">Rather talk?</p><p className="text-sm text-white/70">Record one voice note for every question, up to 10 minutes. We fill in the answers and you check them.</p></div>
-              <button type="button" disabled={!!rec} onClick={() => startRec("all")} className="inline-flex items-center gap-2 rounded-full bg-mint px-4 py-2.5 text-sm font-bold text-ink disabled:opacity-50"><Icon name="mic" size={18} />Record everything</button>
+              <button type="button" disabled={!!rec} onClick={() => startRec("all")} className="inline-flex items-center justify-center gap-2 rounded-full bg-mint px-4 py-3 text-sm font-bold text-ink disabled:opacity-50 sm:py-2.5"><Icon name="mic" size={18} />Record everything</button>
             </div>
           )
         )}

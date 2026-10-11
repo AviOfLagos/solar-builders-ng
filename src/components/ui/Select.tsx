@@ -16,6 +16,7 @@ export function Select({ id, value, onChange, options, placeholder = "Choose…"
   const listId = `${btnId}-list`;
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [up, setUp] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const typed = useRef({ text: "", at: 0 });
@@ -29,7 +30,13 @@ export function Select({ id, value, onChange, options, placeholder = "Choose…"
   }, [open]);
   useEffect(() => { if (open) list.current?.children[active]?.scrollIntoView({ block: "nearest" }); }, [open, active]);
 
-  const show = () => { setActive(Math.max(0, options.findIndex((o) => o.value === value))); setOpen(true); };
+  // Open upwards when there isn't room below (phones, or a bar fixed to the bottom of the screen).
+  const show = () => {
+    const r = root.current?.getBoundingClientRect();
+    setUp(!!r && window.innerHeight - r.bottom < 300 && r.top > window.innerHeight - r.bottom);
+    setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+    setOpen(true);
+  };
   const pick = (i: number) => { const o = options[i]; if (o) onChange(o.value); setOpen(false); };
   const onKey = (e: React.KeyboardEvent) => {
     if (!open) {
@@ -62,7 +69,7 @@ export function Select({ id, value, onChange, options, placeholder = "Choose…"
       </button>
       {open && (
         <ul ref={list} id={listId} role="listbox" aria-labelledby={btnId}
-          className="absolute inset-x-0 top-[calc(100%+6px)] z-50 max-h-64 overflow-auto rounded-2xl bg-paper p-1.5 shadow-[0_16px_40px_rgba(23,32,27,0.16)] ring-1 ring-line">
+          className={`absolute inset-x-0 z-50 ${up ? "bottom-[calc(100%+6px)]" : "top-[calc(100%+6px)]"} max-h-64 overflow-auto rounded-2xl bg-paper p-1.5 shadow-[0_16px_40px_rgba(23,32,27,0.16)] ring-1 ring-line`}>
           {options.map((o, i) => {
             const on = o.value === value;
             return (
