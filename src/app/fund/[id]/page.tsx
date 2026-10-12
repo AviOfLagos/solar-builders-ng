@@ -8,7 +8,7 @@ import { Share } from "@/components/Share";
 import { Contribute } from "./Contribute";
 import { OwnerPanel } from "./OwnerPanel";
 import { ChipInBar, FundView } from "./FundView";
-import { naira } from "@/lib/format";
+import { daysLeft, naira } from "@/lib/format";
 import { OCCASIONS, ORDER_STATUS, type OrderStatus } from "@/config/store";
 
 export const dynamic = "force-dynamic";
@@ -21,11 +21,6 @@ export async function generateMetadata(props: PageProps<"/fund/[id]">): Promise<
     description: `${naira(p.raised)} of ${naira(p.goal)} raised. Chip in any amount to help ${p.owner} go solar in Lagos.`,
     robots: { index: false },
   }, `fund/${p.id}`);
-}
-
-function daysLeft(d: Date) {
-  const days = Math.ceil((new Date(d).getTime() - Date.now()) / 864e5);
-  return days <= 0 ? "Deadline passed" : days === 1 ? "Last day" : `${days} days left`;
 }
 
 export default async function FundPage(props: PageProps<"/fund/[id]">) {

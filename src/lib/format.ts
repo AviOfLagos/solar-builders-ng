@@ -30,3 +30,9 @@ export const isEmail = (s: string) => s.length <= 120 && /^[^\s@]{1,64}@[^\s@.]+
 export const isName = (s: string) => /\p{L}.*\p{L}/u.test(s);
 
 export const firstName = (n: unknown) => String(n ?? "").trim().split(/\s+/)[0] || "";
+
+/** "9 days left", "Last day" or "Deadline passed" for a Go Solar Me deadline. */
+export function daysLeft(d: Date | string) {
+  const days = Math.ceil((new Date(d).getTime() - Date.now()) / 864e5);
+  return days <= 0 ? "Deadline passed" : days === 1 ? "Last day" : `${days} days left`;
+}

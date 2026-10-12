@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { getProductById } from "@/lib/catalog";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 const MINT = "#bdf0a6", HAZE = "#f3f2ec", NIGHT = "#1d2621";
@@ -21,9 +22,15 @@ export async function publicImage(path: string): Promise<string | null> {
   } catch { return null; }
 }
 
+/** Photo of the main thing in a kit (the priciest item that has a photo), ready for Satori. */
+export async function kitImage(items: { id: string; price: number }[]): Promise<string | null> {
+  const main = [...items].sort((a, b) => b.price - a.price).map((i) => getProductById(i.id)?.image).find(Boolean);
+  return main ? publicImage(main) : null;
+}
+
 export type OgData = { eyebrow: string; title: string; sub?: string; image?: string | null; price?: string; pct?: number; host: string };
 
-const Sun = ({ size = 280 }: { size?: number }) => (
+export const Sun = ({ size = 280 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 32 32">
     <circle cx="16" cy="16" r="6.5" fill={MINT} />
     <g fill={MINT}>
@@ -38,7 +45,8 @@ const Sun = ({ size = 280 }: { size?: number }) => (
 
 /** The calm Solar Builders link-preview card: haze page, night card, mint pill. */
 export function OgCard({ eyebrow, title, sub, image, price, pct, host }: OgData) {
-  const size = title.length > 70 ? 46 : title.length > 44 ? 56 : 66;
+  // A photo takes a third of the width, so long titles step down sooner.
+  const size = image ? (title.length > 50 ? 42 : title.length > 28 ? 50 : 60) : title.length > 70 ? 46 : title.length > 44 ? 56 : 66;
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", background: HAZE, padding: 34, fontFamily: "Manrope, Naira" }}>
       <div style={{ flex: 1, display: "flex", background: NIGHT, borderRadius: 44, padding: "48px 56px", color: "#fff" }}>

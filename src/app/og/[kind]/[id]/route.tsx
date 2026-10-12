@@ -1,13 +1,13 @@
 import { ImageResponse } from "next/og";
 import { STORE } from "@/config/store";
-import { naira } from "@/lib/format";
+import { daysLeft, naira } from "@/lib/format";
 import { brandName, getBrand, getCategory, getProduct, products } from "@/lib/catalog";
 import { GUIDES } from "@/data/content";
 import { getSegment } from "@/data/packages";
 import { PROMO } from "@/config/store";
 import { loadPool } from "@/lib/server/pools";
 import { getBuild, getStorePage } from "@/lib/server/social";
-import { OG_SIZE, OgCard, loadFonts, publicImage, type OgData } from "@/lib/og";
+import { OG_SIZE, OgCard, kitImage, loadFonts, publicImage, type OgData } from "@/lib/og";
 
 const HOST = () => new URL(STORE.url).host;
 const BIG = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
@@ -63,7 +63,11 @@ async function data(kind: string, id: string): Promise<OgData | null> {
       const p = await loadPool(id); if (!p || p.status === "cancelled") return null;
       const pct = Math.min(100, Math.floor((p.raised / p.goal) * 100));
       const done = p.status === "funded";
-      return { eyebrow: done ? "Go Solar Me · Funded" : `Go Solar Me · ${pct}% there`, title: BIG(p.title, 80), sub: done ? "Fully funded. Delivery is next." : `${naira(p.raised)} of ${naira(p.goal)} raised. Chip in any amount.`, pct, host: `${host}/fund/${id}` };
+      return {
+        eyebrow: done ? "Go Solar Me · Funded" : `Go Solar Me · ${pct}% there`, title: BIG(p.title, 80),
+        sub: done ? "Fully funded. Delivery is next." : `${naira(p.raised)} of ${naira(p.goal)} raised · ${daysLeft(p.deadline)}`,
+        pct, image: await kitImage(p.items), host: `${host}/fund/${id}`,
+      };
     }
     case "store": {
       const s = await getStorePage(id); if (!s) return null;
