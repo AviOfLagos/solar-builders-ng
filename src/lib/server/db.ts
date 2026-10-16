@@ -147,6 +147,10 @@ alter table orders add column if not exists refunded int not null default 0;
 alter table orders add column if not exists status_at timestamptz not null default now();
 -- Builds the WhatsApp ops agent creates as quotes: site answers, validity, version, conversation.
 alter table builds add column if not exists meta jsonb not null default '{}';
+-- Orders the WhatsApp agent creates from its builds: one order per build, and the pay link to resend.
+alter table orders add column if not exists agent_build_id text;
+alter table orders add column if not exists agent_pay_url text;
+create unique index if not exists orders_agent_build_uidx on orders (agent_build_id) where agent_build_id is not null;
 create index if not exists orders_status_idx on orders(status, created_at);
 alter table pools add column if not exists kind text not null default 'public';
 alter table pools add column if not exists deadline timestamptz;

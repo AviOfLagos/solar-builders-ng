@@ -130,7 +130,8 @@ export type CheckoutInput = DeliveryInput & {
   saveCard?: boolean; cardNickname?: string; savedCardId?: string; source?: string; provider?: "paystack" | "stripe";
 };
 
-export async function startCheckout(input: Partial<Record<keyof CheckoutInput, unknown>>, user: Session | null, origin: string) {
+/** `internal.source` is only set by server code (the WhatsApp agent API), never from a request body. */
+export async function startCheckout(input: Partial<Record<keyof CheckoutInput, unknown>>, user: Session | null, origin: string, internal: { source?: "whatsapp" } = {}) {
   const cart = priceCart(input.items);
   checkCart(cart);
   const { values, errors } = validateDelivery(input);
@@ -159,7 +160,7 @@ export async function startCheckout(input: Partial<Record<keyof CheckoutInput, u
     buyer: sql.json({ name: values.name, email: values.email, phone: values.phone }),
     delivery: sql.json(deliveryJson(values)),
     recipient: values.forSomeoneElse ? sql.json({ name: values.recipientName, phone: values.recipientPhone, message: values.giftMessage }) : null,
-    installer: values.installer, source: input.source === "app" ? "app" : "web",
+    installer: values.installer, source: internal.source ?? (input.source === "app" ? "app" : "web"),
   };
 
   const holdGift = async (tx: Tx, ref: string) => {
