@@ -1,5 +1,6 @@
 import "server-only";
 import { code, type Tx } from "./db";
+import { mirrorOrderLater } from "./sheets";
 
 /**
  * Append-only money record. Kinds:
@@ -18,7 +19,10 @@ export async function insertOrder(tx: Tx, row: Record<string, unknown>) {
   for (let i = 0; i < 5; i++) {
     const ref = "SB-" + code().toUpperCase().slice(0, 6);
     const [o] = await tx`insert into orders ${tx({ ...row, id: ref } as Record<string, unknown>)} on conflict (id) do nothing returning *`;
-    if (o) return o as unknown as OrderRow;
+    if (o) {
+      mirrorOrderLater(ref);
+      return o as unknown as OrderRow;
+    }
   }
   throw new Error("Could not create an order reference");
 }
