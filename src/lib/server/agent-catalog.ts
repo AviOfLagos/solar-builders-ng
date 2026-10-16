@@ -3,8 +3,10 @@ import { createHash } from "node:crypto";
 import { brands, products } from "@/lib/catalog";
 import { ALL_TIERS } from "@/data/packages";
 import { abs } from "@/lib/seo";
-import { db } from "./db";
+import { HttpError } from "./api";
+import { code, db } from "./db";
 import { getBuild } from "./social";
+import { priceCart, storedItems } from "./rules";
 import { readSizingInput, sizeAndRecommend } from "./quote";
 
 /**
@@ -77,4 +79,45 @@ export async function agentOrders(input: { source?: string; limit?: number }) {
     order by o.created_at desc
     limit ${limit}`;
   return { orders: rows };
+}
+
+type BuildInput = Record<string, unknown>;
+
+const s200 = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : "");
+const meta = (b: BuildInput, version: number) => ({
+  source: "whatsapp-agent",
+  version,
+  site: b.site && typeof b.site === "object" ? b.site : {},
+  validUntil: typeof b.validUntil === "string" && !Number.isNaN(Date.parse(b.validUntil)) ? b.validUntil : null,
+  conversationRef: s200(b.conversationRef, 60),
+});
+
+/**
+ * A quote from the WhatsApp agent as a store build (solar-ops-agent #29): the same shareable /b/{id} page,
+ * priced by the store (never by the agent). Returns the link and the store's total.
+ */
+export async function agentBuildCreate(b: BuildInput) {
+  const cart = priceCart(b.items);
+  if (!cart.lines.length) throw new HttpError(400, "No catalogue items in this quote.");
+  const sql = await db();
+  const id = code();
+  await sql`insert into builds ${sql({ id, title: s200(b.title, 80), note: s200(b.note, 500), items: sql.json(storedItems(cart.lines)), meta: sql.json(meta(b, 1) as never) })}`;
+  return { id, path: `/b/${id}`, url: abs(`/b/${id}`), total: cart.total, version: 1 };
+}
+
+/** A new version of an agent-created build (same link). Builds people made on the site can't be changed here. */
+export async function agentBuildUpdate(b: BuildInput) {
+  const id = s200(b.buildId, 16);
+  const cart = priceCart(b.items);
+  if (!cart.lines.length) throw new HttpError(400, "No catalogue items in this quote.");
+  const sql = await db();
+  const [row] = await sql`
+    update builds set items = ${sql.json(storedItems(cart.lines))}, note = coalesce(${b.note === undefined ? null : s200(b.note, 500)}, note),
+      meta = jsonb_set(meta, '{version}', to_jsonb(coalesce((meta->>'version')::int, 1) + 1))
+        || jsonb_strip_nulls(jsonb_build_object('site', ${b.site && typeof b.site === "object" ? sql.json(b.site as never) : null}::jsonb,
+                                                 'validUntil', ${meta(b, 0).validUntil}::text))
+    where id = ${id} and meta->>'source' = 'whatsapp-agent'
+    returning (meta->>'version')::int as version`;
+  if (!row) throw new HttpError(404, "No agent-created build with that id.");
+  return { id, path: `/b/${id}`, url: abs(`/b/${id}`), total: cart.total, version: row.version as number };
 }
