@@ -3,7 +3,7 @@ import { fail, ok, route, HttpError } from "@/lib/server/api";
 import { setOrderStatus } from "@/lib/server/orders";
 import { assignJob, createPO, fulfilmentFlags, marginSummary, orderFulfilment, poMessage, sendPO, updatePO } from "@/lib/server/fulfilment";
 import { brief, listProspects, outboundLog, saveProspect, sendOutbound, updateLead } from "@/lib/server/agent-ops";
-import { agentBuild, agentCatalog, agentSize } from "@/lib/server/agent-catalog";
+import { agentBuild, agentCatalog, agentOrders, agentSize } from "@/lib/server/agent-catalog";
 
 export const maxDuration = 30;
 
@@ -46,6 +46,7 @@ export const POST = route(async (req: Request) => {
     case "catalog.get": return ok(await agentCatalog());
     case "build.read": { const build = await agentBuild(s(b.buildId, 16)); return build ? ok({ build }) : fail("This build link doesn't exist.", 404); }
     case "size": return ok(agentSize((b.input ?? {}) as Record<string, unknown>));
+    case "order.list": return ok(await agentOrders({ source: b.source as string | undefined, limit: b.limit as number | undefined }));
     default: throw new HttpError(400, "Unknown action.");
   }
 });
