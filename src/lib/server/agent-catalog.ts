@@ -54,3 +54,27 @@ export const agentBuild = (id: string) => getBuild(id, false);
 
 /** The site's sizing calculator (/api/v1/size), so the agent sizes exactly like the planner. */
 export const agentSize = (input: Record<string, unknown>) => sizeAndRecommend(readSizingInput(input));
+
+/**
+ * Recent orders for the ops console (solar-ops-agent #77), newest first: status, payments, POs with their
+ * suppliers, and the installer job. Read-only. `source` filters, e.g. "whatsapp" for orders the agent created.
+ */
+export async function agentOrders(input: { source?: string; limit?: number }) {
+  const sql = await db();
+  const limit = Math.min(200, Math.max(1, Math.trunc(Number(input.limit) || 50)));
+  const source = typeof input.source === "string" && input.source ? input.source.slice(0, 30) : null;
+  const rows = await sql`
+    select o.id, o.status, o.status_at as "statusAt", o.created_at as "createdAt", o.source,
+           o.total_paid as "totalPaid", o.refunded, o.installer as "needsInstall",
+           coalesce(o.buyer->>'name', '') as buyer,
+           coalesce((select json_agg(json_build_object('id', p.id, 'supplier', s.name, 'status', p.status,
+                                                        'confirmedAt', p.confirmed_at, 'deliveredAt', p.delivered_at) order by p.created_at)
+                     from purchase_orders p left join suppliers s on s.id = p.supplier_id where p.order_id = o.id), '[]') as pos,
+           (select json_build_object('installer', i.name, 'status', j.status, 'jobDate', j.job_date)
+              from order_jobs j left join installers i on i.id = j.installer_id where j.order_id = o.id) as job
+    from orders o
+    where (${source}::text is null or o.source = ${source})
+    order by o.created_at desc
+    limit ${limit}`;
+  return { orders: rows };
+}
