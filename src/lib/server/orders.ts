@@ -8,6 +8,7 @@ import { MIN_CHARGE_NGN, pickProvider, providerOf, fetchPayment, refundPayment, 
 import { newPaystackRef } from "./paystack";
 import { sendMail, shell, esc, notifyOwner } from "./mail";
 import { orderUpdateEmail } from "./emails";
+import { mirrorOrderLater } from "./sheets";
 import { emit } from "./webhooks";
 import { pushTo } from "./push";
 import { priceCart, checkCart, compactItems, validateDelivery, deliveryJson, assertValid, type CartLine, type DeliveryInput } from "./rules";
@@ -406,6 +407,7 @@ export async function orderNotifications(o: OrderRow) {
     ...o.items.map((l) => `- ${l.qty} x ${l.name}`),
     d.notes ? `Notes: ${d.notes}` : "",
   ].filter(Boolean).join("\n");
+  mirrorOrderLater(o.id);
   await emit("order.paid", { id: o.id, total: o.subtotal, buyer: { name: o.buyer.name, phone: o.buyer.phone }, recipient: o.recipient ? { name: o.recipient.name, phone: o.recipient.phone } : null, lga: d.lga, installer: o.installer, pool_id: o.pool_id, items: o.items.map((l) => ({ name: l.name, qty: l.qty })) });
   await notifyOwner(text);
   await pushTo([o.user_id], { title: "Order received", body: `${o.id} is pending. We'll call ${forOther ? d.name : "you"} to arrange delivery.`, data: { kind: "order", ref: o.id } });
@@ -427,6 +429,7 @@ export async function setOrderStatus(ref: string, status: string) {
   if (mail && o.buyer?.email) await sendMail({ to: [o.buyer.email], ...mail }).catch((e) => console.error("[order mail]", e));
   const words: Record<string, string> = { confirmed: "is confirmed. We'll be in touch about delivery.", out_for_delivery: "is on its way.", delivered: "has been delivered.", installed: "is installed. Lights on!" };
   if (words[status]) await pushTo([o.user_id], { title: status === "installed" ? "Lights on" : "Order update", body: `${o.id} ${words[status]}`, data: { kind: "order", ref: o.id } });
+  mirrorOrderLater(o.id);
   await emit("order.status", { id: o.id, status: o.status });
   return { ref: o.id, status: o.status, label: ORDER_STATUS[o.status as OrderStatus] };
 }
