@@ -427,6 +427,7 @@ export async function setOrderStatus(ref: string, status: string) {
   if (mail && o.buyer?.email) await sendMail({ to: [o.buyer.email], ...mail }).catch((e) => console.error("[order mail]", e));
   const words: Record<string, string> = { confirmed: "is confirmed. We'll be in touch about delivery.", out_for_delivery: "is on its way.", delivered: "has been delivered.", installed: "is installed. Lights on!" };
   if (words[status]) await pushTo([o.user_id], { title: status === "installed" ? "Lights on" : "Order update", body: `${o.id} ${words[status]}`, data: { kind: "order", ref: o.id } });
+  await emit("order.status", { id: o.id, status: o.status });
   return { ref: o.id, status: o.status, label: ORDER_STATUS[o.status as OrderStatus] };
 }
 

@@ -1,4 +1,5 @@
 import "server-only";
+import { emit } from "./webhooks";
 import { db, id } from "./db";
 import { HttpError } from "./api";
 import { esc, sendMail, shell } from "./mail";
@@ -149,8 +150,9 @@ export async function updatePO(poId: string, b: Record<string, unknown>) {
       delivery_cost = case when ${b.deliveryCost === undefined} then delivery_cost else ${money(b.deliveryCost)} end,
       cost = case when ${b.cost === undefined} then cost else ${money(b.cost)} end,
       note = case when ${b.note === undefined} then note else ${clean(b.note, 500)} end
-    where id = ${poId} returning id`;
+    where id = ${poId} returning id, order_id, status, expected_at`;
   if (!r) throw new HttpError(404, "Purchase order not found.");
+  await emit("po.updated", { id: r.id, order_id: r.order_id, status: r.status, expected_at: r.expected_at });
 }
 
 // ---- installer jobs ----
@@ -165,6 +167,7 @@ export async function assignJob(orderId: string, installerId: string, b: Record<
   const fee = b.fee === undefined || b.fee === "" ? i.rate : money(b.fee);
   await sql`insert into order_jobs (id, order_id, installer_id, fee, job_date, status) values (${id()}, ${orderId}, ${installerId}, ${fee}, ${date || null}::date, ${date ? "scheduled" : "assigned"})
     on conflict (order_id) do update set installer_id = excluded.installer_id, fee = excluded.fee, job_date = excluded.job_date, status = excluded.status, assigned_at = now(), completed_at = null`;
+  await emit("job.updated", { order_id: orderId, status: date ? "scheduled" : "assigned", job_date: date || null });
 }
 
 export async function updateJob(orderId: string, b: Record<string, unknown>) {
@@ -182,8 +185,9 @@ export async function updateJob(orderId: string, b: Record<string, unknown>) {
       fee = case when ${b.fee === undefined} then fee else ${money(b.fee)} end,
       photo_url = case when ${b.photoUrl === undefined} then photo_url else ${photo} end,
       note = case when ${b.note === undefined} then note else ${clean(b.note, 500)} end
-    where order_id = ${orderId} returning order_id`;
+    where order_id = ${orderId} returning order_id, status, job_date`;
   if (!r) throw new HttpError(404, "No installer is assigned to this order yet.");
+  await emit("job.updated", { order_id: r.order_id, status: r.status, job_date: r.job_date });
 }
 
 // ---- offering a job to engineers on WhatsApp ----
