@@ -3,7 +3,7 @@ import { fail, ok, route, HttpError } from "@/lib/server/api";
 import { setOrderStatus } from "@/lib/server/orders";
 import { assignJob, createPO, fulfilmentFlags, marginSummary, orderFulfilment, poMessage, sendPO, updatePO } from "@/lib/server/fulfilment";
 import { brief, listProspects, outboundLog, saveProspect, sendOutbound, updateLead } from "@/lib/server/agent-ops";
-import { agentBuild, agentBuildCreate, agentBuildUpdate, agentCatalog, agentOrders, agentSize } from "@/lib/server/agent-catalog";
+import { agentBuild, agentBuildCreate, agentBuildUpdate, agentCatalog, agentOrderCreate, agentOrderRead, agentOrders, agentPaymentsState, agentSize } from "@/lib/server/agent-catalog";
 
 export const maxDuration = 30;
 
@@ -48,6 +48,9 @@ export const POST = route(async (req: Request) => {
     case "size": return ok(agentSize((b.input ?? {}) as Record<string, unknown>));
     case "build.create": return ok(await agentBuildCreate(b));
     case "build.update": return ok(await agentBuildUpdate(b));
+    case "order.create": return ok(await agentOrderCreate(b, new URL(req.url).origin));
+    case "order.read": { const o = await agentOrderRead(s(b.ref, 20)); return o ? ok({ order: o }) : fail("No such order.", 404); }
+    case "payments.state": return ok(await agentPaymentsState());
     case "order.list": return ok(await agentOrders({ source: b.source as string | undefined, limit: b.limit as number | undefined }));
     default: throw new HttpError(400, "Unknown action.");
   }

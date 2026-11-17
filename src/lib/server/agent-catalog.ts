@@ -6,7 +6,11 @@ import { abs } from "@/lib/seo";
 import { HttpError } from "./api";
 import { code, db } from "./db";
 import { getBuild } from "./social";
-import { priceCart, storedItems } from "./rules";
+import { checkCart, compactItems, deliveryJson, priceCart, storedItems, validateDelivery, assertValid } from "./rules";
+import { insertOrder } from "./ledger";
+import { startCheckout } from "./orders";
+import { paymentsOpen } from "./switch";
+import { paystackConfigured } from "./paystack";
 import { readSizingInput, sizeAndRecommend } from "./quote";
 
 /**
@@ -120,4 +124,63 @@ export async function agentBuildUpdate(b: BuildInput) {
     returning (meta->>'version')::int as version`;
   if (!row) throw new HttpError(404, "No agent-created build with that id.");
   return { id, path: `/b/${id}`, url: abs(`/b/${id}`), total: cart.total, version: row.version as number };
+}
+
+/** No email from a WhatsApp customer: Paystack needs one, so receipts go to the ops mailbox, tagged by phone. */
+const fallbackEmail = (phone: string) => `solar+wa${phone.replace(/\D/g, "")}@nexprove.com`;
+
+/**
+ * An order from an agent-created build (solar-ops-agent #34). The store prices it (never the agent), it's
+ * idempotent on the build id, and when payments are switched off it's recorded as `reserved` for a person to
+ * confirm before any money moves. Delivery follows the store's checkout rules (Lagos LGAs).
+ */
+export async function agentOrderCreate(b: Record<string, unknown>, origin: string) {
+  const buildId = s200(b.buildId, 16);
+  const sql = await db();
+  const [build] = await sql`select id, items from builds where id = ${buildId} and meta->>'source' = 'whatsapp-agent'`;
+  if (!build) throw new HttpError(404, "No agent-created build with that id.");
+  const [existing] = await sql`select id, status, total_paid, agent_pay_url from orders where agent_build_id = ${buildId}`;
+  if (existing) return { ref: existing.id as string, status: existing.status as string, total: existing.total_paid as number, payUrl: (existing.agent_pay_url as string | null) ?? null, existing: true };
+
+  const cart = priceCart(build.items);
+  checkCart(cart, "This quote has no items we sell any more.");
+  const phone = s200(b.phone, 20);
+  const fields = {
+    name: s200(b.name, 80), email: s200(b.email, 120) || fallbackEmail(phone), phone, altPhone: s200(b.altPhone, 20),
+    address: s200(b.address, 300), lga: s200(b.lga, 40), landmark: s200(b.landmark, 120), notes: s200(b.notes, 300),
+    installer: b.installer === true,
+    forSomeoneElse: Boolean(b.recipientName), recipientName: s200(b.recipientName, 80), recipientPhone: s200(b.recipientPhone, 20),
+  };
+  const { values, errors } = validateDelivery(fields);
+  assertValid(errors);
+
+  if (!(await paymentsOpen()) || !paystackConfigured()) {
+    const o = await sql.begin((tx) =>
+      insertOrder(tx, {
+        items: tx.json(compactItems(cart.lines)), subtotal: cart.subtotal, total_paid: cart.total, commission: 0,
+        buyer: tx.json({ name: values.name, email: values.email, phone: values.phone }),
+        delivery: tx.json(deliveryJson(values)),
+        recipient: values.forSomeoneElse ? tx.json({ name: values.recipientName, phone: values.recipientPhone }) : null,
+        installer: values.installer, status: "reserved", source: "whatsapp", agent_build_id: buildId,
+      }),
+    );
+    return { ref: o.id, status: "reserved", total: cart.total, payUrl: null, existing: false };
+  }
+
+  const r = await startCheckout({ ...fields, items: storedItems(cart.lines), provider: "paystack", expectedTotal: cart.total }, null, origin, { source: "whatsapp" });
+  const payUrl = "authorizationUrl" in r ? (r.authorizationUrl ?? null) : null;
+  await sql`update orders set agent_build_id = ${buildId}, agent_pay_url = ${payUrl} where id = ${r.ref}`;
+  return { ref: r.ref, status: "awaiting_payment", total: r.amount, payUrl, existing: false };
+}
+
+export async function agentOrderRead(ref: string) {
+  const sql = await db();
+  const [o] = await sql`select id as ref, status, status_at as "statusAt", total_paid as total, refunded, source, agent_build_id as "buildId",
+                               agent_pay_url as "payUrl", installer as "needsInstall", created_at as "createdAt"
+                        from orders where id = ${ref.slice(0, 20)}`;
+  return o ?? null;
+}
+
+export async function agentPaymentsState() {
+  return { open: await paymentsOpen(), paystack: paystackConfigured() };
 }
