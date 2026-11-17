@@ -3,6 +3,7 @@ import { fail, ok, route, HttpError } from "@/lib/server/api";
 import { setOrderStatus } from "@/lib/server/orders";
 import { assignJob, createPO, fulfilmentFlags, marginSummary, orderFulfilment, poMessage, sendPO, updatePO } from "@/lib/server/fulfilment";
 import { brief, listProspects, outboundLog, saveProspect, sendOutbound, updateLead } from "@/lib/server/agent-ops";
+import { agentBuild, agentCatalog, agentSize } from "@/lib/server/agent-catalog";
 
 export const maxDuration = 30;
 
@@ -41,6 +42,10 @@ export const POST = route(async (req: Request) => {
     case "prospect.save": return ok({ id: await saveProspect(b) });
     case "email.send": return ok(await sendOutbound(b, actor));
     case "log": return ok({ log: await outboundLog(Math.min(50, Number(b.limit) || 20)) });
+    // Read-only, for the WhatsApp ops agent: catalogue with selling prices, a shared build, and the sizing calculator.
+    case "catalog.get": return ok(await agentCatalog());
+    case "build.read": { const build = await agentBuild(s(b.buildId, 16)); return build ? ok({ build }) : fail("This build link doesn't exist.", 404); }
+    case "size": return ok(agentSize((b.input ?? {}) as Record<string, unknown>));
     default: throw new HttpError(400, "Unknown action.");
   }
 });
